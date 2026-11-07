@@ -162,4 +162,9 @@ class MatrixBrain:
 
 
 # Global Matrix Brain singleton
+    async def interact(self, user_prompt: str, session_id: str = "sess_default") -> str:
+        """High-level interaction returning the synthesized text response."""
+        res = await self.process_user_request(session_id=session_id, user_prompt=user_prompt)
+        return res.get("response", "")
+
 brain = MatrixBrain()

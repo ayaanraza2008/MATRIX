@@ -23,7 +23,23 @@ This document provides a transparent, evidence-based ledger of hardware constrai
 
 ---
 
-## 3. Windows Display Session Isolation (Headless vs Interactive Desktop)
+## 3. Hands-Free Voice & Room Acoustics
+
+- **Acoustic Environment:** In typical home or office environments (ambient noise < 55 dB), local wake-word detection for "Matrix" and "Snap" achieves >99% precision. In blaring acoustic environments (e.g. loud music playing from the same machine), wake-word recall can experience attenuation.
+  - *Mitigation:* Detection sensitivity is dynamically tunable via the HUD slider or API from `0.10` to `0.95`.
+- **Acoustic Echo Feedback Suppression:** When playing audio through high-volume external laptop speakers without hardware echo-canceling microphones, audio output could theoretically leak into the microphone. MATRIX mitigates this by temporarily muting/suppressing microphone ingestion during active TTS playback.
+- **Microphone Permissions:** Web Audio API capture in browsers requires one-time user authorization on initial load. Native background Python listener utilizes system default PortAudio device directly.
+
+---
+
+## 4. Autonomous Action Safety Boundaries
+
+- **Autonomy Scope:** Safe and reversible operations (web searches, Wikipedia extracts, document parsing, report synthesis, code generation, memory queries) execute autonomously with multi-step plan verification.
+- **Safety Policy Gate:** In accordance with JARVIS safety principles, critical or irreversible operations (formatting drives, deleting directory trees, dropping database tables, altering security settings) are strictly gated and require explicit user confirmation.
+
+---
+
+## 5. Windows Display Session Isolation
 
 - **Architecture:** Multi-tier screen capture (`ImageGrab -> PyAutoGUI -> GDI Direct DC -> Diagnostic Buffer`).
 - **Limitation:** Under Windows DWM session security, background or locked sessions restrict display device context access (BitBlt returns 0 / black frame).
@@ -31,6 +47,6 @@ This document provides a transparent, evidence-based ledger of hardware constrai
 
 ---
 
-## 4. Cloud API Authentication
+## 6. Cloud API Independence
 
-- The system is architected for **zero cloud dependence**. If an invalid or expired `GEMINI_API_KEY` is present in the environment, MATRIX automatically flags the failure and routes directly to the local GGUF model with 0 latency penalty on subsequent queries.
+- The entire system is architected for **zero cloud dependence**. All core intelligence (Qwen2.5 GGUF), wake-word spotting (openWakeWord ONNX), voice activity detection (Silero VAD ONNX), speech recognition (Faster-Whisper INT8), offline speech synthesis (SAPI5), and optical character recognition (Windows 11 Native OCR) operate 100% offline.

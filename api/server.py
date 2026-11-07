@@ -33,6 +33,21 @@ async def lifespan(app: FastAPI):
     else:
         logger.error("Database initialization encountered an error!")
 
+    # Wire hands-free voice manager & orchestrator telemetry to WebSocket broker
+    try:
+        import asyncio
+        from voice.conversation.manager import hands_free_manager
+        from core.orchestrator import orchestrator
+
+        def _broadcast_to_ws(evt):
+            asyncio.create_task(ws_manager.broadcast(evt))
+
+        hands_free_manager.subscribe(_broadcast_to_ws)
+        orchestrator.subscribe_progress(_broadcast_to_ws)
+        logger.info("Hands-Free voice and orchestrator telemetry wired to WebSocket broker.")
+    except Exception as e:
+        logger.warning(f"Could not hook hands-free event broker: {e}")
+
     logger.info(f"MATRIX Server online at http://{settings.host}:{settings.port}")
     yield
     logger.info("MATRIX Server shutting down cleanly...")
@@ -135,10 +150,25 @@ else:
 async def websocket_events(websocket: WebSocket):
     """Bidirectional real-time event socket for UI command center."""
     await ws_manager.connect(websocket)
+    from voice.conversation.manager import hands_free_manager, ConversationMode
+    import json
     try:
         while True:
             data = await websocket.receive_text()
             logger.debug(f"Received WS message: {data}")
+            try:
+                msg = json.loads(data)
+                mtype = msg.get("type", "")
+                if mtype == "voice_interrupt":
+                    await hands_free_manager.interrupt()
+                elif mtype == "set_mode":
+                    mode_val = msg.get("mode")
+                    if mode_val in [m.value for m in ConversationMode]:
+                        hands_free_manager.set_mode(ConversationMode(mode_val))
+                elif mtype == "trigger_listen":
+                    await hands_free_manager.handle_wake_word_activation("manual")
+            except Exception:
+                pass
             # Echo or dispatch user events
             await websocket.send_json({
                 "type": "ack",

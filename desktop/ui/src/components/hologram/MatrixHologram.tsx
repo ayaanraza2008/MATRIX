@@ -6,12 +6,14 @@ interface MatrixHologramProps {
   state: HologramState;
   size?: number;
   className?: string;
+  onClick?: () => void;
 }
 
 export const MatrixHologram: React.FC<MatrixHologramProps> = ({
   state,
-  size = 280,
+  size = 460,
   className = '',
+  onClick,
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
 
@@ -22,7 +24,7 @@ export const MatrixHologram: React.FC<MatrixHologramProps> = ({
     // 1. Scene, Camera, Renderer
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-    camera.position.z = 4.2;
+    camera.position.z = 4.3;
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -34,31 +36,37 @@ export const MatrixHologram: React.FC<MatrixHologramProps> = ({
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
-    // 2. Holographic State Colors
-    const getColors = (s: HologramState) => {
+    // 2. Holographic State Colors & Dynamics
+    const getStateConfig = (s: HologramState) => {
       switch (s) {
+        case 'wake_word':
+          return { primary: 0x00ffff, secondary: 0x38bdf8, speed: 3.2, pulseIntensity: 0.22, coreGlow: 0x00f0ff };
         case 'listening':
-          return { primary: 0x00ff9d, secondary: 0x00f0ff, speed: 1.8 };
+          return { primary: 0x00ff9d, secondary: 0x00f0ff, speed: 2.2, pulseIntensity: 0.18, coreGlow: 0x00ff9d };
         case 'thinking':
-          return { primary: 0x9933ff, secondary: 0x00f0ff, speed: 2.5 };
-        case 'speaking':
-          return { primary: 0x00f0ff, secondary: 0x0066ff, speed: 2.0 };
+          return { primary: 0xa855f7, secondary: 0x38bdf8, speed: 2.8, pulseIntensity: 0.15, coreGlow: 0x9333ea };
+        case 'processing':
+          return { primary: 0x3b82f6, secondary: 0x06b6d4, speed: 3.0, pulseIntensity: 0.16, coreGlow: 0x2563eb };
         case 'executing':
-          return { primary: 0xffb800, secondary: 0xff3366, speed: 2.2 };
+          return { primary: 0xf59e0b, secondary: 0x06b6d4, speed: 2.4, pulseIntensity: 0.14, coreGlow: 0xd97706 };
+        case 'speaking':
+          return { primary: 0x00f0ff, secondary: 0x2563eb, speed: 2.5, pulseIntensity: 0.24, coreGlow: 0x00e5ff };
+        case 'interrupted':
+          return { primary: 0xf43f5e, secondary: 0xfbbf24, speed: 3.5, pulseIntensity: 0.25, coreGlow: 0xe11d48 };
         case 'error':
-          return { primary: 0xff3366, secondary: 0x880022, speed: 0.8 };
+          return { primary: 0xef4444, secondary: 0x991b1b, speed: 0.9, pulseIntensity: 0.08, coreGlow: 0xb91c1c };
         case 'offline':
-          return { primary: 0x445566, secondary: 0x223344, speed: 0.3 };
+          return { primary: 0x475569, secondary: 0x1e293b, speed: 0.3, pulseIntensity: 0.02, coreGlow: 0x334155 };
         case 'idle':
         default:
-          return { primary: 0x00f0ff, secondary: 0x0066ff, speed: 1.0 };
+          return { primary: 0x00f0ff, secondary: 0x0284c7, speed: 1.0, pulseIntensity: 0.08, coreGlow: 0x00b4d8 };
       }
     };
 
-    const colorConfig = getColors(state);
+    const config = getStateConfig(state);
 
-    // 3. Central Core Particle Sphere
-    const particleCount = 600;
+    // 3. Central Core Particle Cloud (1000 particles)
+    const particleCount = size > 350 ? 1000 : 600;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
     const originalPositions = new Float32Array(particleCount * 3);
@@ -68,7 +76,7 @@ export const MatrixHologram: React.FC<MatrixHologramProps> = ({
       const v = Math.random();
       const theta = u * 2.0 * Math.PI;
       const phi = Math.acos(2.0 * v - 1.0);
-      const r = 1.0 + (Math.random() - 0.5) * 0.15;
+      const r = 1.0 + (Math.random() - 0.5) * 0.2;
 
       const x = r * Math.sin(phi) * Math.cos(theta);
       const y = r * Math.sin(phi) * Math.sin(theta);
@@ -86,19 +94,30 @@ export const MatrixHologram: React.FC<MatrixHologramProps> = ({
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
     const particleMaterial = new THREE.PointsMaterial({
-      color: colorConfig.primary,
-      size: 0.045,
+      color: config.primary,
+      size: size > 350 ? 0.048 : 0.040,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.9,
       blending: THREE.AdditiveBlending,
     });
 
     const particles = new THREE.Points(geometry, particleMaterial);
     scene.add(particles);
 
-    // 4. Orbital Hologram Concentric Rings
-    const createRing = (radius: number, color: number, tiltX: number, tiltY: number) => {
-      const ringGeo = new THREE.TorusGeometry(radius, 0.012, 8, 80);
+    // 4. Inner Luminous Core (Geometric Wireframe Sphere)
+    const innerGeo = new THREE.IcosahedronGeometry(0.55, 2);
+    const innerMat = new THREE.MeshBasicMaterial({
+      color: config.coreGlow,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.35,
+    });
+    const innerCore = new THREE.Mesh(innerGeo, innerMat);
+    scene.add(innerCore);
+
+    // 5. Gyroscopic Hologram Rings
+    const createRing = (radius: number, tubeRadius: number, color: number, tiltX: number, tiltY: number) => {
+      const ringGeo = new THREE.TorusGeometry(radius, tubeRadius, 8, 96);
       const ringMat = new THREE.MeshBasicMaterial({
         color,
         transparent: true,
@@ -111,102 +130,116 @@ export const MatrixHologram: React.FC<MatrixHologramProps> = ({
       return ring;
     };
 
-    const ring1 = createRing(1.4, colorConfig.secondary, Math.PI / 4, 0);
-    const ring2 = createRing(1.65, colorConfig.primary, -Math.PI / 3, Math.PI / 6);
-    const ring3 = createRing(1.9, colorConfig.secondary, Math.PI / 6, -Math.PI / 4);
+    const ring1 = createRing(1.35, 0.012, config.secondary, Math.PI / 4, 0);
+    const ring2 = createRing(1.60, 0.010, config.primary, -Math.PI / 3, Math.PI / 6);
+    const ring3 = createRing(1.85, 0.014, config.secondary, Math.PI / 6, -Math.PI / 4);
+    const ring4 = createRing(2.10, 0.008, config.primary, Math.PI / 2, Math.PI / 8);
 
     scene.add(ring1);
     scene.add(ring2);
     scene.add(ring3);
+    scene.add(ring4);
 
-    // 5. Animation Loop
+    // 6. Ambient Floating Dust Particles (External Field)
+    const dustCount = 120;
+    const dustGeo = new THREE.BufferGeometry();
+    const dustPos = new Float32Array(dustCount * 3);
+    for (let i = 0; i < dustCount; i++) {
+      dustPos[i * 3] = (Math.random() - 0.5) * 5.0;
+      dustPos[i * 3 + 1] = (Math.random() - 0.5) * 5.0;
+      dustPos[i * 3 + 2] = (Math.random() - 0.5) * 3.0;
+    }
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+    const dustMat = new THREE.PointsMaterial({
+      color: config.secondary,
+      size: 0.025,
+      transparent: true,
+      opacity: 0.4,
+      blending: THREE.AdditiveBlending,
+    });
+    const dust = new THREE.Points(dustGeo, dustMat);
+    scene.add(dust);
+
+    // 7. Dynamic Animation Loop
     let animationFrameId: number;
-    let clock = new THREE.Clock();
+    const clock = new THREE.Clock();
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
-      const elapsedTime = clock.getElapsedTime() * colorConfig.speed;
+      const elapsedTime = clock.getElapsedTime() * config.speed;
 
-      // Rotate core & rings
+      // Rotations
       particles.rotation.y = elapsedTime * 0.35;
       particles.rotation.x = elapsedTime * 0.15;
+      innerCore.rotation.y = -elapsedTime * 0.45;
+      innerCore.rotation.z = elapsedTime * 0.25;
 
-      ring1.rotation.z = elapsedTime * 0.4;
-      ring2.rotation.z = -elapsedTime * 0.5;
-      ring3.rotation.y = elapsedTime * 0.3;
+      ring1.rotation.z = elapsedTime * 0.45;
+      ring2.rotation.z = -elapsedTime * 0.55;
+      ring3.rotation.y = elapsedTime * 0.35;
+      ring4.rotation.x = -elapsedTime * 0.25;
 
-      // Audio undulating pulse wave simulation on particles
+      dust.rotation.y = elapsedTime * 0.08;
+
+      // Particle pulse wave & breathing dynamics
       const posAttr = geometry.attributes.position as THREE.BufferAttribute;
       const array = posAttr.array as Float32Array;
+      const intensity = config.pulseIntensity;
 
       for (let i = 0; i < particleCount; i++) {
         const ox = originalPositions[i * 3];
         const oy = originalPositions[i * 3 + 1];
         const oz = originalPositions[i * 3 + 2];
 
-        const wave = Math.sin(elapsedTime * 3 + ox * 4 + oy * 4) * 0.06;
+        let wave = 0;
+        if (state === 'speaking') {
+          // Undulating acoustic wave
+          wave = (Math.sin(elapsedTime * 6.0 + ox * 5.0) + Math.cos(elapsedTime * 4.0 + oy * 5.0)) * 0.5 * intensity;
+        } else if (state === 'listening') {
+          // Expanding radar pulse
+          wave = Math.sin(elapsedTime * 5.0 - (ox * ox + oy * oy) * 3.0) * intensity;
+        } else if (state === 'thinking' || state === 'processing') {
+          // Inward swirling vortex
+          wave = Math.sin(elapsedTime * 4.0 + oz * 6.0) * intensity;
+        } else {
+          // Serene breathing pulse
+          wave = Math.sin(elapsedTime * 2.2 + ox * 3.0 + oy * 3.0) * intensity;
+        }
+
         array[i * 3] = ox * (1 + wave);
         array[i * 3 + 1] = oy * (1 + wave);
         array[i * 3 + 2] = oz * (1 + wave);
       }
       posAttr.needsUpdate = true;
 
+      // Pulse inner core scale
+      const coreScale = 1.0 + Math.sin(elapsedTime * 3.0) * (intensity * 0.8);
+      innerCore.scale.set(coreScale, coreScale, coreScale);
+
       renderer.render(scene, camera);
     };
 
     animate();
 
-    // 6. Cleanup
     return () => {
       cancelAnimationFrame(animationFrameId);
       renderer.dispose();
       geometry.dispose();
       particleMaterial.dispose();
-      ring1.geometry.dispose();
-      ring2.geometry.dispose();
-      ring3.geometry.dispose();
-      container.innerHTML = '';
+      innerGeo.dispose();
+      innerMat.dispose();
+      dustGeo.dispose();
+      dustMat.dispose();
     };
   }, [state, size]);
 
   return (
-    <div className={`relative flex items-center justify-center ${className}`}>
-      {/* Outer ambient glow halo */}
-      <div
-        className="absolute rounded-full pointer-events-none filter blur-xl transition-all duration-700"
-        style={{
-          width: size * 0.85,
-          height: size * 0.85,
-          background:
-            state === 'error'
-              ? 'radial-gradient(circle, rgba(255,51,102,0.2) 0%, transparent 70%)'
-              : state === 'listening'
-              ? 'radial-gradient(circle, rgba(0,255,157,0.25) 0%, transparent 70%)'
-              : state === 'thinking'
-              ? 'radial-gradient(circle, rgba(153,51,255,0.25) 0%, transparent 70%)'
-              : 'radial-gradient(circle, rgba(0,240,255,0.22) 0%, transparent 70%)',
-        }}
-      />
-      <div ref={mountRef} className="relative z-10" />
-      {/* State Badge */}
-      <div className="absolute -bottom-2 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full bg-matrix-card/80 border border-matrix-cyan/30 backdrop-blur-md">
-        <span
-          className={`w-2 h-2 rounded-full ${
-            state === 'error'
-              ? 'bg-matrix-red animate-ping'
-              : state === 'listening'
-              ? 'bg-matrix-green animate-pulse'
-              : state === 'thinking'
-              ? 'bg-purple-400 animate-pulse'
-              : state === 'offline'
-              ? 'bg-slate-500'
-              : 'bg-matrix-cyan animate-pulse'
-          }`}
-        />
-        <span className="text-[11px] font-mono tracking-wider uppercase text-slate-300">
-          CORE: {state}
-        </span>
-      </div>
-    </div>
+    <div
+      ref={mountRef}
+      onClick={onClick}
+      className={`relative flex items-center justify-center cursor-pointer select-none transition-transform duration-500 hover:scale-[1.02] ${className}`}
+      style={{ width: size, height: size }}
+      title={`MATRIX Core Hologram — State: ${state.toUpperCase()}`}
+    />
   );
 };

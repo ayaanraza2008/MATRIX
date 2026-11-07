@@ -81,7 +81,15 @@ def preflight_check():
     else:
         print(f"[*] Android APK located in mobile/android_app/app/build/outputs/apk/debug/")
 
-    # 7. Check Port 8000
+    # 7. Check Wake-Word Models
+    ww_matrix = data_dir / "models" / "wakeword" / "matrix.onnx"
+    ww_snap = data_dir / "models" / "wakeword" / "snap.onnx"
+    if ww_matrix.exists() and ww_snap.exists():
+        print(f"[+] Wake-Word Engine: 'Matrix' + 'Snap' ONNX Models Ready ({ww_matrix.parent})")
+    else:
+        print("[!] Wake-Word models loading from openWakeWord defaults.")
+
+    # 8. Check Port 8000
     if is_port_in_use(8000):
         print("[!] Notice: Port 8000 is already active. Existing MATRIX server may be running.")
     else:

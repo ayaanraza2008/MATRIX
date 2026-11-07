@@ -26,6 +26,7 @@ import {
   MessageItem,
   HologramState,
   NavSection,
+  HandsFreeMode,
 } from './types';
 
 export const App: React.FC = () => {
@@ -46,6 +47,9 @@ export const App: React.FC = () => {
   const [audioMuted, setAudioMuted] = useState<boolean>(false);
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
+  const [handsFreeMode, setHandsFreeMode] = useState<HandsFreeMode>('continuous');
+  const [lastTranscript, setLastTranscript] = useState<string>('');
+  const [lastResponse, setLastResponse] = useState<string>('');
 
   // Audio Recording (Push-to-Talk)
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -169,6 +173,47 @@ export const App: React.FC = () => {
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          if (data.type === 'WAKE_WORD_DETECTED') {
+            setHologramState('wake_word');
+          } else if (data.type === 'RECORDING_STARTED') {
+            setHologramState('listening');
+            setIsRecording(true);
+          } else if (data.type === 'RECORDING_STOPPED') {
+            setHologramState('processing');
+            setIsRecording(false);
+          } else if (data.type === 'TRANSCRIPT_GENERATED') {
+            if (data.data?.text) setLastTranscript(data.data.text);
+            setHologramState('thinking');
+          } else if (data.type === 'THINKING') {
+            setHologramState('thinking');
+          } else if (data.type === 'AGENT_SELECTED') {
+            setHologramState('processing');
+          } else if (data.type === 'TASK_PROGRESS') {
+            setHologramState('executing');
+          } else if (data.type === 'TTS_STARTED') {
+            setHologramState('speaking');
+            setIsSpeaking(true);
+            if (data.data?.text) setLastResponse(data.data.text);
+            if (data.data?.audio_url && !audioMuted) {
+              const audio = new Audio(data.data.audio_url);
+              setAudioPlayer(audio);
+              audio.play().catch(() => {});
+              audio.onended = () => {
+                setIsSpeaking(false);
+                setHologramState(handsFreeMode === 'continuous' ? 'listening' : 'idle');
+              };
+            }
+          } else if (data.type === 'TTS_FINISHED') {
+            setIsSpeaking(false);
+            setHologramState(handsFreeMode === 'continuous' ? 'listening' : 'idle');
+          } else if (data.type === 'INTERRUPTED') {
+            setIsSpeaking(false);
+            setHologramState('interrupted');
+          } else if (data.type === 'LISTENING_RESUMED') {
+            setHologramState('idle');
+          } else if (data.type === 'MODE_CHANGED' && data.data?.mode) {
+            setHandsFreeMode(data.data.mode);
+          }
           if (data.type === 'telemetry_update' && data.payload) {
             setMetrics((prev) => ({
               cpu: {
@@ -424,6 +469,17 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleSetHandsFreeMode = async (mode: HandsFreeMode) => {
+    setHandsFreeMode(mode);
+    try {
+      await fetch('/api/v1/voice/hands-free/mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode }),
+      });
+    } catch {}
+  };
+
   const handleToggleMute = () => {
     setAudioMuted((prev) => !prev);
     if (!audioMuted && isSpeaking) {
@@ -464,6 +520,13 @@ export const App: React.FC = () => {
               metrics={metrics}
               hologramState={hologramState}
               capabilities={capabilities || []}
+              lastTranscript={lastTranscript}
+              lastResponse={lastResponse}
+              isSpeaking={isSpeaking}
+              onStopSpeaking={handleStopSpeaking}
+              handsFreeMode={handsFreeMode}
+              onChangeMode={handleSetHandsFreeMode}
+              onToggleListen={handleToggleVoice}
               onQuickAction={(cmd) => {
                 setCurrentSection('chat');
                 handleSendCommand(cmd);

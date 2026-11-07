@@ -16,13 +16,21 @@ export type NavSection =
 
 export type HologramState =
   | 'idle'
+  | 'wake_word'
   | 'listening'
   | 'thinking'
   | 'processing'
   | 'speaking'
   | 'executing'
+  | 'interrupted'
   | 'error'
   | 'offline';
+
+export type HandsFreeMode =
+  | 'continuous'
+  | 'wake_word_only'
+  | 'push_to_talk'
+  | 'privacy_pause';
 
 export interface HealthData {
   status: string;

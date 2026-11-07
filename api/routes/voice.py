@@ -1,18 +1,22 @@
 """MATRIX Voice System API Route.
 Provides endpoints for speech synthesis, microphone audio transcription,
-end-to-end voice loop (Speech -> STT -> Brain -> TTS -> Audio),
-audio file serving, wake-word toggling, audio device discovery, and speech stop controls.
+hands-free autonomous conversation, wake-word sensitivity tuning,
+audio file serving, device discovery, and immediate interruption controls.
 """
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, status
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from pathlib import Path
 import time
 import asyncio
+import numpy as np
+
 from voice.text_to_speech.engine import tts_engine
 from voice.speech_to_text.engine import stt_engine
 from voice.wake_word.engine import wake_word_detector
+from voice.vad.engine import vad_engine
+from voice.conversation.manager import hands_free_manager, ConversationMode, HandsFreeState
 from core.brain import brain
 from config.settings import settings
 from config.logging_config import get_logger
@@ -28,6 +32,19 @@ class SpeakRequest(BaseModel):
 
 class ToggleListenRequest(BaseModel):
     enable: bool
+
+
+class ModeRequest(BaseModel):
+    mode: ConversationMode
+
+
+class SensitivityRequest(BaseModel):
+    sensitivity: float
+
+
+class VADSensitivityRequest(BaseModel):
+    silence_duration_ms: Optional[int] = 1000
+    speech_threshold: Optional[float] = 0.5
 
 
 class RecordRequest(BaseModel):
@@ -68,9 +85,93 @@ async def speak_text(payload: SpeakRequest):
 
 @router.post("/stop")
 async def stop_speaking():
-    """Immediately abort speech synthesis."""
+    """Immediately abort speech synthesis and interrupt hands-free execution."""
+    await hands_free_manager.interrupt()
     tts_engine.stop()
     return {"status": "OK", "stopped": True}
+
+
+@router.get("/hands-free/status")
+async def get_hands_free_status():
+    """Retrieve live status of the continuous hands-free voice loop."""
+    return {
+        "status": "OK",
+        "state": hands_free_manager.state.value,
+        "mode": hands_free_manager.mode.value,
+        "wake_words": ["matrix", "snap"],
+        "wake_word_sensitivity": wake_word_detector.sensitivity,
+        "silence_duration_ms": vad_engine.silence_duration_ms,
+        "speech_threshold": vad_engine.speech_threshold,
+        "is_speaking": tts_engine.is_speaking,
+        "last_transcript": hands_free_manager.last_transcript,
+        "last_response": hands_free_manager.last_response
+    }
+
+
+@router.post("/hands-free/mode")
+async def set_hands_free_mode(payload: ModeRequest):
+    """Update hands-free mode: 'continuous', 'wake_word_only', 'push_to_talk', or 'privacy_pause'."""
+    hands_free_manager.set_mode(payload.mode)
+    return {
+        "status": "OK",
+        "mode": hands_free_manager.mode.value,
+        "state": hands_free_manager.state.value
+    }
+
+
+@router.post("/hands-free/interrupt")
+async def interrupt_hands_free():
+    """Immediately interrupt ongoing speech or task."""
+    await hands_free_manager.interrupt()
+    return {
+        "status": "OK",
+        "interrupted": True,
+        "state": hands_free_manager.state.value
+    }
+
+
+@router.post("/wake-word/sensitivity")
+async def set_wake_word_sensitivity(payload: SensitivityRequest):
+    """Adjust wake-word detection sensitivity threshold (0.1 to 0.95)."""
+    wake_word_detector.set_sensitivity(payload.sensitivity)
+    return {
+        "status": "OK",
+        "sensitivity": wake_word_detector.sensitivity
+    }
+
+
+@router.post("/vad/sensitivity")
+async def set_vad_sensitivity(payload: VADSensitivityRequest):
+    """Adjust end-of-speech silence duration (ms) and speech probability threshold."""
+    if payload.silence_duration_ms is not None:
+        vad_engine.silence_duration_ms = max(500, min(3000, payload.silence_duration_ms))
+    if payload.speech_threshold is not None:
+        vad_engine.speech_threshold = max(0.1, min(0.9, payload.speech_threshold))
+
+    return {
+        "status": "OK",
+        "silence_duration_ms": vad_engine.silence_duration_ms,
+        "speech_threshold": vad_engine.speech_threshold
+    }
+
+
+@router.post("/stream-chunk")
+async def stream_audio_chunk(
+    file: UploadFile = File(...)
+):
+    """Process incoming audio chunk from Web Audio API / browser microphone."""
+    content = await file.read()
+    # Decode audio into 16kHz PCM
+    try:
+        import soundfile as sf
+        import io
+        data, sr = sf.read(io.BytesIO(content), dtype='int16')
+        if data.ndim > 1:
+            data = data[:, 0]
+        result = await hands_free_manager.process_audio_chunk(data, source="web_audio")
+        return {"status": "OK", "result": result}
+    except Exception as e:
+        return {"status": "ERROR", "error": str(e)}
 
 
 @router.post("/transcribe")
@@ -151,7 +252,6 @@ async def record_and_transcribe(payload: RecordRequest):
     """Record audio directly from physical PC microphone and transcribe it."""
     try:
         import sounddevice as sd
-        import numpy as np
         import soundfile as sf
     except ImportError as e:
         raise HTTPException(status_code=500, detail=f"Audio dependencies missing: {e}")
@@ -201,6 +301,9 @@ async def voice_status():
         "listening": wake_word_detector.is_listening,
         "is_speaking": tts_engine.is_speaking,
         "wake_word": settings.wake_word,
+        "supported_wake_words": ["Matrix", "Snap"],
+        "hands_free_mode": hands_free_manager.mode.value,
+        "hands_free_state": hands_free_manager.state.value,
         "supported_languages": ["English", "Hindi", "Hinglish"],
         "tts_engine": "Edge-TTS Neural + SAPI5 Offline Fallback",
         "stt_engine": "Faster-Whisper (INT8 CPU)"

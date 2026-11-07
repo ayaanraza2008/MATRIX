@@ -1,242 +1,307 @@
 import React from 'react';
 import {
-  Cpu,
-  Layers,
-  HardDrive,
-  Database,
+  Mic,
+  Square,
   Sparkles,
-  ShieldCheck,
-  Zap,
-  ArrowUpRight,
+  Shield,
+  Layers,
+  Cpu,
+  Radio,
+  ChevronRight,
 } from 'lucide-react';
 import { MatrixHologram } from '../hologram/MatrixHologram';
-import { HealthData, LiveMetricsData, HologramState, CapabilityItem } from '../../types';
+import { HealthData, LiveMetricsData, HologramState, CapabilityItem, HandsFreeMode } from '../../types';
 
 interface DashboardViewProps {
   health: HealthData | null;
   metrics: LiveMetricsData | null;
   hologramState: HologramState;
-  capabilities: CapabilityItem[];
+  capabilities?: CapabilityItem[];
   onQuickAction: (actionText: string) => void;
+  lastTranscript?: string;
+  lastResponse?: string;
+  isSpeaking?: boolean;
+  onStopSpeaking?: () => void;
+  handsFreeMode?: HandsFreeMode;
+  onChangeMode?: (mode: HandsFreeMode) => void;
+  onToggleListen?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   health,
   metrics,
   hologramState,
-  capabilities,
+  capabilities: _capabilities = [],
   onQuickAction,
+  lastTranscript = '',
+  lastResponse = '',
+  isSpeaking = false,
+  onStopSpeaking,
+  handsFreeMode = 'continuous',
+  onChangeMode,
+  onToggleListen,
 }) => {
+  void _capabilities;
   const cpuPercent = metrics?.cpu?.percent ?? health?.system?.cpu_percent ?? 0;
-  const ramPercent = metrics?.memory?.percent ?? health?.system?.ram_percent ?? 0;
   const ramUsed = metrics?.memory?.used_mb ?? health?.system?.ram_used_mb ?? 0;
-  const ramTotal = metrics?.memory?.total_mb ?? health?.system?.ram_total_mb ?? 0;
+  const ramTotal = metrics?.memory?.total_mb ?? health?.system?.ram_total_mb ?? 8192;
 
-  const storageC = health?.storage?.['C:'];
-  const storageD = health?.storage?.['D:'];
+  // Status message and color based on real backend state
+  const getStateMeta = (s: HologramState) => {
+    switch (s) {
+      case 'wake_word':
+        return {
+          label: 'WAKE-WORD DETECTED',
+          desc: 'Activated by "Matrix" or "Snap". Preparing to listen...',
+          badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 animate-pulse',
+        };
+      case 'listening':
+        return {
+          label: 'LISTENING (HANDS-FREE)',
+          desc: 'Speak your directive naturally. End-of-speech will auto-submit.',
+          badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 animate-pulse',
+        };
+      case 'thinking':
+        return {
+          label: 'NEURAL REASONING',
+          desc: 'Local Qwen2.5 GGUF analyzing intent and planning execution...',
+          badge: 'bg-purple-500/20 text-purple-300 border-purple-500/40 animate-pulse',
+        };
+      case 'processing':
+        return {
+          label: 'PROCESSING DIRECTIVE',
+          desc: 'Synthesizing knowledge and formulating multi-step plan...',
+          badge: 'bg-blue-500/20 text-blue-300 border-blue-500/40 animate-pulse',
+        };
+      case 'executing':
+        return {
+          label: 'EXECUTING MULTI-AGENT TASK',
+          desc: 'Autonomous agent grid executing tools under Policy Level 3/4...',
+          badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse',
+        };
+      case 'speaking':
+        return {
+          label: 'SPEAKING (CHRISTOPHER NEURAL)',
+          desc: 'Streaming natural voice response. Say "Matrix, stop" to interrupt.',
+          badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 animate-pulse',
+        };
+      case 'interrupted':
+        return {
+          label: 'INTERRUPTED',
+          desc: 'Speech immediately canceled. Resuming standby...',
+          badge: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+        };
+      case 'error':
+        return {
+          label: 'AUDIO SUBSYSTEM ALERT',
+          desc: 'Audio device warning. Check microphone permissions.',
+          badge: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+        };
+      case 'offline':
+        return {
+          label: 'DISCONNECTED',
+          desc: 'Waiting for backend reconnection on port 8000...',
+          badge: 'bg-slate-700/40 text-slate-400 border-slate-600/40',
+        };
+      case 'idle':
+      default:
+        return {
+          label: handsFreeMode === 'privacy_pause' ? 'MICROPHONE PAUSED' : 'WAKE-WORD STANDBY',
+          desc:
+            handsFreeMode === 'privacy_pause'
+              ? 'Privacy mode enabled. Wake-word detection is disarmed.'
+              : 'Listening locally for "Matrix" or "Snap". Zero cloud audio upload.',
+          badge:
+            handsFreeMode === 'privacy_pause'
+              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+              : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
+        };
+    }
+  };
+
+  const stateMeta = getStateMeta(hologramState);
+
+  const quickPrompts = [
+    'Research the best free Python libraries for voice assistants',
+    'Inspect my computer and tell me what is consuming memory',
+    'Open my browser and search for latest AI developments',
+    'Create a Python application with a graphical interface',
+    'Summarize my recent files',
+  ];
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6 matrix-grid-bg">
-      {/* Top Banner: Central Holographic Core + System Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-        {/* Hologram Display Card */}
-        <div className="lg:col-span-5 matrix-glass rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
-          <div className="absolute top-3 left-4 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-matrix-cyan animate-pulse" />
-            <span className="text-xs font-mono text-matrix-cyan uppercase tracking-wider font-semibold">
-              NEURAL CORE HOLOGRAM
+    <div className="flex-1 overflow-y-auto flex flex-col items-center justify-between p-4 md:p-6 bg-[#030712] text-slate-100 relative select-none">
+      {/* Background Subtle Gradient & Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(0,240,255,0.06),transparent_70%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#081020_1px,transparent_1px),linear-gradient(to_bottom,#081020_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_35%,#000_70%,transparent_100%)] opacity-30 pointer-events-none" />
+
+      {/* Top Bar: Minimal Status & Mode Switcher */}
+      <div className="w-full max-w-5xl flex items-center justify-between z-10 pt-1">
+        {/* Identity & Status */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                hologramState === 'listening' ? 'bg-emerald-400' :
+                hologramState === 'speaking' ? 'bg-cyan-400' :
+                hologramState === 'thinking' ? 'bg-purple-400' : 'bg-cyan-400'
+              }`} />
+              <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                hologramState === 'listening' ? 'bg-emerald-500' :
+                hologramState === 'speaking' ? 'bg-cyan-500' :
+                hologramState === 'thinking' ? 'bg-purple-500' : 'bg-cyan-500'
+              }`} />
+            </span>
+            <span className="text-xs font-mono tracking-widest uppercase font-semibold text-cyan-400">
+              JARVIS MODE
             </span>
           </div>
 
-          <div className="my-2">
-            <MatrixHologram state={hologramState} size={260} />
-          </div>
+          <span className="text-xs text-slate-600">|</span>
 
-          <div className="w-full mt-2 pt-3 border-t border-matrix-border/40 flex items-center justify-between text-xs font-mono text-slate-400">
-            <span>Hardware: Ryzen 7 5700U (AVX2)</span>
-            <span className="text-matrix-cyan">16 Threads Active</span>
+          {/* Wake Words Supported Pill */}
+          <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-mono text-slate-400 bg-slate-900/60 px-2.5 py-1 rounded-full border border-slate-800">
+            <Radio className="w-3 h-3 text-cyan-400 animate-pulse" />
+            <span>Wake words: <strong className="text-cyan-300">"Matrix"</strong> · <strong className="text-cyan-300">"Snap"</strong></span>
           </div>
         </div>
 
-        {/* System Vitals & Quick Insights */}
-        <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* CPU Card */}
-          <div className="matrix-glass rounded-xl p-4 flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-mono text-slate-400 flex items-center gap-1.5">
-                <Cpu className="w-4 h-4 text-matrix-cyan" />
-                AMD RYZEN 7 5700U
-              </span>
-              <span className="text-xs font-mono font-bold text-matrix-cyan">{cpuPercent}%</span>
-            </div>
-            <div className="text-2xl font-mono font-bold text-slate-100">{cpuPercent}%</div>
-            <div className="text-xs font-mono text-slate-400 mt-1">
-              8 Physical Cores · 16 Threads
-            </div>
-            <div className="w-full h-1.5 bg-slate-800 rounded-full mt-3 overflow-hidden">
-              <div
-                className="h-full bg-matrix-cyan transition-all duration-300"
-                style={{ width: `${Math.min(cpuPercent, 100)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* RAM Card */}
-          <div className="matrix-glass rounded-xl p-4 flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-mono text-slate-400 flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-matrix-blue" />
-                SYSTEM MEMORY
-              </span>
-              <span className="text-xs font-mono font-bold text-matrix-blue">{ramPercent.toFixed(1)}%</span>
-            </div>
-            <div className="text-2xl font-mono font-bold text-slate-100">
-              {(ramUsed / 1024).toFixed(2)} / {(ramTotal / 1024).toFixed(2)} GB
-            </div>
-            <div className="text-xs font-mono text-slate-400 mt-1">
-              Low-RAM Optimization: Active
-            </div>
-            <div className="w-full h-1.5 bg-slate-800 rounded-full mt-3 overflow-hidden">
-              <div
-                className="h-full bg-matrix-blue transition-all duration-300"
-                style={{ width: `${Math.min(ramPercent, 100)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Storage Drives Card */}
-          <div className="matrix-glass rounded-xl p-4 flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-mono text-slate-400 flex items-center gap-1.5">
-                <HardDrive className="w-4 h-4 text-purple-400" />
-                STORAGE PARTITIONS
-              </span>
-              <span className="text-xs font-mono text-matrix-green">D: Mounted</span>
-            </div>
-            <div className="space-y-1.5 text-xs font-mono">
-              <div className="flex justify-between text-slate-300">
-                <span>C: (OS / System)</span>
-                <span className="text-slate-400">{storageC?.free_gb ?? 22} GB Free</span>
-              </div>
-              <div className="flex justify-between text-matrix-cyan font-semibold">
-                <span>D: (MATRIX Data)</span>
-                <span>{storageD?.free_gb ?? 134} GB Free</span>
-              </div>
-            </div>
-            <div className="text-[10px] font-mono text-matrix-textMuted mt-2">
-              Models & ChromaDB safely located in D:\matrix_data
-            </div>
-          </div>
-
-          {/* Core Database & Security Card */}
-          <div className="matrix-glass rounded-xl p-4 flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-mono text-slate-400 flex items-center gap-1.5">
-                <Database className="w-4 h-4 text-matrix-green" />
-                SQLITE PERSISTENCE
-              </span>
-              <span className="text-xs font-mono font-bold text-matrix-green">
-                {health?.database?.connected ? 'CONNECTED' : 'DISCONNECTED'}
-              </span>
-            </div>
-            <div className="text-sm font-mono text-slate-200">
-              Async Aiosqlite ORM
-            </div>
-            <div className="text-xs font-mono text-slate-400 mt-1">
-              Latency: {health?.database?.latency_ms ?? 0} ms
-            </div>
-            <div className="flex items-center gap-1 text-[11px] font-mono text-matrix-amber mt-2">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Deterministic Policy Level 3</span>
-            </div>
-          </div>
+        {/* Hands-Free Mode Selector */}
+        <div className="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-lg border border-slate-800/80 text-xs font-mono">
+          <button
+            onClick={() => onChangeMode && onChangeMode('continuous')}
+            className={`px-2.5 py-1 rounded transition-colors ${
+              handsFreeMode === 'continuous'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold shadow-sm shadow-cyan-500/20'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Continuous conversation: Resumes listening automatically after responding"
+          >
+            Continuous
+          </button>
+          <button
+            onClick={() => onChangeMode && onChangeMode('wake_word_only')}
+            className={`px-2.5 py-1 rounded transition-colors ${
+              handsFreeMode === 'wake_word_only'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Wake-word only: Requires saying 'Matrix' or 'Snap' before every turn"
+          >
+            Wake-Word
+          </button>
+          <button
+            onClick={() => onChangeMode && onChangeMode('privacy_pause')}
+            className={`px-2.5 py-1 rounded transition-colors ${
+              handsFreeMode === 'privacy_pause'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Privacy mode: Microphones completely disarmed"
+          >
+            Pause Mic
+          </button>
         </div>
       </div>
 
-      {/* Quick Launch Directives */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-mono uppercase tracking-wider text-matrix-cyan flex items-center gap-2">
-            <Zap className="w-3.5 h-3.5" />
-            DIRECT COMMAND LAUNCHERS
-          </h2>
-          <span className="text-[11px] font-mono text-slate-500">Verified Subsystem Triggers</span>
+      {/* Main Central Stage: Large Holographic Core */}
+      <div className="relative flex flex-col items-center justify-center my-auto z-10 py-2">
+        {/* Hologram Canvas */}
+        <div className="relative flex items-center justify-center">
+          <MatrixHologram
+            state={hologramState}
+            size={450}
+            className="filter drop-shadow-[0_0_40px_rgba(0,240,255,0.25)]"
+            onClick={onToggleListen}
+          />
+
+          {/* Center Hologram Touch Prompt */}
+          <div className="absolute -bottom-2 text-center pointer-events-none">
+            <span className={`text-[10px] font-mono uppercase tracking-widest px-3 py-1 rounded-full border ${stateMeta.badge}`}>
+              {stateMeta.label}
+            </span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          {[
-            {
-              title: 'Hardware Audit',
-              desc: 'Benchmark CPU & RAM availability',
-              cmd: 'Execute live hardware audit and log telemetry',
-            },
-            {
-              title: 'Inspect Repositories',
-              desc: 'Review 65 starred GitHub repositories',
-              cmd: 'Inspect 65 starred repositories and report integration status',
-            },
-            {
-              title: 'Test PC Control',
-              desc: 'Verify desktop automation boundaries',
-              cmd: 'Test PC automation agent permissions and report',
-            },
-            {
-              title: 'Check Model Status',
-              desc: 'Evaluate Qwen2.5 1.5B Q4 memory profile',
-              cmd: 'Benchmark candidate Qwen2.5 1.5B Q4 local memory footprint',
-            },
-          ].map((item, idx) => (
+        {/* State Description */}
+        <p className="text-xs font-mono text-slate-400 text-center mt-4 max-w-md">
+          {stateMeta.desc}
+        </p>
+
+        {/* Stop Speaking / Interruption Button */}
+        {isSpeaking && onStopSpeaking && (
+          <button
+            onClick={onStopSpeaking}
+            className="mt-3 flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 border border-rose-500/50 text-xs font-mono tracking-wider font-semibold animate-pulse transition-all shadow-lg shadow-rose-950"
+          >
+            <Square className="w-3.5 h-3.5 fill-rose-400" />
+            STOP SPEAKING (INTERRUPT)
+          </button>
+        )}
+
+        {/* Floating Speech HUD (Live Transcripts & JARVIS Answers) */}
+        {(lastTranscript || lastResponse) && (
+          <div className="w-full max-w-2xl mt-5 space-y-2.5 z-20">
+            {lastTranscript && (
+              <div className="bg-slate-900/60 backdrop-blur-md rounded-xl p-3 border border-slate-800/80 shadow-xl flex items-start gap-2.5">
+                <Mic className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <div className="text-[10px] font-mono uppercase text-cyan-400 tracking-wider">User Directive</div>
+                  <div className="text-sm font-medium text-slate-100 mt-0.5">"{lastTranscript}"</div>
+                </div>
+              </div>
+            )}
+
+            {lastResponse && (
+              <div className="bg-slate-950/80 backdrop-blur-md rounded-xl p-3.5 border border-cyan-500/30 shadow-2xl shadow-cyan-950/20 flex items-start gap-2.5">
+                <Sparkles className="w-4 h-4 text-cyan-300 shrink-0 mt-0.5 animate-pulse" />
+                <div className="flex-1">
+                  <div className="text-[10px] font-mono uppercase text-cyan-300 tracking-wider flex items-center justify-between">
+                    <span>MATRIX Spoken Response</span>
+                    <span className="text-slate-500">Offline Qwen2.5</span>
+                  </div>
+                  <div className="text-sm text-slate-200 leading-relaxed mt-1 line-clamp-4">
+                    {lastResponse}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Bar: Quick Directives & System Vitals */}
+      <div className="w-full max-w-4xl flex flex-col items-center gap-3 z-10 pb-1">
+        {/* Quick Suggestion Pills */}
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {quickPrompts.slice(0, 3).map((prompt, idx) => (
             <button
               key={idx}
-              onClick={() => onQuickAction(item.cmd)}
-              className="matrix-glass rounded-lg p-3 text-left hover:border-matrix-cyan/60 hover:bg-slate-900/80 transition-all group relative overflow-hidden"
+              onClick={() => onQuickAction(prompt)}
+              className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400 hover:text-cyan-300 bg-slate-900/60 hover:bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-800/80 hover:border-cyan-500/40 transition-all duration-200"
             >
-              <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-200 group-hover:text-matrix-cyan">
-                <span>{item.title}</span>
-                <ArrowUpRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
-              </div>
-              <p className="text-[11px] font-mono text-slate-400 mt-1 leading-snug">
-                {item.desc}
-              </p>
+              <span>{prompt}</span>
+              <ChevronRight className="w-3 h-3 opacity-60" />
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Active Capabilities Grid */}
-      <div className="matrix-glass rounded-xl p-5 space-y-4">
-        <div className="flex items-center justify-between border-b border-matrix-border/40 pb-3">
-          <h3 className="text-xs font-mono uppercase tracking-wider text-slate-200 flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-matrix-cyan" />
-            INITIALIZED CAPABILITIES & AGENTS
-          </h3>
-          <span className="text-[11px] font-mono text-matrix-cyan">
-            {capabilities.length} Verified Subsystems
+        {/* Minimal Vitals Footprint */}
+        <div className="flex items-center gap-4 text-[10px] font-mono text-slate-500">
+          <span className="flex items-center gap-1">
+            <Cpu className="w-3 h-3 text-cyan-400" />
+            Ryzen 7 5700U ({cpuPercent}%)
           </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {capabilities.map((cap) => (
-            <div
-              key={cap.capability_id}
-              className="p-3 rounded-lg bg-slate-900/50 border border-slate-800 flex flex-col justify-between"
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-semibold text-slate-200">
-                  {cap.name}
-                </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-matrix-cyan/15 text-matrix-cyan uppercase">
-                  {cap.integration_method}
-                </span>
-              </div>
-              <p className="text-[11px] font-mono text-slate-400 mt-1 line-clamp-2">
-                {cap.description}
-              </p>
-              <div className="mt-2 text-[10px] font-mono text-slate-500 truncate">
-                Source: {cap.source_repo ?? 'MATRIX Native'}
-              </div>
-            </div>
-          ))}
+          <span>·</span>
+          <span className="flex items-center gap-1">
+            <Layers className="w-3 h-3 text-blue-400" />
+            RAM: {(ramUsed / 1024).toFixed(1)} / {(ramTotal / 1024).toFixed(1)} GB
+          </span>
+          <span>·</span>
+          <span className="flex items-center gap-1">
+            <Shield className="w-3 h-3 text-emerald-400" />
+            Policy Level 3/4 Active
+          </span>
         </div>
       </div>
     </div>
