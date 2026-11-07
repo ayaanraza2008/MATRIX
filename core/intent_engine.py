@@ -53,7 +53,7 @@ class IntentEngine:
         (r"\b(memory|remember|save\s+.+\s+in\s+memory|store\s+.+\s+in\s+memory|retrieve\s+memory|recall|user\s+preference|favorite\s+\w+)\b", IntentType.MEMORY, "memory", 1),
 
         # 3. Creative & Diagram Blueprints
-        (r"\b(diagram|mermaid|flowchart|architecture\s+diagram|svg|draw\s+architecture|render\s+diagram)\b", IntentType.CREATIVE, "creative", 1),
+        (r"\b(diagram|mermaid|flowchart|architecture\s+diagram|svg|draw\s+architecture|render\s+diagram|diagram\s+of\s+(?:your\s+)?architecture)\b", IntentType.CREATIVE, "creative", 1),
 
         # 4. Coding & AST Structural Analysis
         (r"\b(analyze\s+(?:the\s+)?(?:python\s+)?file|inspect\s+(?:the\s+)?(?:code|file|architecture)|verify\s+syntax|lint|ast|code\s+analysis|coding\s+capability)\b", IntentType.CODING, "coding", 2),
@@ -70,18 +70,18 @@ class IntentEngine:
         (r"\b(data\s+analysis|dataset|tabular|statistics|numerical\s+analysis|analyze\s+csv|calculate\s+stats)\b", IntentType.DATA_ANALYSIS, "data_analysis", 1),
 
         # 8. PC Control / Command
-        (r"\b(open|launch|start|run|close|switch to|maximize|minimize|type|click|press)\b.*\b(notepad|calc|browser|chrome|terminal|cmd|powershell|window|app|code)\b", IntentType.COMMAND, "computer", 1),
-        (r"\b(safe\s+command|run\s+command|execute\s+command|whoami|hostname|ipconfig|systeminfo)\b", IntentType.COMMAND, "computer", 1),
+        (r"\b(open|launch|start|run|close|switch to|maximize|minimize|type|click|press)\b.*\b(notepad|calc|calculator|browser|chrome|terminal|cmd|powershell|window|app|application|code)\b", IntentType.COMMAND, "computer", 1),
+        (r"\b(safe\s+task|perform\s+a\s+safe\s+task|safe\s+command|run\s+command|execute\s+command|whoami|hostname|ipconfig|systeminfo)\b", IntentType.COMMAND, "computer", 1),
         (r"\b(screenshot|capture screen|take a snap)\b", IntentType.COMMAND, "computer", 1),
 
         # 9. File & Document Intelligence
         (r"\b(pdf|docx|xlsx|read document|summarize file|convert format|extract text from file|organize files|find files|personal files|storage files|list\s+files)\b", IntentType.FILES, "files", 1),
 
-        # 8. Vision & Camera
+        # 10. Vision & Camera
         (r"\b(screen|camera|webcam|visible on my screen|what is on my screen|what is currently visible|read this image|ocr|look at this|scan this)\b", IntentType.VISION, "vision", 1),
 
-        # 9. JARVIS Voice
-        (r"\b(speak|say out loud|voice|volume|mute|listen|unmute|talk in hindi|bolna)\b", IntentType.VOICE, "voice", 0),
+        # 11. JARVIS Voice
+        (r"\b(speak|say out loud|voice|volume|mute|listen|unmute|talk in hindi|bolna|continue\s+listening|keep\s+listening)\b", IntentType.VOICE, "voice", 0),
 
         # 10. System Telemetry & Performance
         (r"\b(cpu|ram|memory|specs|hardware|temperature|storage|disk space|usage|system monitor|telemetry|performance|system\s+performance)\b", IntentType.SYSTEM, "system", 0),
