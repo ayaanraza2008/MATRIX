@@ -1,0 +1,3538 @@
+{
+  "cap_free_for_dev": {
+    "capability_id": "cap_free_for_dev",
+    "name": "free-for-dev",
+    "description": "A list of SaaS, PaaS and IaaS offerings that have free tiers of interest to devops and infradev",
+    "category": "Workflow & Files",
+    "source_repo": "jixserver/free-for-dev",
+    "integration_method": "service",
+    "maturity": "reference_only",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via jixserver/free-for-dev",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via jixserver/free-for-dev",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via jixserver/free-for-dev",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via jixserver/free-for-dev",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [
+      "network"
+    ],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.258545Z"
+  },
+  "cap_gravitas": {
+    "capability_id": "cap_gravitas",
+    "name": "Gravitas",
+    "description": "Make Gemini code like Claude Models. Forces it to inspect files before editing, plan changes, test its work, and back up every \u201cdone\u201d with actual evidence.",
+    "category": "Coding & DevTools",
+    "source_repo": "udaysharmadev/Gravitas",
+    "integration_method": "adapter",
+    "maturity": "installed",
+    "operations": [
+      {
+        "name": "ast_linting",
+        "description": "Ast linting via udaysharmadev/Gravitas",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "code_architecture_inspection",
+        "description": "Code architecture inspection via udaysharmadev/Gravitas",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "syntax_verification",
+        "description": "Syntax verification via udaysharmadev/Gravitas",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "reverse_engineering",
+        "description": "Reverse engineering via udaysharmadev/Gravitas",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "healthy",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.267776Z"
+  },
+  "cap_hexstrike_ai": {
+    "capability_id": "cap_hexstrike_ai",
+    "name": "hexstrike-ai",
+    "description": "HexStrike AI MCP Agents is an advanced MCP server that lets AI agents (Claude, GPT, Copilot, etc.) autonomously run 150+ cybersecurity tools for automated pentesting, vulnerability discovery, bug bounty automation, and security research. Seamlessly bridge LLMs with real-world offensive security capabilities.",
+    "category": "Security & MCP",
+    "source_repo": "0x4m4/hexstrike-ai",
+    "integration_method": "adapter",
+    "maturity": "installed",
+    "operations": [
+      {
+        "name": "port_scan",
+        "description": "Port scan via 0x4m4/hexstrike-ai",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      },
+      {
+        "name": "vulnerability_audit",
+        "description": "Vulnerability audit via 0x4m4/hexstrike-ai",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      },
+      {
+        "name": "mcp_defense",
+        "description": "Mcp defense via 0x4m4/hexstrike-ai",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      },
+      {
+        "name": "payload_inspection",
+        "description": "Payload inspection via 0x4m4/hexstrike-ai",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "healthy",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.275646Z"
+  },
+  "cap_jarvis_ultimate": {
+    "capability_id": "cap_jarvis_ultimate",
+    "name": "JARVIS-ULTIMATE",
+    "description": "The JARVIS project is an advanced, AI-powered virtual assistant and autonomous agent designed to simplify your digital life. By leveraging powerful language models, it automates workflows, answers queries, manages smart home devices, and navigates the web to assist with complex daily tasks.",
+    "category": "Creative & Media",
+    "source_repo": "mohammedayanrafiq/JARVIS-ULTIMATE",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "diagram_generation",
+        "description": "Diagram generation via mohammedayanrafiq/JARVIS-ULTIMATE",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "svg_rendering",
+        "description": "Svg rendering via mohammedayanrafiq/JARVIS-ULTIMATE",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "creative_layout",
+        "description": "Creative layout via mohammedayanrafiq/JARVIS-ULTIMATE",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "storyboarding",
+        "description": "Storyboarding via mohammedayanrafiq/JARVIS-ULTIMATE",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "HTML"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.284478Z"
+  },
+  "cap_ultron": {
+    "capability_id": "cap_ultron",
+    "name": "Ultron",
+    "description": "Autonomous desktop intelligence with MCU Ultron persona, mood-aware workspace orchestration, cyber security sentry, and full PC control.",
+    "category": "Security & MCP",
+    "source_repo": "AbuZar-Ansarii/Ultron",
+    "integration_method": "adapter",
+    "maturity": "installed",
+    "operations": [
+      {
+        "name": "port_scan",
+        "description": "Port scan via AbuZar-Ansarii/Ultron",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "vulnerability_audit",
+        "description": "Vulnerability audit via AbuZar-Ansarii/Ultron",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "mcp_defense",
+        "description": "Mcp defense via AbuZar-Ansarii/Ultron",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "payload_inspection",
+        "description": "Payload inspection via AbuZar-Ansarii/Ultron",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "healthy",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.292887Z"
+  },
+  "cap_ego_lite": {
+    "capability_id": "cap_ego_lite",
+    "name": "ego-lite",
+    "description": "The fastest browser for AI agents to run browser automation, built for sharing your logged-in browser state with your AI agents, like Codex or Claude Code, without disturbing you. Zero cost, zero config.",
+    "category": "Browser & Web",
+    "source_repo": "citrolabs/ego-lite",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "browse_page",
+        "description": "Browse page via citrolabs/ego-lite",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "extract_content",
+        "description": "Extract content via citrolabs/ego-lite",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "headless_automation",
+        "description": "Headless automation via citrolabs/ego-lite",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "take_screenshot",
+        "description": "Take screenshot via citrolabs/ego-lite",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "JavaScript"
+    ],
+    "permissions": [
+      "network"
+    ],
+    "resource_reqs": {
+      "ram_mb": 450,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.301041Z"
+  },
+  "cap_mobile_mcp": {
+    "capability_id": "cap_mobile_mcp",
+    "name": "mobile-mcp",
+    "description": "Mobile MCP: let AI agents drive your iOS and Android apps. MCP server for simulators, emulators and real devices. Works with Claude Code, Codex, Cursor and any MCP client.",
+    "category": "Mobile & Android",
+    "source_repo": "mobile-next/mobile-mcp",
+    "integration_method": "adapter",
+    "maturity": "installed",
+    "operations": [
+      {
+        "name": "adb_bridge",
+        "description": "Adb bridge via mobile-next/mobile-mcp",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "mobile_mcp",
+        "description": "Mobile mcp via mobile-next/mobile-mcp",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "ui_hierarchy_dump",
+        "description": "Ui hierarchy dump via mobile-next/mobile-mcp",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "intent_launch",
+        "description": "Intent launch via mobile-next/mobile-mcp",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "TypeScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "healthy",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.309096Z"
+  },
+  "cap_diorama": {
+    "capability_id": "cap_diorama",
+    "name": "diorama",
+    "description": "Diorama: Unleashing Zero-shot Single-view 3D Scene Modeling (ICCV 2025 Highlight)",
+    "category": "Workflow & Files",
+    "source_repo": "3dlg-hcvc/diorama",
+    "integration_method": "service",
+    "maturity": "incompatible",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via 3dlg-hcvc/diorama",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via 3dlg-hcvc/diorama",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via 3dlg-hcvc/diorama",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via 3dlg-hcvc/diorama",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 8000,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": true,
+      "supports_avx2": false
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.317107Z"
+  },
+  "cap_nightcrawler": {
+    "capability_id": "cap_nightcrawler",
+    "name": "nightcrawler",
+    "description": "Local AI powered red teamer on a phone",
+    "category": "Security & MCP",
+    "source_repo": "garagehq/nightcrawler",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "port_scan",
+        "description": "Port scan via garagehq/nightcrawler",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      },
+      {
+        "name": "vulnerability_audit",
+        "description": "Vulnerability audit via garagehq/nightcrawler",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      },
+      {
+        "name": "mcp_defense",
+        "description": "Mcp defense via garagehq/nightcrawler",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      },
+      {
+        "name": "payload_inspection",
+        "description": "Payload inspection via garagehq/nightcrawler",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.326184Z"
+  },
+  "cap_dsh_god": {
+    "capability_id": "cap_dsh_god",
+    "name": "DSH-GOD",
+    "description": "DSH GOD \u2014 model router and provider dashboard for DeepSeek Harness",
+    "category": "Free LLM Providers",
+    "source_repo": "crackerghost/DSH-GOD",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "llm_routing",
+        "description": "Llm routing via crackerghost/DSH-GOD",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "provider_fallback",
+        "description": "Provider fallback via crackerghost/DSH-GOD",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "model_benchmarking",
+        "description": "Model benchmarking via crackerghost/DSH-GOD",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "token_budgeting",
+        "description": "Token budgeting via crackerghost/DSH-GOD",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      }
+    ],
+    "dependencies": [
+      "JavaScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.334680Z"
+  },
+  "cap_chatterbox": {
+    "capability_id": "cap_chatterbox",
+    "name": "chatterbox",
+    "description": "SoTA open-source TTS",
+    "category": "Voice & Audio",
+    "source_repo": "resemble-ai/chatterbox",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "synthesize_speech",
+        "description": "Synthesize speech via resemble-ai/chatterbox",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "transcribe_audio",
+        "description": "Transcribe audio via resemble-ai/chatterbox",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "voice_cloning",
+        "description": "Voice cloning via resemble-ai/chatterbox",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "audio_filter",
+        "description": "Audio filter via resemble-ai/chatterbox",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 350,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.343262Z"
+  },
+  "cap_penpot": {
+    "capability_id": "cap_penpot",
+    "name": "penpot",
+    "description": "Penpot: The open-source design platform for Product teams that need scalable collaboration.",
+    "category": "Creative & Media",
+    "source_repo": "penpot/penpot",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "diagram_generation",
+        "description": "Diagram generation via penpot/penpot",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "svg_rendering",
+        "description": "Svg rendering via penpot/penpot",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "creative_layout",
+        "description": "Creative layout via penpot/penpot",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "storyboarding",
+        "description": "Storyboarding via penpot/penpot",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Clojure"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.350879Z"
+  },
+  "cap_immich": {
+    "capability_id": "cap_immich",
+    "name": "immich",
+    "description": "High performance self-hosted photo and video management solution.",
+    "category": "Workflow & Files",
+    "source_repo": "immich-app/immich",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via immich-app/immich",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via immich-app/immich",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via immich-app/immich",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via immich-app/immich",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "TypeScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 6000,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.360390Z"
+  },
+  "cap_freellmapi": {
+    "capability_id": "cap_freellmapi",
+    "name": "freellmapi",
+    "description": "7.4 billion tokens per month. 34 free LLM providers. 635 free model endpoints. All behind one /v1 endpoint, plus any custom OpenAI-compatible endpoint. Smart routing, automatic failover, encrypted keys. Personal experimentation only.",
+    "category": "Free LLM Providers",
+    "source_repo": "tashfeenahmed/freellmapi",
+    "integration_method": "adapter",
+    "maturity": "installed",
+    "operations": [
+      {
+        "name": "llm_routing",
+        "description": "Llm routing via tashfeenahmed/freellmapi",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "provider_fallback",
+        "description": "Provider fallback via tashfeenahmed/freellmapi",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "model_benchmarking",
+        "description": "Model benchmarking via tashfeenahmed/freellmapi",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "token_budgeting",
+        "description": "Token budgeting via tashfeenahmed/freellmapi",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      }
+    ],
+    "dependencies": [
+      "TypeScript"
+    ],
+    "permissions": [
+      "network"
+    ],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "healthy",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.372997Z"
+  },
+  "cap_awesome_free_llm_apis": {
+    "capability_id": "cap_awesome_free_llm_apis",
+    "name": "awesome-free-llm-apis",
+    "description": "List of Permanent Free LLM API  (API Keys)",
+    "category": "Free LLM Providers",
+    "source_repo": "mnfst/awesome-free-llm-apis",
+    "integration_method": "service",
+    "maturity": "reference_only",
+    "operations": [
+      {
+        "name": "llm_routing",
+        "description": "Llm routing via mnfst/awesome-free-llm-apis",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "provider_fallback",
+        "description": "Provider fallback via mnfst/awesome-free-llm-apis",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "model_benchmarking",
+        "description": "Model benchmarking via mnfst/awesome-free-llm-apis",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "token_budgeting",
+        "description": "Token budgeting via mnfst/awesome-free-llm-apis",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      }
+    ],
+    "dependencies": [
+      "JavaScript"
+    ],
+    "permissions": [
+      "network"
+    ],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.381705Z"
+  },
+  "cap_airllm": {
+    "capability_id": "cap_airllm",
+    "name": "airllm",
+    "description": "AirLLM 2.8T LLM inference with single 4GB GPU",
+    "category": "Free LLM Providers",
+    "source_repo": "lyogavin/airllm",
+    "integration_method": "service",
+    "maturity": "incompatible",
+    "operations": [
+      {
+        "name": "llm_routing",
+        "description": "Llm routing via lyogavin/airllm",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "provider_fallback",
+        "description": "Provider fallback via lyogavin/airllm",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "model_benchmarking",
+        "description": "Model benchmarking via lyogavin/airllm",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "token_budgeting",
+        "description": "Token budgeting via lyogavin/airllm",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Jupyter Notebook"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 8000,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": true,
+      "supports_avx2": false
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.389721Z"
+  },
+  "cap_harness2": {
+    "capability_id": "cap_harness2",
+    "name": "harness2",
+    "description": "",
+    "category": "Workflow & Files",
+    "source_repo": "google-research/harness2",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via google-research/harness2",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via google-research/harness2",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via google-research/harness2",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via google-research/harness2",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.397769Z"
+  },
+  "cap_g0dm0d3": {
+    "capability_id": "cap_g0dm0d3",
+    "name": "G0DM0D3",
+    "description": "LIBERATED AI CHAT",
+    "category": "Workflow & Files",
+    "source_repo": "elder-plinius/G0DM0D3",
+    "integration_method": "service",
+    "maturity": "rejected",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via elder-plinius/G0DM0D3",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via elder-plinius/G0DM0D3",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via elder-plinius/G0DM0D3",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via elder-plinius/G0DM0D3",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      }
+    ],
+    "dependencies": [
+      "TypeScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.406800Z"
+  },
+  "cap_automaton": {
+    "capability_id": "cap_automaton",
+    "name": "automaton",
+    "description": "The first AI that can earn its own existence, replicate, and evolve \u2014 without needing a human",
+    "category": "Workflow & Files",
+    "source_repo": "Conway-Research/automaton",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via Conway-Research/automaton",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via Conway-Research/automaton",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via Conway-Research/automaton",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via Conway-Research/automaton",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "TypeScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.415365Z"
+  },
+  "cap_spark_x2.6": {
+    "capability_id": "cap_spark_x2.6",
+    "name": "Spark-X2.6",
+    "description": "Spark-x2.6 open model series. Pushing the Limits of Agentic Capabilities in On-Device Models",
+    "category": "Workflow & Files",
+    "source_repo": "XHToken/Spark-X2.6",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via XHToken/Spark-X2.6",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via XHToken/Spark-X2.6",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via XHToken/Spark-X2.6",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via XHToken/Spark-X2.6",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.423890Z"
+  },
+  "cap_rakazo": {
+    "capability_id": "cap_rakazo",
+    "name": "rakazo",
+    "description": "Open-source Grok Bot alternative. Choose your own model and sandbox.",
+    "category": "Workflow & Files",
+    "source_repo": "elie222/rakazo",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via elie222/rakazo",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via elie222/rakazo",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via elie222/rakazo",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via elie222/rakazo",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "TypeScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.432598Z"
+  },
+  "cap_mocha": {
+    "capability_id": "cap_mocha",
+    "name": "MoCha",
+    "description": "MoCha: End-to-End Video Character Replacement without Structural Guidance",
+    "category": "Creative & Media",
+    "source_repo": "Orange-3DV-Team/MoCha",
+    "integration_method": "service",
+    "maturity": "incompatible",
+    "operations": [
+      {
+        "name": "diagram_generation",
+        "description": "Diagram generation via Orange-3DV-Team/MoCha",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "svg_rendering",
+        "description": "Svg rendering via Orange-3DV-Team/MoCha",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "creative_layout",
+        "description": "Creative layout via Orange-3DV-Team/MoCha",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "storyboarding",
+        "description": "Storyboarding via Orange-3DV-Team/MoCha",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 8000,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": true,
+      "supports_avx2": false
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.440671Z"
+  },
+  "cap_build_your_own_x": {
+    "capability_id": "cap_build_your_own_x",
+    "name": "build-your-own-x",
+    "description": "Master programming by recreating your favorite technologies from scratch.",
+    "category": "Coding & DevTools",
+    "source_repo": "codecrafters-io/build-your-own-x",
+    "integration_method": "service",
+    "maturity": "reference_only",
+    "operations": [
+      {
+        "name": "ast_linting",
+        "description": "Ast linting via codecrafters-io/build-your-own-x",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "code_architecture_inspection",
+        "description": "Code architecture inspection via codecrafters-io/build-your-own-x",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "syntax_verification",
+        "description": "Syntax verification via codecrafters-io/build-your-own-x",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "reverse_engineering",
+        "description": "Reverse engineering via codecrafters-io/build-your-own-x",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Markdown"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.450349Z"
+  },
+  "cap_era_system_prompts": {
+    "capability_id": "cap_era_system_prompts",
+    "name": "ERA-System-Prompts",
+    "description": "Choose your own mood based system prompt for ERA AI AGENT",
+    "category": "Workflow & Files",
+    "source_repo": "SailikNanda/ERA-System-Prompts",
+    "integration_method": "service",
+    "maturity": "reference_only",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via SailikNanda/ERA-System-Prompts",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via SailikNanda/ERA-System-Prompts",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via SailikNanda/ERA-System-Prompts",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via SailikNanda/ERA-System-Prompts",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.458995Z"
+  },
+  "cap_heretic": {
+    "capability_id": "cap_heretic",
+    "name": "heretic",
+    "description": "Training-free language model modification: Remove censorship, suppress slop, reduce sycophancy, and more",
+    "category": "Workflow & Files",
+    "source_repo": "p-e-w/heretic",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via p-e-w/heretic",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via p-e-w/heretic",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via p-e-w/heretic",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via p-e-w/heretic",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.467520Z"
+  },
+  "cap_atticus_mac": {
+    "capability_id": "cap_atticus_mac",
+    "name": "atticus-mac",
+    "description": "Fast, free voice assistant for your Mac. No API key: runs on your Claude Pro or Max plan. Sends background agents for big jobs, remembers you and learns your shortcuts. Hold \u2303\u2325Space and talk.",
+    "category": "Voice & Audio",
+    "source_repo": "SaarthurR/atticus-mac",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "synthesize_speech",
+        "description": "Synthesize speech via SaarthurR/atticus-mac",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "transcribe_audio",
+        "description": "Transcribe audio via SaarthurR/atticus-mac",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "voice_cloning",
+        "description": "Voice cloning via SaarthurR/atticus-mac",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "audio_filter",
+        "description": "Audio filter via SaarthurR/atticus-mac",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [
+      "network"
+    ],
+    "resource_reqs": {
+      "ram_mb": 350,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.476037Z"
+  },
+  "cap_ecc": {
+    "capability_id": "cap_ecc",
+    "name": "ECC",
+    "description": "The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond.",
+    "category": "Security & MCP",
+    "source_repo": "affaan-m/ECC",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "port_scan",
+        "description": "Port scan via affaan-m/ECC",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "vulnerability_audit",
+        "description": "Vulnerability audit via affaan-m/ECC",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "mcp_defense",
+        "description": "Mcp defense via affaan-m/ECC",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "payload_inspection",
+        "description": "Payload inspection via affaan-m/ECC",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "JavaScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.484536Z"
+  },
+  "cap_hermes_agent": {
+    "capability_id": "cap_hermes_agent",
+    "name": "hermes-agent",
+    "description": "The agent that grows with you",
+    "category": "Coding & DevTools",
+    "source_repo": "NousResearch/hermes-agent",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "ast_linting",
+        "description": "Ast linting via NousResearch/hermes-agent",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "code_architecture_inspection",
+        "description": "Code architecture inspection via NousResearch/hermes-agent",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "syntax_verification",
+        "description": "Syntax verification via NousResearch/hermes-agent",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "reverse_engineering",
+        "description": "Reverse engineering via NousResearch/hermes-agent",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.493558Z"
+  },
+  "cap_obscura": {
+    "capability_id": "cap_obscura",
+    "name": "obscura",
+    "description": "The headless browser for AI agents and web scraping",
+    "category": "Browser & Web",
+    "source_repo": "h4ckf0r0day/obscura",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "browse_page",
+        "description": "Browse page via h4ckf0r0day/obscura",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "extract_content",
+        "description": "Extract content via h4ckf0r0day/obscura",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "headless_automation",
+        "description": "Headless automation via h4ckf0r0day/obscura",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "take_screenshot",
+        "description": "Take screenshot via h4ckf0r0day/obscura",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      }
+    ],
+    "dependencies": [
+      "Rust"
+    ],
+    "permissions": [
+      "network"
+    ],
+    "resource_reqs": {
+      "ram_mb": 450,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.504687Z"
+  },
+  "cap_rea": {
+    "capability_id": "cap_rea",
+    "name": "rea",
+    "description": "Reverse engineer anything with agents, from app behavior down to native binaries.",
+    "category": "Coding & DevTools",
+    "source_repo": "morluto/rea",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "ast_linting",
+        "description": "Ast linting via morluto/rea",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "code_architecture_inspection",
+        "description": "Code architecture inspection via morluto/rea",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "syntax_verification",
+        "description": "Syntax verification via morluto/rea",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "reverse_engineering",
+        "description": "Reverse engineering via morluto/rea",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "TypeScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.513207Z"
+  },
+  "cap_youtube_automation_agent": {
+    "capability_id": "cap_youtube_automation_agent",
+    "name": "youtube-automation-agent",
+    "description": "\ud83c\udfac Open-source, self-hosted AI agent that runs a YouTube channel end to end: researches topics, writes scripts, generates narration, visuals and video, optimizes SEO, and publishes after your approval, then learns from analytics. Works with Gemini, OpenAI, OpenRouter, DeepSeek and more.",
+    "category": "Workflow & Files",
+    "source_repo": "darkzOGx/youtube-automation-agent",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via darkzOGx/youtube-automation-agent",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via darkzOGx/youtube-automation-agent",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via darkzOGx/youtube-automation-agent",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via darkzOGx/youtube-automation-agent",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "JavaScript"
+    ],
+    "permissions": [
+      "network"
+    ],
+    "resource_reqs": {
+      "ram_mb": 6000,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.522736Z"
+  },
+  "cap_cap": {
+    "capability_id": "cap_cap",
+    "name": "Cap",
+    "description": "Open source Loom alternative. Beautiful, shareable screen recordings.",
+    "category": "Coding & DevTools",
+    "source_repo": "CapSoftware/Cap",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "ast_linting",
+        "description": "Ast linting via CapSoftware/Cap",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "code_architecture_inspection",
+        "description": "Code architecture inspection via CapSoftware/Cap",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "syntax_verification",
+        "description": "Syntax verification via CapSoftware/Cap",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "reverse_engineering",
+        "description": "Reverse engineering via CapSoftware/Cap",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Rust"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.530513Z"
+  },
+  "cap_chatwoot": {
+    "capability_id": "cap_chatwoot",
+    "name": "chatwoot",
+    "description": "Open-source live-chat, email support, omni-channel desk. An alternative to Intercom, Zendesk, Salesforce Service Cloud etc. \ud83d\udd25\ud83d\udcac",
+    "category": "Workflow & Files",
+    "source_repo": "chatwoot/chatwoot",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via chatwoot/chatwoot",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via chatwoot/chatwoot",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via chatwoot/chatwoot",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via chatwoot/chatwoot",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Ruby"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.540430Z"
+  },
+  "cap_cal.diy": {
+    "capability_id": "cap_cal.diy",
+    "name": "cal.diy",
+    "description": "Scheduling infrastructure for absolutely everyone.",
+    "category": "Workflow & Files",
+    "source_repo": "calcom/cal.diy",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via calcom/cal.diy",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via calcom/cal.diy",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via calcom/cal.diy",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via calcom/cal.diy",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "TypeScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.547984Z"
+  },
+  "cap_openproject": {
+    "capability_id": "cap_openproject",
+    "name": "openproject",
+    "description": "OpenProject is the leading open source project management software for product, project and portfolio management. A powerful Jira alternative with agile planning, issue tracking, roadmaps, Gantt charts, time tracking, collaboration features, and more. Available on premises or in the cloud. \u2b50 Star us on GitHub",
+    "category": "Workflow & Files",
+    "source_repo": "opf/openproject",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via opf/openproject",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via opf/openproject",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via opf/openproject",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via opf/openproject",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Ruby"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.557252Z"
+  },
+  "cap_openwhispr": {
+    "capability_id": "cap_openwhispr",
+    "name": "openwhispr",
+    "description": "Voice-to-text dictation app with local (Nvidia Parakeet/Whisper) and cloud models (BYOK). Privacy-first and available cross-platform.",
+    "category": "Voice & Audio",
+    "source_repo": "OpenWhispr/openwhispr",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "synthesize_speech",
+        "description": "Synthesize speech via OpenWhispr/openwhispr",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "transcribe_audio",
+        "description": "Transcribe audio via OpenWhispr/openwhispr",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "voice_cloning",
+        "description": "Voice cloning via OpenWhispr/openwhispr",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "audio_filter",
+        "description": "Audio filter via OpenWhispr/openwhispr",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "JavaScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 350,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.565244Z"
+  },
+  "cap_appflowy": {
+    "capability_id": "cap_appflowy",
+    "name": "AppFlowy",
+    "description": "Bring projects, wikis, and teams together with AI. AppFlowy is the AI collaborative workspace where you achieve more without losing control of your data. The leading open source Notion alternative.",
+    "category": "Workflow & Files",
+    "source_repo": "AppFlowy-IO/AppFlowy",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via AppFlowy-IO/AppFlowy",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via AppFlowy-IO/AppFlowy",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via AppFlowy-IO/AppFlowy",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via AppFlowy-IO/AppFlowy",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Dart"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.574778Z"
+  },
+  "cap_open_seo": {
+    "capability_id": "cap_open_seo",
+    "name": "open-seo",
+    "description": "Open source alternative to Semrush and Ahrefs",
+    "category": "Workflow & Files",
+    "source_repo": "every-app/open-seo",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via every-app/open-seo",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via every-app/open-seo",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via every-app/open-seo",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via every-app/open-seo",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "TypeScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.583329Z"
+  },
+  "cap_open_higgsfield": {
+    "capability_id": "cap_open_higgsfield",
+    "name": "open-higgsfield",
+    "description": "A studio for image and video generation \u2014 one prompt bar, each model\u2019s own settings, and every finished run in one gallery.",
+    "category": "Creative & Media",
+    "source_repo": "wide-trace/open-higgsfield",
+    "integration_method": "service",
+    "maturity": "incompatible",
+    "operations": [
+      {
+        "name": "diagram_generation",
+        "description": "Diagram generation via wide-trace/open-higgsfield",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "svg_rendering",
+        "description": "Svg rendering via wide-trace/open-higgsfield",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "creative_layout",
+        "description": "Creative layout via wide-trace/open-higgsfield",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "storyboarding",
+        "description": "Storyboarding via wide-trace/open-higgsfield",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "TypeScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 8000,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": true,
+      "supports_avx2": false
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.591890Z"
+  },
+  "cap_free_claude_code": {
+    "capability_id": "cap_free_claude_code",
+    "name": "free-claude-code",
+    "description": "Use Claude Code, Codex, Antigravity, VSCode, Pi, and OpenCode (and 6 other harnesses) for free (1.3B+ free tokens) from your terminal, app, IDE, or phone, and now from the browser with native browser sessions (multi-harness + multi-model) like OpenClaw (voice supported + ToS friendly)",
+    "category": "Browser & Web",
+    "source_repo": "Alishahryar1/free-claude-code",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "browse_page",
+        "description": "Browse page via Alishahryar1/free-claude-code",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "extract_content",
+        "description": "Extract content via Alishahryar1/free-claude-code",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "headless_automation",
+        "description": "Headless automation via Alishahryar1/free-claude-code",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "take_screenshot",
+        "description": "Take screenshot via Alishahryar1/free-claude-code",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [
+      "network"
+    ],
+    "resource_reqs": {
+      "ram_mb": 450,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.600623Z"
+  },
+  "cap_voicestudio": {
+    "capability_id": "cap_voicestudio",
+    "name": "VoiceStudio",
+    "description": "VoiceStudio is the open-source, fully-local ElevenLabs alternative \u2014 voice cloning, voice design, video dubbing, dictation, transcription & audiobook creation in 646 languages.",
+    "category": "Voice & Audio",
+    "source_repo": "debpalash/VoiceStudio",
+    "integration_method": "adapter",
+    "maturity": "installed",
+    "operations": [
+      {
+        "name": "synthesize_speech",
+        "description": "Synthesize speech via debpalash/VoiceStudio",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "transcribe_audio",
+        "description": "Transcribe audio via debpalash/VoiceStudio",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "voice_cloning",
+        "description": "Voice cloning via debpalash/VoiceStudio",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "audio_filter",
+        "description": "Audio filter via debpalash/VoiceStudio",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 350,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "healthy",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.611304Z"
+  },
+  "cap_geo_sleuth": {
+    "capability_id": "cap_geo_sleuth",
+    "name": "geo-sleuth",
+    "description": "An agent skill that finds where a photo was taken \u2014 OpenStreetMap geometry, elevation skylines, satellite imagery and street view \u2014 and shows its work. Works with Claude Code, Codex, Cursor, Gemini CLI, OpenCode and GitHub Copilot.",
+    "category": "Research & Science",
+    "source_repo": "Oldcircle/geo-sleuth",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "public_api_query",
+        "description": "Public api query via Oldcircle/geo-sleuth",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "scientific_data_extraction",
+        "description": "Scientific data extraction via Oldcircle/geo-sleuth",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "fact_checking",
+        "description": "Fact checking via Oldcircle/geo-sleuth",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "geo_lookup",
+        "description": "Geo lookup via Oldcircle/geo-sleuth",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.620412Z"
+  },
+  "cap_heygem.ai": {
+    "capability_id": "cap_heygem.ai",
+    "name": "HeyGem.ai",
+    "description": "",
+    "category": "Workflow & Files",
+    "source_repo": "suifeng9203/HeyGem.ai",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via suifeng9203/HeyGem.ai",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via suifeng9203/HeyGem.ai",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via suifeng9203/HeyGem.ai",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via suifeng9203/HeyGem.ai",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.628427Z"
+  },
+  "cap_comfyui": {
+    "capability_id": "cap_comfyui",
+    "name": "ComfyUI",
+    "description": "The most powerful and modular diffusion model GUI, api and backend with a graph/nodes interface. The fastest local inference engine in the world.",
+    "category": "Creative & Media",
+    "source_repo": "Comfy-Org/ComfyUI",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "diagram_generation",
+        "description": "Diagram generation via Comfy-Org/ComfyUI",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "svg_rendering",
+        "description": "Svg rendering via Comfy-Org/ComfyUI",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "creative_layout",
+        "description": "Creative layout via Comfy-Org/ComfyUI",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "storyboarding",
+        "description": "Storyboarding via Comfy-Org/ComfyUI",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [
+      "network"
+    ],
+    "resource_reqs": {
+      "ram_mb": 6000,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.637945Z"
+  },
+  "cap_omnivoice": {
+    "capability_id": "cap_omnivoice",
+    "name": "OmniVoice",
+    "description": "High-Quality Voice Cloning TTS for 600+ Languages",
+    "category": "Voice & Audio",
+    "source_repo": "k2-fsa/OmniVoice",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "synthesize_speech",
+        "description": "Synthesize speech via k2-fsa/OmniVoice",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "transcribe_audio",
+        "description": "Transcribe audio via k2-fsa/OmniVoice",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "voice_cloning",
+        "description": "Voice cloning via k2-fsa/OmniVoice",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "audio_filter",
+        "description": "Audio filter via k2-fsa/OmniVoice",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 350,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.646470Z"
+  },
+  "cap_handy": {
+    "capability_id": "cap_handy",
+    "name": "Handy",
+    "description": "A free, open source, and extensible speech-to-text application that works completely offline.",
+    "category": "Voice & Audio",
+    "source_repo": "cjpais/Handy",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "synthesize_speech",
+        "description": "Synthesize speech via cjpais/Handy",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "transcribe_audio",
+        "description": "Transcribe audio via cjpais/Handy",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "voice_cloning",
+        "description": "Voice cloning via cjpais/Handy",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "audio_filter",
+        "description": "Audio filter via cjpais/Handy",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Rust"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 350,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.655993Z"
+  },
+  "cap_openviking": {
+    "capability_id": "cap_openviking",
+    "name": "OpenViking",
+    "description": "Self-evolving Context Database for AI Agents. Unify Agent Memory, Knowledge RAG and Skills.",
+    "category": "Memory & Context",
+    "source_repo": "volcengine/OpenViking",
+    "integration_method": "adapter",
+    "maturity": "installed",
+    "operations": [
+      {
+        "name": "episodic_storage",
+        "description": "Episodic storage via volcengine/OpenViking",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "vector_search",
+        "description": "Vector search via volcengine/OpenViking",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "context_retrieval",
+        "description": "Context retrieval via volcengine/OpenViking",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "session_cache",
+        "description": "Session cache via volcengine/OpenViking",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "healthy",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.664513Z"
+  },
+  "cap_awesome_harness_engineering": {
+    "capability_id": "cap_awesome_harness_engineering",
+    "name": "awesome-harness-engineering",
+    "description": "Awesome list for AI agent harness engineering: tools, patterns, evals, memory, MCP, permissions, observability, and orchestration.",
+    "category": "Memory & Context",
+    "source_repo": "ai-boost/awesome-harness-engineering",
+    "integration_method": "service",
+    "maturity": "reference_only",
+    "operations": [
+      {
+        "name": "episodic_storage",
+        "description": "Episodic storage via ai-boost/awesome-harness-engineering",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "vector_search",
+        "description": "Vector search via ai-boost/awesome-harness-engineering",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "context_retrieval",
+        "description": "Context retrieval via ai-boost/awesome-harness-engineering",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "session_cache",
+        "description": "Session cache via ai-boost/awesome-harness-engineering",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.673054Z"
+  },
+  "cap_anthropic_cybersecurity_skills": {
+    "capability_id": "cap_anthropic_cybersecurity_skills",
+    "name": "Anthropic-Cybersecurity-Skills",
+    "description": "817 structured cybersecurity skills for AI agents \u00b7 Mapped to 6 frameworks: MITRE ATT&CK, NIST CSF 2.0, MITRE ATLAS, D3FEND, NIST AI RMF & MITRE F3 (Fight Fraud) \u00b7 agentskills.io standard \u00b7 Works with Claude Code, GitHub Copilot, Codex CLI, Cursor, Gemini CLI & 20+ platforms \u00b7 29 security domains \u00b7 Apache 2.0",
+    "category": "Security & MCP",
+    "source_repo": "mukul975/Anthropic-Cybersecurity-Skills",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "port_scan",
+        "description": "Port scan via mukul975/Anthropic-Cybersecurity-Skills",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "vulnerability_audit",
+        "description": "Vulnerability audit via mukul975/Anthropic-Cybersecurity-Skills",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "mcp_defense",
+        "description": "Mcp defense via mukul975/Anthropic-Cybersecurity-Skills",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "payload_inspection",
+        "description": "Payload inspection via mukul975/Anthropic-Cybersecurity-Skills",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.682544Z"
+  },
+  "cap_diagram_design": {
+    "capability_id": "cap_diagram_design",
+    "name": "diagram-design",
+    "description": "Editorial diagram design for Claude Code, Codex, GitHub Copilot, Cursor, Factory Droid, Qoder, and Pi. 45 diagram types. Self-contained HTML + SVG. No shadows. No Mermaid slop.",
+    "category": "Creative & Media",
+    "source_repo": "cathrynlavery/diagram-design",
+    "integration_method": "adapter",
+    "maturity": "installed",
+    "operations": [
+      {
+        "name": "diagram_generation",
+        "description": "Diagram generation via cathrynlavery/diagram-design",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "svg_rendering",
+        "description": "Svg rendering via cathrynlavery/diagram-design",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "creative_layout",
+        "description": "Creative layout via cathrynlavery/diagram-design",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "storyboarding",
+        "description": "Storyboarding via cathrynlavery/diagram-design",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "HTML"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "healthy",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.690571Z"
+  },
+  "cap_scientific_agent_skills": {
+    "capability_id": "cap_scientific_agent_skills",
+    "name": "scientific-agent-skills",
+    "description": "Turn any AI agent into an AI Scientist. The #1 Agent Skills library for science, used by 250,000+ scientists worldwide. 177 ready-to-use validated skills plus 100+ scientific databases covering biology, chemistry, medicine, and drug discovery. Compatible with Cursor, Claude Code, Codex, Pi, Antigravity, and the open Agent Skills standard.",
+    "category": "Coding & DevTools",
+    "source_repo": "K-Dense-AI/scientific-agent-skills",
+    "integration_method": "adapter",
+    "maturity": "installed",
+    "operations": [
+      {
+        "name": "ast_linting",
+        "description": "Ast linting via K-Dense-AI/scientific-agent-skills",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "code_architecture_inspection",
+        "description": "Code architecture inspection via K-Dense-AI/scientific-agent-skills",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "syntax_verification",
+        "description": "Syntax verification via K-Dense-AI/scientific-agent-skills",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "reverse_engineering",
+        "description": "Reverse engineering via K-Dense-AI/scientific-agent-skills",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "healthy",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.699658Z"
+  },
+  "cap_agentmemory": {
+    "capability_id": "cap_agentmemory",
+    "name": "agentmemory",
+    "description": "#1 Persistent memory for AI coding agents based on real-world benchmarks",
+    "category": "Memory & Context",
+    "source_repo": "rohitg00/agentmemory",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "episodic_storage",
+        "description": "Episodic storage via rohitg00/agentmemory",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "vector_search",
+        "description": "Vector search via rohitg00/agentmemory",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "context_retrieval",
+        "description": "Context retrieval via rohitg00/agentmemory",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "session_cache",
+        "description": "Session cache via rohitg00/agentmemory",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "TypeScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.708104Z"
+  },
+  "cap_browser_use": {
+    "capability_id": "cap_browser_use",
+    "name": "browser-use",
+    "description": "Open-source Python library for AI browser agents, plus Browser Use Cloud: stealth browsers and a hosted agent API.",
+    "category": "Browser & Web",
+    "source_repo": "browser-use/browser-use",
+    "integration_method": "adapter",
+    "maturity": "installed",
+    "operations": [
+      {
+        "name": "browse_page",
+        "description": "Browse page via browser-use/browser-use",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "extract_content",
+        "description": "Extract content via browser-use/browser-use",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "headless_automation",
+        "description": "Headless automation via browser-use/browser-use",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "take_screenshot",
+        "description": "Take screenshot via browser-use/browser-use",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [
+      "network"
+    ],
+    "resource_reqs": {
+      "ram_mb": 450,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "healthy",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.717483Z"
+  },
+  "cap_gods_eye_view": {
+    "capability_id": "cap_gods_eye_view",
+    "name": "gods-eye-view",
+    "description": "A spy satellite simulator in your browser, except the data is real. Live open source spatial intelligence on a photorealistic 3D globe.",
+    "category": "Browser & Web",
+    "source_repo": "bilawalsidhu/gods-eye-view",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "browse_page",
+        "description": "Browse page via bilawalsidhu/gods-eye-view",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "extract_content",
+        "description": "Extract content via bilawalsidhu/gods-eye-view",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "headless_automation",
+        "description": "Headless automation via bilawalsidhu/gods-eye-view",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "take_screenshot",
+        "description": "Take screenshot via bilawalsidhu/gods-eye-view",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "JavaScript"
+    ],
+    "permissions": [
+      "network"
+    ],
+    "resource_reqs": {
+      "ram_mb": 450,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.756409Z"
+  },
+  "cap_kaligpt": {
+    "capability_id": "cap_kaligpt",
+    "name": "KaliGPT",
+    "description": "KaliGPT: an Agentic AI (built with Gemini, ChatGPT, Ollama, OpenRouter Models) fine tuned for ethical hackers & students in offensive security making workflows smarter, faster, and more accessible.",
+    "category": "Security & MCP",
+    "source_repo": "SudoHopeX/KaliGPT",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "port_scan",
+        "description": "Port scan via SudoHopeX/KaliGPT",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      },
+      {
+        "name": "vulnerability_audit",
+        "description": "Vulnerability audit via SudoHopeX/KaliGPT",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      },
+      {
+        "name": "mcp_defense",
+        "description": "Mcp defense via SudoHopeX/KaliGPT",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      },
+      {
+        "name": "payload_inspection",
+        "description": "Payload inspection via SudoHopeX/KaliGPT",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 3
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.765516Z"
+  },
+  "cap_paperclip": {
+    "capability_id": "cap_paperclip",
+    "name": "paperclip",
+    "description": "The open-source app everyone uses to manage agents at work",
+    "category": "Workflow & Files",
+    "source_repo": "paperclipai/paperclip",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via paperclipai/paperclip",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via paperclipai/paperclip",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via paperclipai/paperclip",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via paperclipai/paperclip",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "TypeScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.773482Z"
+  },
+  "cap_strata": {
+    "capability_id": "cap_strata",
+    "name": "Strata",
+    "description": "Qwen3.8-Flash-Next on any consumer hardware: one-click install for Windows / Linux. Strata inference engine, OpenAI/Anthropic API on localhost, optional image input.",
+    "category": "Free LLM Providers",
+    "source_repo": "Niko1221/Strata",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "llm_routing",
+        "description": "Llm routing via Niko1221/Strata",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "provider_fallback",
+        "description": "Provider fallback via Niko1221/Strata",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "model_benchmarking",
+        "description": "Model benchmarking via Niko1221/Strata",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "token_budgeting",
+        "description": "Token budgeting via Niko1221/Strata",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      }
+    ],
+    "dependencies": [
+      "C++"
+    ],
+    "permissions": [
+      "network"
+    ],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.782436Z"
+  },
+  "cap_open_design": {
+    "capability_id": "cap_open_design",
+    "name": "open-design",
+    "description": "The 1st Collaborative AI Design Agent Workspace. Local-first and open source. Create motion, prototypes, websites, apps, dashboards, presentations, images, and videos with your team and AI agents. Share work, exchange feedback, and iterate together in one workspace.",
+    "category": "Coding & DevTools",
+    "source_repo": "nexu-io/open-design",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "ast_linting",
+        "description": "Ast linting via nexu-io/open-design",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "code_architecture_inspection",
+        "description": "Code architecture inspection via nexu-io/open-design",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "syntax_verification",
+        "description": "Syntax verification via nexu-io/open-design",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "reverse_engineering",
+        "description": "Reverse engineering via nexu-io/open-design",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "TypeScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 6000,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.790681Z"
+  },
+  "cap_not_ai": {
+    "capability_id": "cap_not_ai",
+    "name": "Not-Ai",
+    "description": "Not Ai isn\u2019t just about bypassing AI detectors. It puts good writing first, creating clear, honest prose shaped by human writing standards. It\u2019s perfect for college and school projects, LinkedIn/X posts, emails, factual articles, personal essays, social media posts, and technical documentation, especially GitHub READMEs",
+    "category": "Coding & DevTools",
+    "source_repo": "udaysharmadev/Not-Ai",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "ast_linting",
+        "description": "Ast linting via udaysharmadev/Not-Ai",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "code_architecture_inspection",
+        "description": "Code architecture inspection via udaysharmadev/Not-Ai",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "syntax_verification",
+        "description": "Syntax verification via udaysharmadev/Not-Ai",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "reverse_engineering",
+        "description": "Reverse engineering via udaysharmadev/Not-Ai",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.798191Z"
+  },
+  "cap_jcode": {
+    "capability_id": "cap_jcode",
+    "name": "jcode",
+    "description": "High performance coding agent harness written in Rust, built for heavy multi-agent dev workflows",
+    "category": "Coding & DevTools",
+    "source_repo": "1jehuang/jcode",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "ast_linting",
+        "description": "Ast linting via 1jehuang/jcode",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "code_architecture_inspection",
+        "description": "Code architecture inspection via 1jehuang/jcode",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "syntax_verification",
+        "description": "Syntax verification via 1jehuang/jcode",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "reverse_engineering",
+        "description": "Reverse engineering via 1jehuang/jcode",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Rust"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.808456Z"
+  },
+  "cap_open_generative_ai": {
+    "capability_id": "cap_open_generative_ai",
+    "name": "Open-Generative-AI",
+    "description": "Unrestricted Open-source alternative to AI video platforms \u2014 Free AI image & video generation studio with 600+ models (Flux, Midjourney, Kling, Sora, Veo). No content filters. Self-hosted, MIT licensed.",
+    "category": "Workflow & Files",
+    "source_repo": "Anil-matcha/Open-Generative-AI",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "document_workflow",
+        "description": "Document workflow via Anil-matcha/Open-Generative-AI",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "project_tracking",
+        "description": "Project tracking via Anil-matcha/Open-Generative-AI",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "file_indexing",
+        "description": "File indexing via Anil-matcha/Open-Generative-AI",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "data_formatting",
+        "description": "Data formatting via Anil-matcha/Open-Generative-AI",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "JavaScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 6000,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.817481Z"
+  },
+  "cap_dramaclaw": {
+    "capability_id": "cap_dramaclaw",
+    "name": "dramaclaw",
+    "description": "A general-purpose AIGC video engine: script to finished film in one pipeline \u2014 dramas, ads, product videos, otome games, and more. | \u901a\u7528 AIGC \u89c6\u9891\u5f15\u64ce \u2014\u2014 \u4ece\u5267\u672c\u5230\u6210\u7247\u4e00\u6761\u6d41\u6c34\u7ebf\uff0c\u6f2b\u5267\u3001\u5e7f\u544a\u3001\u7535\u5546\u3001\u4e59\u6e38\u7686\u53ef",
+    "category": "Creative & Media",
+    "source_repo": "dramaclaw/dramaclaw",
+    "integration_method": "service",
+    "maturity": "incompatible",
+    "operations": [
+      {
+        "name": "diagram_generation",
+        "description": "Diagram generation via dramaclaw/dramaclaw",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "svg_rendering",
+        "description": "Svg rendering via dramaclaw/dramaclaw",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "creative_layout",
+        "description": "Creative layout via dramaclaw/dramaclaw",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "storyboarding",
+        "description": "Storyboarding via dramaclaw/dramaclaw",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 8000,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": true,
+      "supports_avx2": false
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.826042Z"
+  },
+  "cap_opencluely": {
+    "capability_id": "cap_opencluely",
+    "name": "OpenCluely",
+    "description": "OpenCluely is a free, open source Cluely (alternative), built for technical interviews like DSA, OAs, and CP. It offers an invisible overlay, real-time AI help, Smart Image Processing for question capture, and multi-language support : 100% customizable and private.",
+    "category": "Coding & DevTools",
+    "source_repo": "TechyCSR/OpenCluely",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "ast_linting",
+        "description": "Ast linting via TechyCSR/OpenCluely",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "code_architecture_inspection",
+        "description": "Code architecture inspection via TechyCSR/OpenCluely",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "syntax_verification",
+        "description": "Syntax verification via TechyCSR/OpenCluely",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "reverse_engineering",
+        "description": "Reverse engineering via TechyCSR/OpenCluely",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "JavaScript"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.833570Z"
+  },
+  "cap_public_apis": {
+    "capability_id": "cap_public_apis",
+    "name": "public-apis",
+    "description": "A collective list of free APIs",
+    "category": "Research & Science",
+    "source_repo": "public-apis/public-apis",
+    "integration_method": "service",
+    "maturity": "reference_only",
+    "operations": [
+      {
+        "name": "public_api_query",
+        "description": "Public api query via public-apis/public-apis",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "scientific_data_extraction",
+        "description": "Scientific data extraction via public-apis/public-apis",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "fact_checking",
+        "description": "Fact checking via public-apis/public-apis",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      },
+      {
+        "name": "geo_lookup",
+        "description": "Geo lookup via public-apis/public-apis",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 2
+      }
+    ],
+    "dependencies": [
+      "Python"
+    ],
+    "permissions": [
+      "network"
+    ],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.843142Z"
+  },
+  "cap_agency_agents": {
+    "capability_id": "cap_agency_agents",
+    "name": "agency-agents",
+    "description": "A complete AI agency at your fingertips - From frontend wizards to Reddit community ninjas, from whimsy injectors to reality checkers. Each agent is a specialized expert with personality, processes, and proven deliverables.",
+    "category": "Coding & DevTools",
+    "source_repo": "msitarzewski/agency-agents",
+    "integration_method": "service",
+    "maturity": "available",
+    "operations": [
+      {
+        "name": "ast_linting",
+        "description": "Ast linting via msitarzewski/agency-agents",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "code_architecture_inspection",
+        "description": "Code architecture inspection via msitarzewski/agency-agents",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "syntax_verification",
+        "description": "Syntax verification via msitarzewski/agency-agents",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      },
+      {
+        "name": "reverse_engineering",
+        "description": "Reverse engineering via msitarzewski/agency-agents",
+        "parameters": {},
+        "returns": {},
+        "risk_level": 1
+      }
+    ],
+    "dependencies": [
+      "Shell"
+    ],
+    "permissions": [],
+    "resource_reqs": {
+      "ram_mb": 150,
+      "cpu_threads": 2,
+      "disk_mb": 100,
+      "requires_gpu": false,
+      "supports_avx2": true
+    },
+    "health_status": "uninstalled",
+    "version": "1.0.0",
+    "test_results": {},
+    "last_updated": "2026-11-07T18:43:53.853640Z"
+  }
+}

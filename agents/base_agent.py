@@ -39,6 +39,32 @@ class BaseAgent(ABC):
             return False
         return True
 
+    async def execute_tool_adapter(
+        self,
+        adapter_id: str,
+        operation: str,
+        parameters: Dict[str, Any],
+        is_user_confirmed: bool = False
+    ) -> AgentResult:
+        """Execute an operation through a repository tool adapter with verified results."""
+        from core.tool_adapters.manager import adapter_manager
+        start_time = datetime.now(timezone.utc)
+        res = await adapter_manager.execute(
+            adapter_id=adapter_id,
+            operation=operation,
+            parameters=parameters,
+            is_user_confirmed=is_user_confirmed
+        )
+        return AgentResult(
+            success=res.success,
+            agent_name=self.name,
+            action_taken=f"{adapter_id}:{operation}",
+            data=res.data,
+            verification=res.verification,
+            error=res.error,
+            execution_time_ms=res.execution_time_ms
+        )
+
     @abstractmethod
     async def execute(self, action: str, parameters: Dict[str, Any]) -> AgentResult:
         """Execute the requested tool action."""

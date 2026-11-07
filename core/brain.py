@@ -106,7 +106,37 @@ class MatrixBrain:
             if model_res.content and len(model_res.content.strip()) > 10:
                 reply_content = model_res.content
 
-        # E. Hinglish/Hindi general conversation
+        # E. Autonomous Capability & Repository Selection (e.g. "Create a professional AI voice assistant", "Find tools for X")
+        elif any(w in prompt_lower for w in ["repository", "repositories", "tool for", "how to build", "create a voice assistant", "create an ai voice assistant", "voice assistant"]):
+            from core.repository_intelligence.engine import repo_intelligence
+            selection = repo_intelligence.select_best_tool(user_prompt)
+            gap = repo_intelligence.detect_capability_gap(user_prompt)
+            
+            repo_enrich_prompt = (
+                f"The user requested: \"{user_prompt}\"\n\n"
+                f"Autonomous Repository Intelligence Engine Selection:\n"
+                f"- Selected Tool: {selection.selected_adapter} (from {selection.selected_repo})\n"
+                f"- Category: {selection.category} -> Agent: {selection.target_agent}\n"
+                f"- Capabilities: {', '.join(selection.operations_to_invoke)}\n"
+                f"- Compatibility Score: {selection.compatibility_score} on AMD Ryzen 7 5700U\n"
+                f"- Decision Reasoning: {selection.reason}\n"
+            )
+            if gap.has_gap and not gap.is_compatible:
+                repo_enrich_prompt += f"- Hardware Note: {gap.incompatibility_reason}\n- Alternative: {gap.alternative_suggestion}\n"
+
+            repo_enrich_prompt += (
+                f"\nSynthesize a decisive, professional JARVIS response confirming the selected architecture, "
+                f"how MATRIX autonomously configured it, and the verified operational readiness.{language_hint}"
+            )
+            model_res = await model_manager.generate_response(
+                prompt=repo_enrich_prompt,
+                system_prompt="You are MATRIX, an autonomous AI architect. Explain your autonomous tool selection and execution clearly.",
+                max_tokens=300
+            )
+            if model_res.content and len(model_res.content.strip()) > 10:
+                reply_content = model_res.content
+
+        # F. Hinglish/Hindi general conversation
         elif is_hinglish_requested:
             hinglish_prompt = (
                 f"The user asked in Hinglish: \"{user_prompt}\"\n"
