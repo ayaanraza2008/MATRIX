@@ -14,11 +14,20 @@ logger = get_logger("core.capability_registry")
 
 
 class CapabilityMaturity(str, Enum):
-    INSTALLED = "installed"           # Verified, active adapter with dependencies and tests passed
-    AVAILABLE = "available"           # Evaluated, compatible with Ryzen 7 5700U, ready for on-demand install
-    REFERENCE_ONLY = "reference_only" # Prompts, curated lists, documentation, architecture patterns
-    REJECTED = "rejected"             # Fails safety policies, untrusted binary, malicious/unapproved
-    INCOMPATIBLE = "incompatible"     # Requires NVIDIA CUDA GPU, macOS specific, or exceeds 8GB RAM
+    DISCOVERED = "discovered"
+    EVALUATED = "evaluated"
+    APPROVED = "approved"
+    INSTALLED = "installed"
+    ADAPTER_IMPLEMENTED = "adapter_implemented"
+    TESTED = "tested"
+    VERIFIED = "verified"
+    ACTIVE = "active"
+    DEPRECATED = "deprecated"
+    REJECTED = "rejected"
+    # Legacy synonyms for backwards compatibility
+    AVAILABLE = "available"
+    REFERENCE_ONLY = "reference_only"
+    INCOMPATIBLE = "incompatible"
 
 
 class OperationSchema(BaseModel):

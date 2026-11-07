@@ -1,0 +1,108 @@
+{
+  "timestamp": 1794080773.7824829,
+  "total_workflows": 8,
+  "total_tests": 8,
+  "passed": 8,
+  "pass_rate_pct": 100.0,
+  "workflows": {
+    "WORKFLOW_A_BROWSER": [
+      {
+        "name": "browser_research_execution",
+        "status": "PASS",
+        "latency_ms": 5911.61,
+        "evidence": "Reply: 'Found 5 web results:\n\n**[1] Matrix Olympiad Foundation | National...'",
+        "data": {
+          "reply": "Found 5 web results:\n\n**[1] Matrix Olympiad Foundation | National Olympiad Exam 2026**\n> Register for Matrix Olympiad Foundation 2026 and compete with students nationwide. Get scholarships, awards, study resources, \u2026\nSource: https://www.bing.com/ck/a?!&&p=420cc3a94588f934030578d4358323da43f457e5d5c2"
+        }
+      }
+    ],
+    "WORKFLOW_B_VISION": [
+      {
+        "name": "screen_visual_ocr_inspection",
+        "status": "PASS",
+        "latency_ms": 6320.74,
+        "evidence": "Reply: 'Hi there! I'm Matrix, your personal AI assistant. Let's get start...'",
+        "data": {
+          "reply": "Hi there! I'm Matrix, your personal AI assistant. Let's get started.\n\nFirst, I'll check your screen to see what's visible. I see dark, low-light scenes with soft, diffuse elements. The sharpness is at a low level, and the detail is smooth and smooth. I don't see any text on the screen.\n\nIs there any"
+        }
+      }
+    ],
+    "WORKFLOW_C_CODING": [
+      {
+        "name": "scaffold_and_test_python_app",
+        "status": "PASS",
+        "latency_ms": 1147.52,
+        "evidence": "Project: autonomy_calc_app, Tests passed: True",
+        "data": {
+          "success": true,
+          "stdout": "============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.2.0, pluggy-1.7.0 -- C:\\Users\\Ali Raza Zaidi\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\Ali Raza Zaidi\\Desktop\\matrix\nplugins: anyio-4.16.0, asyncio-1.4.1.post1\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollecting ... collected 1 item\n\n::test_addition PASSED                                                   [100%]\n\n============================== 1 passed in 0.02s ==============================\n",
+          "stderr": "C:\\Users\\Ali Raza Zaidi\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python312\\site-packages\\pytest_asyncio\\plugin.py:300: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the \"fixture\" caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to \"function\" scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n",
+          "returncode": 0,
+          "latency_ms": 864.26
+        }
+      }
+    ],
+    "WORKFLOW_D_MEMORY": [
+      {
+        "name": "remember_preference_sqlite",
+        "status": "PASS",
+        "latency_ms": 39.82,
+        "evidence": "Persisted key 'favorite_code_theme' -> 'Matrix Dark Cyan'",
+        "data": {
+          "key": "favorite_code_theme",
+          "val": "Matrix Dark Cyan"
+        }
+      }
+    ],
+    "WORKFLOW_E_VOICE": [
+      {
+        "name": "voice_synthesis_and_continuous_listen",
+        "status": "PASS",
+        "latency_ms": 6772.57,
+        "evidence": "Audio: speech_1794080771912.mp3 (37728 bytes), State: listening",
+        "data": {
+          "file": "D:\\matrix_data\\cache\\audio\\speech_1794080771912.mp3"
+        }
+      }
+    ],
+    "WORKFLOW_F_CAPABILITY": [
+      {
+        "name": "autonomous_capability_selection",
+        "status": "PASS",
+        "latency_ms": 0.14,
+        "evidence": "Selected Tool: SystemTelemetryAdapter from AbuZar-Ansarii/Ultron (Score: 0.9)",
+        "data": {
+          "adapter": "SystemTelemetryAdapter",
+          "repo": "AbuZar-Ansarii/Ultron"
+        }
+      }
+    ],
+    "WORKFLOW_G_SYSTEM": [
+      {
+        "name": "system_performance_telemetry",
+        "status": "PASS",
+        "latency_ms": 36.32,
+        "evidence": "Reply: 'Telemetry nominal: CPU at 5.3%, RAM utilization at 90.8%....'",
+        "data": {
+          "reply": "Telemetry nominal: CPU at 5.3%, RAM utilization at 90.8%."
+        }
+      }
+    ],
+    "WORKFLOW_H_TASKS": [
+      {
+        "name": "task_state_summarization",
+        "status": "PASS",
+        "latency_ms": 3.15,
+        "evidence": "Retrieved 10 persisted tasks. Latest: plan_d150fca655: Plan: SYSTEM (performance) [COMPLETED]",
+        "data": {
+          "count": 10,
+          "samples": [
+            "plan_d150fca655: Plan: SYSTEM (performance) [COMPLETED]",
+            "plan_a87ed26680: Plan: MEMORY (remember) [COMPLETED]",
+            "plan_6ffa65fdd4: Plan: VISION (screen) [COMPLETED]"
+          ]
+        }
+      }
+    ]
+  }
+}

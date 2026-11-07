@@ -45,6 +45,8 @@ export const MatrixHologram: React.FC<MatrixHologramProps> = ({
           return { primary: 0x00ff9d, secondary: 0x00f0ff, speed: 2.2, pulseIntensity: 0.18, coreGlow: 0x00ff9d };
         case 'thinking':
           return { primary: 0xa855f7, secondary: 0x38bdf8, speed: 2.8, pulseIntensity: 0.15, coreGlow: 0x9333ea };
+        case 'planning':
+          return { primary: 0x8b5cf6, secondary: 0x06b6d4, speed: 2.5, pulseIntensity: 0.16, coreGlow: 0x7c3aed };
         case 'processing':
           return { primary: 0x3b82f6, secondary: 0x06b6d4, speed: 3.0, pulseIntensity: 0.16, coreGlow: 0x2563eb };
         case 'executing':
@@ -53,6 +55,8 @@ export const MatrixHologram: React.FC<MatrixHologramProps> = ({
           return { primary: 0x00f0ff, secondary: 0x2563eb, speed: 2.5, pulseIntensity: 0.24, coreGlow: 0x00e5ff };
         case 'interrupted':
           return { primary: 0xf43f5e, secondary: 0xfbbf24, speed: 3.5, pulseIntensity: 0.25, coreGlow: 0xe11d48 };
+        case 'sleeping':
+          return { primary: 0x334155, secondary: 0x0f172a, speed: 0.4, pulseIntensity: 0.03, coreGlow: 0x1e293b };
         case 'error':
           return { primary: 0xef4444, secondary: 0x991b1b, speed: 0.9, pulseIntensity: 0.08, coreGlow: 0xb91c1c };
         case 'offline':

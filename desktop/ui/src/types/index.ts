@@ -19,12 +19,14 @@ export type HologramState =
   | 'wake_word'
   | 'listening'
   | 'thinking'
+  | 'planning'
   | 'processing'
   | 'speaking'
   | 'executing'
   | 'interrupted'
   | 'error'
-  | 'offline';
+  | 'offline'
+  | 'sleeping';
 
 export type HandsFreeMode =
   | 'continuous'

@@ -45,11 +45,21 @@ async def lifespan(app: FastAPI):
         hands_free_manager.subscribe(_broadcast_to_ws)
         orchestrator.subscribe_progress(_broadcast_to_ws)
         logger.info("Hands-Free voice and orchestrator telemetry wired to WebSocket broker.")
+
+        # Start persistent native background microphone service
+        from voice.mic_listener import mic_listener
+        mic_listener.start(asyncio.get_running_loop())
+        logger.info("Persistent background native microphone listener service started.")
     except Exception as e:
-        logger.warning(f"Could not hook hands-free event broker: {e}")
+        logger.warning(f"Could not hook hands-free event broker or mic listener: {e}")
 
     logger.info(f"MATRIX Server online at http://{settings.host}:{settings.port}")
     yield
+    try:
+        from voice.mic_listener import mic_listener
+        mic_listener.stop()
+    except Exception:
+        pass
     logger.info("MATRIX Server shutting down cleanly...")
 
 

@@ -95,6 +95,49 @@ class VisionAnalyzer:
             "question": prompt or "General scene inspection"
         }
 
+    def compare_images(self, path1: Path, path2: Path) -> Dict[str, Any]:
+        """Compute visual similarity and structural diff between two frames."""
+        if not path1.exists() or not path2.exists():
+            return {"success": False, "error": "One or both image files not found"}
+        img1 = cv2.imread(str(path1), cv2.IMREAD_GRAYSCALE)
+        img2 = cv2.imread(str(path2), cv2.IMREAD_GRAYSCALE)
+        if img1 is None or img2 is None:
+            return {"success": False, "error": "Failed to decode one or both images"}
+        # Resize to match dimensions if needed
+        if img1.shape != img2.shape:
+            img2 = cv2.resize(img2, (img1.shape[1], img1.shape[0]))
+        diff = cv2.absdiff(img1, img2)
+        non_zero = np.count_nonzero(diff > 30)
+        similarity = 1.0 - (non_zero / (img1.shape[0] * img1.shape[1]))
+        return {
+            "success": True,
+            "similarity_score": round(similarity, 4),
+            "changed_pixels_ratio": round(non_zero / (img1.shape[0] * img1.shape[1]), 4),
+            "is_identical": similarity > 0.99
+        }
+
+    def find_ui_elements(self, image_path: Path) -> Dict[str, Any]:
+        """Detect rectangular interactive UI elements (buttons, inputs) using morphological contours."""
+        if not image_path.exists():
+            return {"success": False, "error": "Image file not found"}
+        img = cv2.imread(str(image_path))
+        if img is None:
+            return {"success": False, "error": "Unable to decode image"}
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        elements = []
+        for c in contours:
+            x, y, w, h = cv2.boundingRect(c)
+            # Filter typical button/input dimensions
+            if 40 < w < 600 and 20 < h < 150:
+                elements.append({"x": int(x), "y": int(y), "width": int(w), "height": int(h)})
+        return {
+            "success": True,
+            "detected_elements_count": len(elements),
+            "candidate_elements": elements[:20]
+        }
+
 
 # Global Vision Analyzer singleton
 vision_analyzer = VisionAnalyzer()

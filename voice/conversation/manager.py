@@ -1,7 +1,8 @@
 """MATRIX Autonomous Hands-Free Conversation & State Manager.
 Coordinates:
-IDLE (Wake-word standby) -> WAKE_WORD_DETECTED -> LISTENING (VAD capture) ->
-END-OF-SPEECH -> TRANSCRIBING -> THINKING -> EXECUTING -> SPEAKING -> AUTO-RESUME
+SLEEPING -> IDLE (Wake-word standby) -> WAKE_DETECTED -> LISTENING (VAD capture) ->
+TRANSCRIBING -> THINKING -> PLANNING -> EXECUTING -> SPEAKING -> LISTENING RESUMES.
+Handles barge-in interruption, wake-word suppression during TTS, and exact voice directives.
 """
 from enum import Enum
 from typing import Optional, Dict, Any, Callable, List
@@ -29,15 +30,16 @@ class ConversationMode(str, Enum):
 
 
 class HandsFreeState(str, Enum):
+    SLEEPING = "sleeping"                # Low-resource sleep mode
     IDLE = "idle"                        # Standby waiting for 'Matrix' or 'Snap'
-    WAKE_WORD = "wake_word"              # Wake-word triggered
+    WAKE_DETECTED = "wake_detected"      # Wake-word triggered
     LISTENING = "listening"              # Capturing speech via VAD
     TRANSCRIBING = "transcribing"        # Whisper STT running
     THINKING = "thinking"                # Brain LLM reasoning
+    PLANNING = "planning"                # Orchestrator planning
     EXECUTING = "executing"              # Multi-agent tools executing
     SPEAKING = "speaking"                # TTS audio playing
     INTERRUPTED = "interrupted"          # Aborted by user
-    PAUSED = "paused"                    # Microphone paused
     ERROR = "error"                      # Audio device or engine error
 
 
@@ -93,10 +95,10 @@ class HandsFreeManager:
         self.mode = mode
         if mode == ConversationMode.PRIVACY_PAUSE:
             wake_word_detector.stop_listening()
-            self.state = HandsFreeState.PAUSED
+            self.state = HandsFreeState.SLEEPING
         elif mode in [ConversationMode.CONTINUOUS, ConversationMode.WAKE_WORD_ONLY]:
             wake_word_detector.start_listening()
-            if self.state == HandsFreeState.PAUSED:
+            if self.state in (HandsFreeState.SLEEPING, HandsFreeState.ERROR):
                 self.state = HandsFreeState.IDLE
         logger.info(f"Hands-Free mode changed to: {mode.value}")
         asyncio.create_task(self.emit_event("MODE_CHANGED", {"mode": mode.value}))
@@ -109,16 +111,16 @@ class HandsFreeManager:
 
     async def handle_wake_word_activation(self, word: str):
         """Trigger activation sequence on wake word."""
-        if self.state in [HandsFreeState.SPEAKING, HandsFreeState.THINKING, HandsFreeState.EXECUTING]:
+        if self.state in [HandsFreeState.SPEAKING, HandsFreeState.THINKING, HandsFreeState.EXECUTING, HandsFreeState.PLANNING]:
             # User interrupted ongoing speech or execution!
             await self.interrupt()
 
         logger.info(f"ACTIVATING HANDS-FREE on wake-word: '{word}'")
-        self.state = HandsFreeState.WAKE_WORD
+        self.state = HandsFreeState.WAKE_DETECTED
         await self.emit_event("WAKE_WORD_DETECTED", {"word": word})
 
-        # Short pause for visual activation pulse and optional beep
-        await asyncio.sleep(0.3)
+        # Short pause for visual activation pulse
+        await asyncio.sleep(0.2)
 
         # Transition to active listening
         vad_engine.reset()
@@ -137,7 +139,7 @@ class HandsFreeManager:
         vad_engine.reset()
 
         # Wait briefly then resume appropriate listening state
-        await asyncio.sleep(0.4)
+        await asyncio.sleep(0.3)
         if self.mode == ConversationMode.CONTINUOUS:
             self.state = HandsFreeState.LISTENING
             await self.emit_event("RECORDING_STARTED", {"reason": "interrupted_resume"})
@@ -155,13 +157,13 @@ class HandsFreeManager:
         if self.mode == ConversationMode.PRIVACY_PAUSE:
             return {"status": "paused"}
 
-        # 1. In IDLE mode: Evaluate Wake Word Detector
-        if self.state == HandsFreeState.IDLE:
+        # 1. In IDLE / SLEEPING mode: Evaluate Wake Word Detector
+        if self.state in (HandsFreeState.IDLE, HandsFreeState.SLEEPING):
             detected = wake_word_detector.process_audio_frame(chunk, is_tts_speaking=tts_engine.is_speaking)
             if detected:
                 await self.handle_wake_word_activation(detected)
                 return {"status": "wake_word_detected", "word": detected}
-            return {"status": "idle"}
+            return {"status": self.state.value}
 
         # 2. In LISTENING mode: Feed VAD and monitor endpoint
         if self.state == HandsFreeState.LISTENING:
@@ -177,7 +179,7 @@ class HandsFreeManager:
         return {"status": self.state.value}
 
     async def _process_completed_speech(self, audio_data: np.ndarray):
-        """Process captured speech buffer: STT -> Brain / Tools -> TTS -> Auto-playback -> Auto-resume."""
+        """Process captured speech buffer: STT -> Directives / Brain -> TTS -> Auto-resume."""
         async with self._lock:
             self._interrupted = False
             try:
@@ -185,7 +187,6 @@ class HandsFreeManager:
                 self.state = HandsFreeState.TRANSCRIBING
                 await self.emit_event("RECORDING_STOPPED", {})
 
-                # Save temporary WAV for Faster-Whisper
                 upload_dir = settings.cache_dir / "audio_in"
                 upload_dir.mkdir(parents=True, exist_ok=True)
                 temp_wav = upload_dir / f"input_{int(time.time() * 1000)}.wav"
@@ -220,17 +221,33 @@ class HandsFreeManager:
 
                 # 2. Check for Immediate Voice Directives
                 lower_text = transcript.lower().strip()
+
+                # Directive A: Stop
                 if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix stop", "stop", "cancel", "chup", "ruko"]):
                     await self.interrupt()
                     return
 
-                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix go to sleep", "go to sleep", "sleep", "so jao"]):
-                    self.set_mode(ConversationMode.WAKE_WORD_ONLY)
-                    ack_audio = await tts_engine.speak("Going to sleep, sir. Say Matrix or Snap whenever you need me.")
+                # Directive B: Cancel that task
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix cancel that task", "cancel that task", "cancel task", "stop task"]):
+                    from core.orchestrator import orchestrator
+                    orchestrator.cancel_active()
+                    self.state = HandsFreeState.SPEAKING
+                    await self.emit_event("SPEAKING", {"text": "Task cancelled, sir."})
+                    ack_audio = await tts_engine.speak("Task has been cancelled, sir.")
                     self.state = HandsFreeState.IDLE
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
 
+                # Directive C: Go to sleep
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix go to sleep", "go to sleep", "sleep", "so jao"]):
+                    self.set_mode(ConversationMode.WAKE_WORD_ONLY)
+                    self.state = HandsFreeState.SLEEPING
+                    await self.emit_event("SPEAKING", {"text": "Going to sleep, sir."})
+                    ack_audio = await tts_engine.speak("Going to sleep, sir. Say Matrix or Snap whenever you need me.")
+                    await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
+                    return
+
+                # Directive D: Listen
                 if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix listen", "listen", "suno"]):
                     self.set_mode(ConversationMode.CONTINUOUS)
                     self.state = HandsFreeState.LISTENING
@@ -238,66 +255,79 @@ class HandsFreeManager:
                     await self.emit_event("RECORDING_STARTED", {"reason": "explicit_listen"})
                     return
 
-                # 3. State: THINKING
+                # Directive E: What are you doing?
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix what are you doing", "what are you doing", "kya kar rahe ho"]):
+                    from core.agent_coordinator import agent_coordinator
+                    dashboard = agent_coordinator.get_agent_dashboard()
+                    recent = dashboard.get("recent_tasks_count", 0)
+                    msg = f"System is fully operational, sir. All 16 agents are standing by, with {recent} tasks recorded in this session."
+                    self.state = HandsFreeState.SPEAKING
+                    await self.emit_event("SPEAKING", {"text": msg})
+                    ack_audio = await tts_engine.speak(msg)
+                    self.state = HandsFreeState.IDLE
+                    await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
+                    return
+
+                # Directive F: Open browser
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix open my browser", "open my browser", "open browser"]):
+                    from core.brain import brain
+                    self.state = HandsFreeState.SPEAKING
+                    ack_audio = await tts_engine.speak("Opening browser now, sir.")
+                    await brain.interact("Open browser", session_id=self.active_session_id)
+                    self.state = HandsFreeState.IDLE
+                    await self.emit_event("LISTENING_RESUMED", {})
+                    return
+
+                # 3. State: THINKING -> PLANNING -> EXECUTING
                 self.state = HandsFreeState.THINKING
                 await self.emit_event("THINKING", {"prompt": transcript})
 
                 # Execute Brain reasoning and autonomous tool dispatch
+                self.state = HandsFreeState.EXECUTING
+                await self.emit_event("EXECUTING", {"prompt": transcript})
+
                 response_text = await brain.interact(
                     user_prompt=transcript,
                     session_id=self.active_session_id
                 )
                 self.last_response = response_text
-                logger.info(f"Brain synthesized response ({len(response_text)} chars).")
 
                 if self._interrupted:
-                    logger.info("Turn was interrupted before speech synthesis.")
+                    logger.info("Turn execution was interrupted before speaking.")
                     return
 
-                # 4. State: SPEAKING
+                # 4. State: SPEAKING (TTS Generation & Playback)
                 self.state = HandsFreeState.SPEAKING
-                audio_path = await tts_engine.speak(response_text)
-                self.last_audio_file = audio_path
+                await self.emit_event("SPEAKING", {"text": response_text[:120]})
 
-                if self._interrupted:
-                    return
+                audio_file = await tts_engine.speak(response_text)
+                self.last_audio_file = audio_file
 
-                if audio_path and audio_path.exists():
-                    audio_filename = audio_path.name
-                    await self.emit_event("TTS_STARTED", {
-                        "text": response_text,
-                        "audio_url": f"/api/v1/voice/audio/{audio_filename}",
-                        "filename": audio_filename
-                    })
-
-                    # Estimate speech playback duration: ~150 words per minute plus padding
-                    word_count = len(response_text.split())
-                    estimated_duration = max(1.5, min(25.0, (word_count / 2.5)))
-                    await asyncio.sleep(estimated_duration)
-
-                await self.emit_event("TTS_FINISHED", {})
-
-                # 5. Return to Listening or Idle
-                if self.mode == ConversationMode.CONTINUOUS and not self._interrupted:
-                    logger.info("Continuous mode: Automatically resuming listening without wake word.")
-                    vad_engine.reset()
-                    self.state = HandsFreeState.LISTENING
-                    await self.emit_event("RECORDING_STARTED", {"reason": "auto_resume"})
-                else:
-                    self.state = HandsFreeState.IDLE
-                    await self.emit_event("LISTENING_RESUMED", {})
+                # 5. Transition back: Auto-resume listening if CONTINUOUS mode
+                if not self._interrupted:
+                    if self.mode == ConversationMode.CONTINUOUS:
+                        self.state = HandsFreeState.LISTENING
+                        vad_engine.reset()
+                        await self.emit_event("RECORDING_STARTED", {
+                            "reason": "continuous_resume",
+                            "audio_file": audio_file.name if audio_file else None
+                        })
+                    else:
+                        self.state = HandsFreeState.IDLE
+                        await self.emit_event("LISTENING_RESUMED", {
+                            "audio_file": audio_file.name if audio_file else None
+                        })
 
             except asyncio.CancelledError:
-                logger.info("Speech processing task was cancelled.")
+                logger.info("Speech turn task was cancelled.")
                 self.state = HandsFreeState.IDLE
             except Exception as e:
-                logger.error(f"Error in hands-free voice loop: {e}")
+                logger.error(f"Error in speech processing turn: {e}", exc_info=True)
                 self.state = HandsFreeState.ERROR
                 await self.emit_event("ERROR", {"error": str(e)})
                 await asyncio.sleep(1.0)
                 self.state = HandsFreeState.IDLE
-                await self.emit_event("LISTENING_RESUMED", {})
 
 
-# Global Hands-Free singleton instance
+# Global Hands-Free Manager singleton
 hands_free_manager = HandsFreeManager()

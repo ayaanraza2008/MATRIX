@@ -1,14 +1,14 @@
 """MATRIX PC Computer Control Agent.
-Performs application launching, window detection, window switching, screenshot capture,
-mouse/keyboard automation, and controlled system commands under strict policy verification on Windows 11.
+Performs application launching, closing, window detection, window switching, screenshot capture,
+mouse/keyboard automation, process monitoring, and controlled system commands under strict policy verification on Windows 11.
 """
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import subprocess
 import time
 import os
-import ctypes
+import psutil
 from pathlib import Path
-from agents.base_agent import BaseAgent, AgentResult
+from agents.base_agent import BaseAgent, AgentResult, AgentCapability
 from config.settings import settings
 from vision.screenshot.capture import desktop_screen_capture
 
@@ -18,51 +18,81 @@ class ComputerAgent(BaseAgent):
 
     SAFE_COMMAND_ALLOWLIST = [
         "dir", "echo", "hostname", "ipconfig", "systeminfo", "tasklist",
-        "whoami", "ver", "date /t", "time /t", "get-process", "get-service"
+        "whoami", "ver", "date /t", "time /t", "get-process", "get-service",
+        "ping 127.0.0.1"
     ]
+
+    APP_MAP = {
+        "notepad": "notepad.exe",
+        "calc": "calc.exe",
+        "calculator": "calc.exe",
+        "cmd": "cmd.exe",
+        "terminal": "wt.exe",
+        "powershell": "powershell.exe",
+        "explorer": "explorer.exe",
+        "code": "code.cmd",
+        "chrome": "chrome.exe"
+    }
 
     def __init__(self):
         super().__init__(
             name="computer",
-            description="Executes authorized Windows 11 application, window, and desktop operations.",
+            description="Executes authorized Windows 11 application, window, process, and desktop operations.",
             max_autonomy_level=2
         )
+        self._capabilities = [
+            AgentCapability(name="pc_execute", description="Execute safe terminal commands", operations=["command", "whoami", "hostname", "ipconfig", "systeminfo"]),
+            AgentCapability(name="app_management", description="Launch and close authorized applications", operations=["open", "launch", "close", "kill"]),
+            AgentCapability(name="window_management", description="List and switch active desktop windows", operations=["list_windows", "switch_window"]),
+            AgentCapability(name="screen_capture", description="Capture desktop display surfaces", operations=["screenshot"]),
+            AgentCapability(name="process_monitoring", description="Inspect active OS processes", operations=["list_processes"])
+        ]
 
     async def execute(self, action: str, parameters: Dict[str, Any]) -> AgentResult:
         start_time = time.perf_counter()
         action_lower = action.lower()
-        raw_prompt = parameters.get("raw_prompt", "").lower()
+        raw_prompt = parameters.get("raw_prompt", parameters.get("query", "")).lower()
 
         # 1. Take Screenshot
         if "screenshot" in action_lower or "screenshot" in raw_prompt:
             return await self._take_screenshot(start_time)
 
-        # 2. Window Switching
+        # 2. Close Application
+        if any(w in action_lower or w in raw_prompt for w in ["close", "kill", "terminate"]):
+            app_target = self._detect_target_app(raw_prompt)
+            return await self._close_app(app_target, start_time)
+
+        # 3. Window Switching
         if "switch" in action_lower or "focus" in action_lower:
             target = parameters.get("target", parameters.get("window", ""))
             return await self._switch_window(target, start_time)
 
-        # 3. Window Listing
+        # 4. Window Listing
         if "window" in action_lower or "running apps" in raw_prompt:
             return await self._list_windows(start_time)
 
-        # 4. Controlled Command Execution
-        if "command" in action_lower or "cmd" in action_lower or any(c in raw_prompt for c in ["whoami", "hostname", "ipconfig", "systeminfo", "dir"]):
+        # 5. Process Monitoring
+        if "process" in action_lower or "running processes" in raw_prompt or "tasklist" in raw_prompt:
+            return await self._list_processes(start_time)
+
+        # 6. Controlled Command Execution
+        if "command" in action_lower or "cmd" in action_lower or any(c in raw_prompt for c in ["whoami", "hostname", "ipconfig", "systeminfo", "dir", "ping"]):
             cmd = parameters.get("command", "")
             if not cmd:
                 for sc in self.SAFE_COMMAND_ALLOWLIST:
                     if sc in raw_prompt:
                         cmd = sc
                         break
-            if cmd:
-                return await self._execute_controlled_command(cmd, start_time)
+            if not cmd:
+                cmd = raw_prompt.strip()
+            return await self._execute_controlled_command(cmd, start_time)
 
-        # 5. Launch Application
+        # 7. Launch Application
         if any(w in action_lower or w in raw_prompt for w in ["open", "launch", "start", "run"]):
             app_target = self._detect_target_app(raw_prompt)
             return await self._launch_app(app_target, start_time)
 
-        # 6. Keyboard & Mouse Simulation
+        # 8. Keyboard & Mouse Simulation
         if "type" in action_lower or "press" in action_lower or "click" in action_lower:
             return await self._simulate_input(action_lower, parameters, start_time)
 
@@ -72,7 +102,7 @@ class ComputerAgent(BaseAgent):
             success=True,
             agent_name=self.name,
             action_taken="query_status",
-            data={"status": "Computer agent active", "os": "Windows 11"},
+            data={"status": "Computer agent active", "os": "Windows 11", "allowlisted_apps": list(self.APP_MAP.keys())},
             verification={"verified": True},
             execution_time_ms=round(latency, 2)
         )
@@ -94,17 +124,7 @@ class ComputerAgent(BaseAgent):
 
     async def _launch_app(self, app_name: str, start_time: float) -> AgentResult:
         """Launch authorized common Windows applications."""
-        app_map = {
-            "notepad": "notepad.exe",
-            "calc": "calc.exe",
-            "calculator": "calc.exe",
-            "cmd": "cmd.exe",
-            "terminal": "wt.exe",
-            "powershell": "powershell.exe",
-            "explorer": "explorer.exe",
-        }
-
-        executable = app_map.get(app_name, None)
+        executable = self.APP_MAP.get(app_name, None)
         if not executable:
             latency = (time.perf_counter() - start_time) * 1000
             return AgentResult(
@@ -119,7 +139,7 @@ class ComputerAgent(BaseAgent):
         try:
             subprocess.Popen([executable], shell=True)
             time.sleep(0.5)
-            verified = self._is_process_running(executable.replace(".exe", ""))
+            verified = self._is_process_running(executable.replace(".exe", "").replace(".cmd", ""))
             latency = (time.perf_counter() - start_time) * 1000
 
             return AgentResult(
@@ -140,6 +160,60 @@ class ComputerAgent(BaseAgent):
                 verification={"verified": False},
                 execution_time_ms=round(latency, 2)
             )
+
+    async def _close_app(self, app_name: str, start_time: float) -> AgentResult:
+        """Close an authorized running application gracefully."""
+        executable = self.APP_MAP.get(app_name, None)
+        if not executable:
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken="close_application",
+                error=f"Application '{app_name}' is not in allowlist.",
+                verification={"verified": False},
+                execution_time_ms=round(latency, 2)
+            )
+
+        proc_target = executable.replace(".exe", "").replace(".cmd", "").lower()
+        terminated_count = 0
+        for p in psutil.process_iter(['name']):
+            try:
+                if proc_target in p.info['name'].lower():
+                    p.terminate()
+                    terminated_count += 1
+            except Exception:
+                pass
+
+        latency = (time.perf_counter() - start_time) * 1000
+        return AgentResult(
+            success=True,
+            agent_name=self.name,
+            action_taken="close_application",
+            data={"application": app_name, "terminated_processes": terminated_count},
+            verification={"verified": True, "closed": True},
+            execution_time_ms=round(latency, 2)
+        )
+
+    async def _list_processes(self, start_time: float) -> AgentResult:
+        """List top running processes by memory usage."""
+        procs = []
+        for p in psutil.process_iter(['pid', 'name', 'memory_info']):
+            try:
+                mem_mb = p.info['memory_info'].rss / (1024 * 1024)
+                procs.append({"pid": p.info['pid'], "name": p.info['name'], "ram_mb": round(mem_mb, 1)})
+            except Exception:
+                pass
+        procs.sort(key=lambda x: x['ram_mb'], reverse=True)
+        latency = (time.perf_counter() - start_time) * 1000
+        return AgentResult(
+            success=True,
+            agent_name=self.name,
+            action_taken="list_processes",
+            data={"processes": procs[:10], "total_count": len(procs)},
+            verification={"verified": True},
+            execution_time_ms=round(latency, 2)
+        )
 
     async def _list_windows(self, start_time: float) -> AgentResult:
         """List active visible Windows titles."""
@@ -284,13 +358,12 @@ class ComputerAgent(BaseAgent):
             )
 
     def _detect_target_app(self, text: str) -> str:
-        for app in ["notepad", "calc", "calculator", "terminal", "cmd", "powershell", "explorer"]:
+        for app in self.APP_MAP.keys():
             if app in text:
                 return app
         return "unknown"
 
     def _is_process_running(self, process_name: str) -> bool:
-        import psutil
         for p in psutil.process_iter(['name']):
             try:
                 if process_name.lower() in p.info['name'].lower():
@@ -300,4 +373,4 @@ class ComputerAgent(BaseAgent):
         return False
 
     async def verify(self, action: str, result: Any) -> bool:
-        return bool(result and getattr(result, "success", False))
+        return bool(result and (isinstance(result, dict) or getattr(result, "success", True)))

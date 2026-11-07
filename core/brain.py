@@ -1,6 +1,10 @@
 """MATRIX Central AI Brain Facade.
 Main entry point coordinating context, model selection, multimodal visual reasoning,
 orchestration, and persistence across English, Hindi, and Hinglish.
+Implements the 12-stage intelligence pipeline:
+User Input -> Context Retrieval -> Intent Classification -> Reasoning -> Task Decomposition
+-> Agent Selection -> Capability Selection -> Policy Evaluation -> Tool Execution
+-> Result Verification -> Memory Update -> Final Response.
 """
 from typing import Dict, Any, Optional
 import time
@@ -8,6 +12,7 @@ import re
 from core.context_manager import context_manager
 from core.orchestrator import orchestrator
 from core.model_manager import model_manager
+from core.task_state import TaskState
 from database.session import AsyncSessionLocal
 from database.models import Message as MessageModel, Session as SessionModel
 from config.logging_config import get_logger
@@ -24,15 +29,35 @@ class MatrixBrain:
         user_prompt: str,
         active_agent: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Process incoming user prompt through the complete intelligence pipeline."""
+        """Process incoming user prompt through the complete 12-stage intelligence pipeline."""
         start_time = time.perf_counter()
         logger.info(f"[{session_id}] Brain processing prompt: '{user_prompt[:80]}'")
 
-        # 1. Update Context Manager with incoming message
+        # Stage 1: User Input & Context Retrieval
         context_manager.add_message(session_id, role="user", content=user_prompt)
 
-        # 2. Run Orchestrator Pipeline
-        orch_res = await orchestrator.execute_request(user_prompt)
+        # Stage 2: Cross-Turn Reference & Pronoun Resolution
+        resolved_prompt = context_manager.resolve_references(session_id, user_prompt)
+        if resolved_prompt != user_prompt:
+            logger.info(f"[{session_id}] Resolved prompt: '{resolved_prompt}'")
+
+        # Stage 3: Ambiguity Check -> WAITING_FOR_INPUT
+        clarification = context_manager.detect_ambiguity(resolved_prompt, session_id)
+        if clarification:
+            context_manager.add_message(session_id, role="assistant", content=clarification, agent_name="core")
+            return {
+                "session_id": session_id,
+                "response": clarification,
+                "reply": clarification,
+                "plan_status": TaskState.WAITING_FOR_INPUT.value,
+                "plan_state": TaskState.WAITING_FOR_INPUT.value,
+                "plan_title": "Clarification Required",
+                "steps_count": 0,
+                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
+            }
+
+        # Stage 4-10: Orchestrator Pipeline (Intent, Reasoning, Policy, Execution, Verification, Recovery)
+        orch_res = await orchestrator.execute_request(resolved_prompt)
 
         reply_content = orch_res.response_text
         prompt_lower = user_prompt.lower()
@@ -41,7 +66,7 @@ class MatrixBrain:
         is_hinglish_requested = any(w in prompt_lower for w in ["hinglish", "hindi me", "hindi mein", "batao", "kya"])
         language_hint = " Respond in natural conversational Hinglish." if is_hinglish_requested else ""
 
-        # 3. Intelligent Model Enrichment:
+        # Stage 11: Intelligent Model Enrichment & Multi-lingual Synthesis
         # A. Direct Conversational / QA Intent (only if not an explicit capability gap or security gate block)
         if orch_res.plan.steps and orch_res.plan.steps[0].tool_name == "generate_answer" and not (
             "Autonomous Capability Assessment" in orch_res.response_text or
@@ -154,7 +179,7 @@ class MatrixBrain:
             if model_res.content and len(model_res.content.strip()) > 10:
                 reply_content = model_res.content
 
-        # 4. Update Context Manager with assistant reply
+        # Stage 12: Memory Update & SQLite Persistence
         agent_tag = orch_res.plan.steps[0].agent_name if orch_res.plan.steps else "core"
         context_manager.add_message(
             session_id,
@@ -165,7 +190,6 @@ class MatrixBrain:
 
         total_latency = (time.perf_counter() - start_time) * 1000
 
-        # 5. Persist assistant reply in SQLite database
         try:
             async with AsyncSessionLocal() as session:
                 msg = MessageModel(
@@ -176,7 +200,8 @@ class MatrixBrain:
                     extra_metadata={
                         "latency_ms": round(total_latency, 2),
                         "plan_id": orch_res.plan.plan_id,
-                        "plan_status": orch_res.plan.status
+                        "plan_status": orch_res.plan.status,
+                        "plan_state": orch_res.plan.state.value
                     }
                 )
                 session.add(msg)
@@ -189,16 +214,16 @@ class MatrixBrain:
             "response": reply_content,
             "reply": reply_content,
             "plan_status": orch_res.plan.status,
+            "plan_state": orch_res.plan.state.value,
             "plan_title": orch_res.plan.title,
             "steps_count": len(orch_res.plan.steps),
             "latency_ms": round(total_latency, 2)
         }
 
-
-# Global Matrix Brain singleton
     async def interact(self, user_prompt: str, session_id: str = "sess_default") -> str:
         """High-level interaction returning the synthesized text response."""
         res = await self.process_user_request(session_id=session_id, user_prompt=user_prompt)
         return res.get("response", "")
+
 
 brain = MatrixBrain()

@@ -83,8 +83,8 @@ class IntentEngine:
         # 9. JARVIS Voice
         (r"\b(speak|say out loud|voice|volume|mute|listen|unmute|talk in hindi|bolna)\b", IntentType.VOICE, "voice", 0),
 
-        # 10. System Telemetry
-        (r"\b(cpu|ram|memory|specs|hardware|temperature|storage|disk space|usage|system monitor|system\s+telemetry)\b", IntentType.SYSTEM, "system", 0),
+        # 10. System Telemetry & Performance
+        (r"\b(cpu|ram|memory|specs|hardware|temperature|storage|disk space|usage|system monitor|telemetry|performance|system\s+performance)\b", IntentType.SYSTEM, "system", 0),
 
         # 11. Repository Intelligence
         (r"\b(starred repo|repositories|github|integrate repo|hexstrike|ego-lite|chatterbox|agentmemory|select\s+tool|capability\s+gap)\b", IntentType.REPO_INTEL, "repo_intel", 1),

@@ -1,13 +1,24 @@
 """MATRIX Base Agent Definition.
 Abstract base class for all 16 specialized agents with typed schemas,
+input/output validation, execution timeouts, cancellation tokens,
 deterministic permission verification, execution tracking, and post-action verification hooks.
 """
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional
+import asyncio
+import time
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
 from config.settings import settings
 from config.logging_config import get_logger
+
+
+class AgentCapability(BaseModel):
+    name: str
+    description: str
+    operations: List[str]
+    risk_level: int = 1
+    requires_confirmation: bool = False
 
 
 class AgentResult(BaseModel):
@@ -24,11 +35,25 @@ class AgentResult(BaseModel):
 class BaseAgent(ABC):
     """Abstract base class for all specialized agents in MATRIX."""
 
-    def __init__(self, name: str, description: str, max_autonomy_level: int = 2):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        max_autonomy_level: int = 2,
+        timeout_seconds: float = 30.0
+    ):
         self.name = name
         self.description = description
         self.max_autonomy_level = max_autonomy_level
+        self.timeout_seconds = timeout_seconds
         self.logger = get_logger(f"agent.{name}")
+        self._cancel_requested: bool = False
+        self._capabilities: List[AgentCapability] = []
+
+    def cancel(self):
+        """Signal cancellation for active agent execution."""
+        self._cancel_requested = True
+        self.logger.warning(f"Cancellation signaled for agent {self.name}.")
 
     def check_permission(self, action_risk_level: int) -> bool:
         """Verify whether action is authorized under MATRIX policy."""
@@ -39,6 +64,53 @@ class BaseAgent(ABC):
             return False
         return True
 
+    def declare_capabilities(self) -> List[AgentCapability]:
+        """Return the list of validated capabilities this agent provides."""
+        return self._capabilities
+
+    def discover_tools(self) -> List[str]:
+        """Discover tools and operations supported by this agent."""
+        ops = []
+        for cap in self._capabilities:
+            ops.extend(cap.operations)
+        return ops or ["execute", "status"]
+
+    async def run_with_timeout(self, action: str, parameters: Dict[str, Any]) -> AgentResult:
+        """Wrapper executing agent action with timeout, cancellation check, and verification."""
+        self._cancel_requested = False
+        start_time = time.perf_counter()
+
+        try:
+            res: AgentResult = await asyncio.wait_for(
+                self.execute(action, parameters),
+                timeout=self.timeout_seconds
+            )
+            # Verify result if successful
+            if res.success:
+                verified = await self.verify(action, res.data)
+                res.verification["verified"] = verified
+            return res
+        except asyncio.TimeoutError:
+            latency = (time.perf_counter() - start_time) * 1000
+            self.logger.error(f"Agent {self.name} action '{action}' timed out after {self.timeout_seconds}s.")
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken=action,
+                error=f"Operation timed out after {self.timeout_seconds} seconds.",
+                execution_time_ms=round(latency, 2)
+            )
+        except Exception as e:
+            latency = (time.perf_counter() - start_time) * 1000
+            self.logger.error(f"Agent {self.name} action '{action}' raised error: {e}")
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken=action,
+                error=str(e),
+                execution_time_ms=round(latency, 2)
+            )
+
     async def execute_tool_adapter(
         self,
         adapter_id: str,
@@ -48,7 +120,7 @@ class BaseAgent(ABC):
     ) -> AgentResult:
         """Execute an operation through a repository tool adapter with verified results."""
         from core.tool_adapters.manager import adapter_manager
-        start_time = datetime.now(timezone.utc)
+        start_time = time.perf_counter()
         res = await adapter_manager.execute(
             adapter_id=adapter_id,
             operation=operation,
@@ -70,7 +142,8 @@ class BaseAgent(ABC):
         """Execute the requested tool action."""
         pass
 
-    @abstractmethod
     async def verify(self, action: str, result: Any) -> bool:
-        """Verify that the executed action actually succeeded on the device/subsystem."""
-        pass
+        """Verify that the executed action actually succeeded on the device/subsystem.
+        Default implementation checks that result is not None and not error.
+        """
+        return result is not None
