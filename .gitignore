@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Environment Variables & Secrets
+.env
+*.pem
+*.key
+
+# Database & Local Media Cache (Stored in D:\matrix_data)
+*.db
+*.sqlite3
+D:/matrix_data/
+
+# Logs
+logs/
+*.log
+
+# Unit test & coverage
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Node / Frontend
+node_modules/
+desktop/ui/node_modules/
+desktop/ui/dist/
+desktop/ui/.vite/
+
+# OS specific
+.DS_Store
+Thumbs.db

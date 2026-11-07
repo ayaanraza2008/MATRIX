@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #05070E;
+    color: #E2E8F0;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #070B16;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.25);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 240, 255, 0.5);
+}
+
+/* Glassmorphism Matrix Classes */
+.matrix-glass {
+  background: rgba(10, 15, 29, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+}
+
+.matrix-glass-glow {
+  background: rgba(10, 15, 29, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.08);
+}
+
+.matrix-cyan-glow {
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+}
+
+.matrix-border-glow {
+  border-color: rgba(0, 240, 255, 0.4);
+}
+
+/* Subtle holographic grid lines background */
+.matrix-grid-bg {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+}

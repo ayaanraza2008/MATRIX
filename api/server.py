@@ -1,0 +1,161 @@
+"""MATRIX Main FastAPI Application Server.
+Provides REST APIs, WebSocket real-time channel, error handlers, and lifecycle hooks.
+"""
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import time
+import uuid
+
+from config.settings import settings
+from config.logging_config import get_logger
+from database.init_db import init_database
+from api.routes import (
+    health, system, sessions, capabilities, devices, memory, voice, vision, repositories,
+    automation, files, audit, developer
+)
+from api.websocket.manager import ws_manager
+
+logger = get_logger("server")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application startup and shutdown lifecycle manager."""
+    logger.info(f"Initiating {settings.app_name} v{settings.version} [{settings.env}]...")
+    settings.initialize_directories()
+
+    # Initialize SQLite database schema
+    db_ready = await init_database()
+    if db_ready:
+        logger.info(f"Core database operational at {settings.data_dir / 'matrix.db'}")
+    else:
+        logger.error("Database initialization encountered an error!")
+
+    logger.info(f"MATRIX Server online at http://{settings.host}:{settings.port}")
+    yield
+    logger.info("MATRIX Server shutting down cleanly...")
+
+
+app = FastAPI(
+    title=settings.app_name,
+    version=settings.version,
+    description="JARVIS-inspired Personal AI Ecosystem Core API",
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+# CORS Middleware configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# Global timing and request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    request_id = str(uuid.uuid4())[:8]
+    start_time = time.perf_counter()
+    logger.debug(f"[{request_id}] {request.method} {request.url.path}")
+
+    try:
+        response = await call_next(request)
+        process_time_ms = round((time.perf_counter() - start_time) * 1000, 2)
+        response.headers["X-Process-Time"] = f"{process_time_ms}ms"
+        response.headers["X-Request-ID"] = request_id
+        return response
+    except Exception as exc:
+        process_time_ms = round((time.perf_counter() - start_time) * 1000, 2)
+        logger.exception(f"[{request_id}] Unhandled error processing {request.url.path}: {exc}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "error": "Internal Server Error",
+                "request_id": request_id,
+                "detail": str(exc) if settings.debug else "An unexpected error occurred."
+            }
+        )
+
+
+# Include REST API Routers under /api/v1 prefix
+app.include_router(health.router, prefix="/api/v1")
+app.include_router(system.router, prefix="/api/v1")
+app.include_router(sessions.router, prefix="/api/v1")
+app.include_router(capabilities.router, prefix="/api/v1")
+app.include_router(devices.router, prefix="/api/v1")
+app.include_router(memory.router, prefix="/api/v1")
+app.include_router(voice.router, prefix="/api/v1")
+app.include_router(vision.router, prefix="/api/v1")
+app.include_router(repositories.router, prefix="/api/v1")
+app.include_router(automation.router, prefix="/api/v1")
+app.include_router(files.router, prefix="/api/v1")
+app.include_router(audit.router, prefix="/api/v1")
+app.include_router(developer.router, prefix="/api/v1")
+
+# Mount React UI static assets if built
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+
+ui_dist_dir = Path(__file__).resolve().parent.parent / "desktop" / "ui" / "dist"
+if ui_dist_dir.exists():
+    app.mount("/assets", StaticFiles(directory=str(ui_dist_dir / "assets")), name="static_assets")
+
+    @app.get("/", tags=["UI"])
+    async def serve_ui():
+        from fastapi.responses import FileResponse
+        return FileResponse(str(ui_dist_dir / "index.html"))
+
+    @app.get("/{full_path:path}", tags=["UI"], include_in_schema=False)
+    async def serve_spa_catchall(full_path: str):
+        if full_path.startswith("api/") or full_path.startswith("ws/") or full_path.startswith("assets/"):
+            return JSONResponse(status_code=404, content={"error": "Not Found"})
+        from fastapi.responses import FileResponse
+        return FileResponse(str(ui_dist_dir / "index.html"))
+else:
+    @app.get("/", tags=["Root"])
+    async def root():
+        """Root endpoint verifying MATRIX Core is active."""
+        return {
+            "name": settings.app_name,
+            "version": settings.version,
+            "status": "OPERATIONAL",
+            "system": "JARVIS-inspired Personal AI Ecosystem",
+            "docs": "/docs",
+            "health": "/api/v1/health"
+        }
+
+
+@app.websocket("/ws/events")
+async def websocket_events(websocket: WebSocket):
+    """Bidirectional real-time event socket for UI command center."""
+    await ws_manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            logger.debug(f"Received WS message: {data}")
+            # Echo or dispatch user events
+            await websocket.send_json({
+                "type": "ack",
+                "received": data
+            })
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        ws_manager.disconnect(websocket)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "api.server:app",
+        host=settings.host,
+        port=settings.port,
+        reload=settings.debug
+    )

@@ -1,0 +1,45 @@
+# ==========================================
+# MATRIX: Python Dependencies (Phase 1+)
+# Python 3.12+ (Windows 11 x64, Ryzen 7 AVX2)
+# ==========================================
+
+# Core Backend Framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
+python-dotenv>=1.0.1
+starlette>=0.38.0
+websockets>=13.0
+
+# Database & Async ORM
+SQLAlchemy>=2.0.35
+aiosqlite>=0.20.0
+greenlet>=3.1.0
+
+# System & Hardware Telemetry
+psutil>=6.0.0
+rich>=13.8.0
+
+# HTTP & Async Client
+httpx>=0.27.0
+aiohttp>=3.10.0
+
+# Security & Utilities
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+
+# Testing
+pytest>=8.3.0
+pytest-asyncio>=0.24.0
+
+# Desktop & PC Automation (Ready for Phase 5)
+pywin32>=306
+pywinauto>=0.6.8
+pyautogui>=0.9.54
+
+# Speech & Audio (Ready for Phase 4)
+sounddevice>=0.5.0
+soundfile>=0.12.1
+faster-whisper>=1.0.0
+kokoro-onnx>=0.6.0
