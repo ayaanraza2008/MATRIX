@@ -32,16 +32,26 @@ class ReasoningEngine:
             ))
 
         elif intent.intent_type == IntentType.RESEARCH:
-            # Check if direct browser operation requested
-            steps.append(PlanStep(
-                step_id=1,
-                title="Execute Web Search & Browser Extraction",
-                agent_name="browser",
-                tool_name="search_web",
-                arguments={"query": intent.parameters.get("query", intent.raw_prompt)},
-                risk_level=1,
-                verification_hook="verify_sources_found"
-            ))
+            if intent.target_agent == "research":
+                steps.append(PlanStep(
+                    step_id=1,
+                    title="Execute Deep Research Dossier",
+                    agent_name="research",
+                    tool_name="execute",
+                    arguments={"query": intent.parameters.get("query", intent.raw_prompt)},
+                    risk_level=1,
+                    verification_hook="verify_sources_found"
+                ))
+            else:
+                steps.append(PlanStep(
+                    step_id=1,
+                    title="Execute Web Search & Browser Extraction",
+                    agent_name="browser",
+                    tool_name="search_web",
+                    arguments={"query": intent.parameters.get("query", intent.raw_prompt)},
+                    risk_level=1,
+                    verification_hook="verify_sources_found"
+                ))
 
         elif intent.intent_type == IntentType.CODING:
             p_low = intent.raw_prompt.lower()
@@ -166,6 +176,61 @@ class ReasoningEngine:
                 arguments={"query": intent.raw_prompt},
                 risk_level=1,
                 verification_hook="verify_vision_inspected"
+            ))
+
+        elif intent.intent_type == IntentType.ANDROID:
+            steps.append(PlanStep(
+                step_id=1,
+                title="Generate Android Companion Token & Device Status",
+                agent_name="android",
+                tool_name="pair",
+                arguments={"action": "pair"},
+                risk_level=1,
+                verification_hook="verify_android_token"
+            ))
+
+        elif intent.intent_type == IntentType.DATA_ANALYSIS:
+            steps.append(PlanStep(
+                step_id=1,
+                title="Analyze Tabular Dataset & Statistics",
+                agent_name="data_analysis",
+                tool_name="analyze_csv",
+                arguments=intent.parameters,
+                risk_level=1,
+                verification_hook="verify_data_analyzed"
+            ))
+
+        elif intent.intent_type == IntentType.WORKFLOW:
+            steps.append(PlanStep(
+                step_id=1,
+                title="Schedule Automated Workflow",
+                agent_name="automation",
+                tool_name="create_workflow",
+                arguments={"title": intent.raw_prompt, "steps": []},
+                risk_level=2,
+                verification_hook="verify_workflow_scheduled"
+            ))
+
+        elif intent.intent_type == IntentType.SECURITY:
+            steps.append(PlanStep(
+                step_id=1,
+                title="Inspect Security Policy & Payload",
+                agent_name="security",
+                tool_name="evaluate_payload",
+                arguments={"command": intent.raw_prompt},
+                risk_level=1,
+                verification_hook="verify_security_audit"
+            ))
+
+        elif intent.intent_type == IntentType.QUERY:
+            steps.append(PlanStep(
+                step_id=1,
+                title="Personal Assistant Response",
+                agent_name="personal",
+                tool_name="answer",
+                arguments={"query": intent.raw_prompt},
+                risk_level=0,
+                verification_hook="verify_personal_response"
             ))
 
         else:

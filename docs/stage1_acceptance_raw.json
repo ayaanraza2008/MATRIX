@@ -1,0 +1,632 @@
+{
+  "timestamp": 1794079942.926817,
+  "duration_seconds": 52.37,
+  "summary": {
+    "TEST_1_AGENTS": {
+      "total": 16,
+      "pass": 16,
+      "partial": 0,
+      "fail": 0
+    },
+    "TEST_2_VOICE": {
+      "total": 7,
+      "pass": 7,
+      "partial": 0,
+      "fail": 0
+    },
+    "TEST_3_COMPUTER": {
+      "total": 7,
+      "pass": 7,
+      "partial": 0,
+      "fail": 0
+    },
+    "TEST_4_BROWSER": {
+      "total": 4,
+      "pass": 4,
+      "partial": 0,
+      "fail": 0
+    },
+    "TEST_5_VISION": {
+      "total": 5,
+      "pass": 5,
+      "partial": 0,
+      "fail": 0
+    },
+    "TEST_6_REPO_ENGINE": {
+      "total": 5,
+      "pass": 5,
+      "partial": 0,
+      "fail": 0
+    },
+    "TEST_7_MEMORY": {
+      "total": 6,
+      "pass": 6,
+      "partial": 0,
+      "fail": 0
+    },
+    "TEST_8_ANDROID": {
+      "total": 4,
+      "pass": 3,
+      "partial": 1,
+      "fail": 0
+    },
+    "TEST_9_PERFORMANCE": {
+      "total": 4,
+      "pass": 4,
+      "partial": 0,
+      "fail": 0
+    },
+    "TEST_10_SECURITY": {
+      "total": 4,
+      "pass": 4,
+      "partial": 0,
+      "fail": 0
+    }
+  },
+  "suites": {
+    "TEST_1_AGENTS": [
+      {
+        "test_name": "agent_computer",
+        "status": "PASS",
+        "latency_ms": 114.72,
+        "ram_mb": 204.82,
+        "evidence": "Plan: COMPLETED. Reply: Command `whoami` executed successfully: ``` pc-lenovo\\ali raza zaidi ```",
+        "data": {
+          "reply": "Command `whoami` executed successfully:\n```\npc-lenovo\\ali raza zaidi\n```",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_browser",
+        "status": "PASS",
+        "latency_ms": 6077.07,
+        "ram_mb": 207.08,
+        "evidence": "Plan: COMPLETED. Reply: Found 5 web results:  **[1] Google** > Search the world's information, including",
+        "data": {
+          "reply": "Found 5 web results:\n\n**[1] Google**\n> Search the world's information, including webpages, images, videos and more. Google has many special features to help you find \u2026\nSource: https://www.bing.com/ck/a?!&&p=a9664faa76b5d72c84a0139d862968ce242a8ebe0d91352dd069177b25fcca1cJmltdHM9MTc5NDAwOTYwMA&ptn=3&ver=2&hsh=4&fclid=1f5fd60f-b9f0-6ddd-0771-ce05b8366c5b&u=a1aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8&ntb=1\n\n**[2] Search - Microsoft Bing**\n> Search with Microsoft Bing and use the power of AI to find information, explore webpages, images, videos, maps, and more. A smart \u2026\nSource: https://www.bing.com/ck/a?!&&p=16c9a58ab8dfaf5c257f8fd126e7ae9431e59aa4144331ae645cc3bddc9de9e2JmltdHM9MTc5NDAwOTYwMA&ptn=3&ver=2&hsh=4&fclid=1f5fd60f-b9f0-6ddd-0771-ce05b8366c5b&u=a1aHR0cHM6Ly9pbi5iaW5nLmNvbS8&ntb=1\n\n**[3] Search anything, effortlessly**\n> Since our launch in 1997, Google Search has continued to evolve to help you find the information you're looking for. Explore new \u2026\nSource: https://www.bing.com/ck/a?!&&p=d77b92035c47c1bbc8254b259ebc898ce2b17220b60136698f1990d1a3f27db5JmltdHM9MTc5NDAwOTYwMA&ptn=3&ver=2&hsh=4&fclid=1f5fd60f-b9f0-6ddd-0771-ce05b8366c5b&u=a1aHR0cHM6Ly9zZWFyY2guZ29vZ2xlL2ludGwvZW4tSU4v&ntb=1\n\n**[4] Search - Microsoft Bing**\n> Search with Microsoft Bing and use the power of AI to find information, explore webpages, images, videos, maps, and more. A smart \u2026\nSource: https://www.bing.com/\n",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_research",
+        "status": "PASS",
+        "latency_ms": 5503.6,
+        "ram_mb": 207.39,
+        "evidence": "Plan: COMPLETED. Reply: # Research Dossier: Perform deep research on quantum computing and compile a res",
+        "data": {
+          "reply": "# Research Dossier: Perform deep research on quantum computing and compile a research report\n\n### Verified Executive Findings\n\n**[1] Windows10\u7cfb\u7edf\u5982\u4f55\u67e5\u8be2\u5bc6\u94a5 - \u767e\u5ea6\u7ecf\u9a8c**\n> May 1, 2020 \u00b7 Windows10\u7cfb\u7edf\u5982\u4f55\u67e5\u8be2\u5bc6\u94a5,\u5f53\u6211\u4eec\u5728Widow\u9500\u552e\u65b9\u6216\u7ecf\u9500\u65b9\u53d1\u7ed9\u4f60\u7684\u7535\u5b50\u90ae\u4ef6\u4e2d\uff0c\u6216\u8005\u5728WidowDVD\u6216USB\u5305\u88c5\u76d2 \u2026\nSource: [https://www.bing.com/ck/a?!&&p=0ef0b84853c67b6336408f9c2c2bc9ad200f72191bde3c78d903f23407b9807fJmltdHM9MTc5NDAwOTYwMA&ptn=3&ver=2&hsh=4&fclid=15052fcd-7164-6cb2-02ae-37c7700a6def&u=a1aHR0cHM6Ly9qaW5neWFuLmJhaWR1LmNvbS9hcnRpY2xlL2Y3MWQ2MDM3NWIzNTQ3NWJiNzQxZDE0Yy5odG1s&ntb=1](https://www.bing.com/ck/a?!&&p=0ef0b84853c67b6336408f9c2c2bc9ad200f72191bde3c78d903f23407b9807fJmltdHM9MTc5NDAwOTYwMA&ptn=3&ver=2&hsh=4&fclid=15052fcd-7164-6cb2-02ae-37c7700a6def&u=a1aHR0cHM6Ly9qaW5neWFuLmJhaWR1LmNvbS9hcnRpY2xlL2Y3MWQ2MDM3NWIzNTQ3NWJiNzQxZDE0Yy5odG1s&ntb=1)\n\n**[2] \u5982\u4f55\u6fc0\u6d3bwindows10 - \u767e\u5ea6\u7ecf\u9a8c**\n> Apr 10, 2018 \u00b7 \u5982\u4f55\u6fc0\u6d3bwindows10,\u5728\u4f7f\u7528Wi10\u7cfb\u7edf\u7684\u65f6\u5019\uff0c\u8981\u662f\u6ca1\u6709widow\u5bc6\u94a5\uff0c\u90a3\u4e48\u5728\u4f7f\u7528\u7684\u529f\u80fd\u4e0a\u5c31\u4f1a\u6709\u5f88\u591a\u9650\u5236\uff0c\u751a\u81f3\u6ca1\u6709\u4e2a \u2026\nSource: [https://www.bing.com/ck/a?!&&p=33f620f4c511d1024936609687aafee9d21916140c238020ff8452983a428f07JmltdHM9MTc5NDAwOTYwMA&ptn=3&ver=2&hsh=4&fclid=15052fcd-7164-6cb2-02ae-37c7700a6def&u=a1aHR0cHM6Ly9qaW5neWFuLmJhaWR1LmNvbS9hcnRpY2xlLzc3YjhkYzdmYjBkY2M4NjE3NGVhYjY4Ni5odG1s&ntb=1](https://www.bing.com/ck/a?!&&p=33f620f4c511d1024936609687aafee9d21916140c238020ff8452983a428f07JmltdHM9MTc5NDAwOTYwMA&ptn=3&ver=2&hsh=4&fclid=15052fcd-7164-6cb2-02ae-37c7700a6def&u=a1aHR0cHM6Ly9qaW5neWFuLmJhaWR1LmNvbS9hcnRpY2xlLzc3YjhkYzdmYjBkY2M4NjE3NGVhYjY4Ni5odG1s&ntb=1)\n\n**[3] QZZN\u8bba\u575b \u516c\u52a1\u5458\u8003\u8bd5\u8bba\u575b**\n> QZZN\u516c\u52a1\u5458\u8bba\u575b\u662f\u77e5\u540d\u516c\u52a1\u5458\u8003\u8bd5\u8bba\u575b\u548c\u516c\u52a1\u5458\u8bba\u575b\uff0c\u60a8\u53ef\u4ee5\u5728QZZN\u83b7\u5f97\u6700\u65b0\u7684\u516c\u52a1\u5458\u8003\u8bd5\u8d44\u8baf\u3001\u7ecf\u9a8c\u3001\u8d44\u6599\u3001\u771f\u9898\uff0c\u8fd8\u53ef\u4ee5\u8ba4\u8bc6 \u2026\nSource: [https://www.bing.com/ck/a?!&&p=2a48d8b526a9d1cc1975ebcbd1c14c1f476ea45cd19d76bc1a53f6e03a5a51c0JmltdHM9MTc5NDAwOTYwMA&ptn=3&ver=2&hsh=4&fclid=15052fcd-7164-6cb2-02ae-37c7700a6def&u=a1aHR0cHM6Ly9iYnMucXp6bi5jb20v&ntb=1](https://www.bing.com/ck/a?!&&p=2a48d8b526a9d1cc1975ebcbd1c14c1f476ea45cd19d76bc1a53f6e03a5a51c0JmltdHM9MTc5NDAwOTYwMA&ptn=3&ver=2&hsh=4&fclid=15052fcd-7164-6cb2-02ae-37c7700a6def&u=a1aHR0cHM6Ly9iYnMucXp6bi5jb20v&ntb=1)\n\n**[4] \u7518\u8083\u7701\u516c\u52a1\u5458\u8003\u8bd5\u516c\u544a\u518d\u4e0d\u51fa\u6765\uff0c\u7b14\u8bd5\u3001\u9762\u8bd5\u3001\u4f53\u68c0\u5b8c\u5c31\u52302020\u5e74 \u2026**\n> Jul 10, 2019 \u00b7 \u7518\u8083\u7701\u516c\u52a1\u5458\u8003\u8bd5\u516c\u544a\u8fdf\u8fdf\u672a\u51fa\uff0c\u5bfc\u81f4\u8003\u8bd5\u6d41\u7a0b\u53ef\u80fd\u5ef6\u81f32020\u5e74\u3002 \u633a\u6709\u8010\u5fc3\u7684\u7518\u8083\u7701\u516c\u52a1\u5458\u8003\u8bd5\u7518\u8083\u516c\u52a1\u5458\u8003\u8bd5\u7518\u8083\u7701 \u2026\nSource: [https://www.bing.com/ck/a?!&&p=a58a323af42adc0fa4e1cd4200795752c1f0e64b6776ad1b969fc8243bba32a6JmltdHM9MTc5NDAwOTYwMA&ptn=3&ver=2&hsh=4&fclid=15052fcd-7164-6cb2-02ae-37c7700a6def&u=a1aHR0cHM6Ly9iYnMucXp6bi5jb20vdGhyZWFkLTE2NTkwODc3LTEtMS5odG1s&ntb=1](https://www.bing.com/ck/a?!&&p=a58a323af42adc0fa4e1cd4200795752c1f0e64b6776ad1b969fc8243bba32a6JmltdHM9MTc5NDAwOTYwMA&ptn=3&ver=2&hsh=4&fclid=15052fcd-7164-6cb2-02ae-37c7700a6def&u=a1aHR0cHM6Ly9iYnMucXp6bi5jb20vdGhyZWFkLTE2NTkwODc3LTEtMS5odG1s&ntb=1)\n\n**[5] \u8fd0\u884c\u65f6\u51fa\u9519\uff0c \u9519\u8bef\u4fe1\u606f\u5206\u914dxxxxx\u5b57\u8282\u5185\u5b58\u5931\u8d25-\u767e\u5ea6\u7ecf\u9a8c**\n> Dec 3, 2017 \u00b7 \u8fd0\u884c\u65f6\u51fa\u9519\uff0c \u9519\u8bef\u4fe1\u606f\u5206\u914dxxxxx\u5b57\u8282\u5185\u5b58\u5931\u8d25,\u7406\u8bba\u5206\u6790\uff0c\u7a0b\u5e8f\u6267\u884c\u65f6\u8981\u5728\u5185\u5b58\u91cc\u5212\u51fa\u4e00\u5757\u533a\u57df\u6765\uff0c\u5982\u679c\u8fd9\u4e2a\u8fc7\u7a0b\u51fa \u2026\nSource: [https://www.bing.com/ck/a?!&&p=562d6a5066006ca2a0a0483a2045800f09dfaaa5005c10e44c811040c8a9356cJmltdHM9MTc5NDAwOTYwMA&ptn=3&ver=2&hsh=4&fclid=15052fcd-7164-6cb2-02ae-37c7700a6def&u=a1aHR0cHM6Ly9qaW5neWFuLmJhaWR1LmNvbS9hcnRpY2xlL2M5MTAyNzRiYjdiZjVhY2QzNjFkMmRhNi5odG1s&ntb=1](https://www.bing.com/ck/a?!&&p=562d6a5066006ca2a0a0483a2045800f09dfaaa5005c10e44c811040c8a9356cJmltdHM9MTc5NDAwOTYwMA&ptn=3&ver=2&hsh=4&fclid=15052fcd-7164-6cb2-02ae-37c7700a6def&u=a1aHR0cHM6Ly9qaW5neWFuLmJhaWR1LmNvbS9hcnRpY2xlL2M5MTAyNzRiYjdiZjVhY2QzNjFkMmRhNi5odG1s&ntb=1)\n",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_coding",
+        "status": "PASS",
+        "latency_ms": 28.01,
+        "ram_mb": 207.93,
+        "evidence": "Plan: COMPLETED. Reply: AST Code Architecture Analysis for `core\\brain.py` (204 lines of code): - **Clas",
+        "data": {
+          "reply": "AST Code Architecture Analysis for `core\\brain.py` (204 lines of code):\n- **Classes Identified (1)**: MatrixBrain\n- **Key Functions (2)**: process_user_request, interact\n- **Syntax Integrity**: Clean and valid Python AST structure verified.",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_files",
+        "status": "PASS",
+        "latency_ms": 19.02,
+        "ram_mb": 207.98,
+        "evidence": "Plan: COMPLETED. Reply: Storage partition `D:\\matrix_data` inspected: 11 items found.",
+        "data": {
+          "reply": "Storage partition `D:\\matrix_data` inspected: 11 items found.",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_voice",
+        "status": "PASS",
+        "latency_ms": 2121.61,
+        "ram_mb": 219.83,
+        "evidence": "Plan: COMPLETED. Reply: Speech synthesized (Acceptance test initiated).",
+        "data": {
+          "reply": "Speech synthesized (Acceptance test initiated).",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_vision",
+        "status": "PASS",
+        "latency_ms": 5566.29,
+        "ram_mb": 800.6,
+        "evidence": "Plan: COMPLETED. Reply: Ah, you've asked for a visual inspection of your screen contents. It looks like ",
+        "data": {
+          "reply": "Ah, you've asked for a visual inspection of your screen contents. It looks like you're using a high-quality monitor with a low-light setting. The screenshot is quite dark and soft, with a few low-detail elements to smooth it out a bit. There are no text lines present on the screen, which is good news for now. If you have any specific questions about the screen's quality or if you need help with something else, feel free to ask!",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_android",
+        "status": "PASS",
+        "latency_ms": 17.09,
+        "ram_mb": 800.68,
+        "evidence": "Plan: COMPLETED. Reply: Android companion pairing token generated: `mtx_pair_bb679b0a88504c1a`. Protocol",
+        "data": {
+          "reply": "Android companion pairing token generated: `mtx_pair_bb679b0a88504c1a`. Protocol: `matrix://pair?token=mtx_pair_bb679b0a88504c1a&host=127.0.0.1:8000` (Expires in 300s).",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_system",
+        "status": "PASS",
+        "latency_ms": 21.92,
+        "ram_mb": 800.75,
+        "evidence": "Plan: COMPLETED. Reply: Telemetry nominal: CPU at 20.9%, RAM utilization at 91.6%.",
+        "data": {
+          "reply": "Telemetry nominal: CPU at 20.9%, RAM utilization at 91.6%.",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_personal",
+        "status": "PASS",
+        "latency_ms": 18.46,
+        "ram_mb": 800.84,
+        "evidence": "Plan: COMPLETED. Reply: I am MATRIX, your personal AI ecosystem. System is operational and all specializ",
+        "data": {
+          "reply": "I am MATRIX, your personal AI ecosystem. System is operational and all specialized agents are ready.",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_automation",
+        "status": "PASS",
+        "latency_ms": 21.35,
+        "ram_mb": 800.91,
+        "evidence": "Plan: COMPLETED. Reply: Autonomous workflow 'Schedule an automated workflow task for system check' creat",
+        "data": {
+          "reply": "Autonomous workflow 'Schedule an automated workflow task for system check' created and checkpoint saved (Task ID: `task_f5f3566b27`).",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_creative",
+        "status": "PASS",
+        "latency_ms": 21.23,
+        "ram_mb": 800.94,
+        "evidence": "Plan: COMPLETED. Reply: Mermaid Architecture Diagram generated successfully:  ```mermaid graph TD     %%",
+        "data": {
+          "reply": "Mermaid Architecture Diagram generated successfully:\n\n```mermaid\ngraph TD\n    %% Title: MATRIX Personal AI Ecosystem Architecture\n    User[\"User\"] --> Microphone[\"Microphone\"]\n    Microphone[\"Microphone\"] --> Silero_VAD[\"Silero VAD\"]\n    Silero_VAD[\"Silero VAD\"] --> Faster_Whisper_STT[\"Faster Whisper STT\"]\n    Faster_Whisper_STT[\"Faster Whisper STT\"] --> Matrix_Brain[\"Matrix Brain\"]\n    Matrix_Brain[\"Matrix Brain\"] --> Autonomous_Multi-Agent_Orchestrator[\"Autonomous Multi-Agent Orchestrator\"]\n    Autonomous_Multi-Agent_Orchestrator[\"Autonomous Multi-Agent Orchestrator\"] --> Tool_Adapters[\"Tool Adapters\"]\n    Matrix_Brain[\"Matrix Brain\"] --> Edge_TTS_Audio_Engine[\"Edge TTS Audio Engine\"]\n```",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_memory",
+        "status": "PASS",
+        "latency_ms": 25.69,
+        "ram_mb": 801.09,
+        "evidence": "Plan: COMPLETED. Reply: Preference stored in persistent long-term memory: `favorite_city` -> `Tokyo`.",
+        "data": {
+          "reply": "Preference stored in persistent long-term memory: `favorite_city` -> `Tokyo`.",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_repo_intel",
+        "status": "PASS",
+        "latency_ms": 4934.35,
+        "ram_mb": 803.05,
+        "evidence": "Plan: COMPLETED. Reply: Welcome to the Matrix, an autonomous AI architect.  Our decision to select the S",
+        "data": {
+          "reply": "Welcome to the Matrix, an autonomous AI architect.\n\nOur decision to select the SystemTelemetryAdapter (STA) from AbuZar-Ansarii/Ultron for your task of inspecting starred repositories inventory is based on the following criteria:\n\n1. **Hardware Telemetry**: The system is equipped with hardware telemetry capabilities, which makes it well-suited for inspecting system resources and components like starred repositories.\n\n2. **System & Automation -> Agent: system**: This classification aligns with our tool selection strategy, as the SystemTelemetryAdapter is specifically designed to monitor and manage hardware and software resources.\n\n3. **Compatibility Score**: The STA is rated as 0.9 on the AMD Ryzen 7 5700U, indicating it is well-integrated with the system's architecture.\n\n4. **Decision Reasoning**: We have opted for this architecture for general system inspection, given the high compatibility with the system architecture.\n\n**Verification on AMD Ryzen 7 5700U**: The SystemTelemetryAdapter has been tested on the AMD Ryzen 7 5700U, and its compatibility score of 0.9 on the Ryzen 7 5700U indicates that it is highly integrated with the system.\n\n**JARVIS Response**: We have selected the SystemTelemetryAdapter (STA) from AbuZar-Ansarii/Ultron for your task of inspecting starred repositories inventory. We have confirmed the selected architecture",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_security",
+        "status": "PASS",
+        "latency_ms": 23.93,
+        "ram_mb": 803.12,
+        "evidence": "Plan: COMPLETED. Reply: Security audit complete: Payload verified clean. (Policy Level 3).",
+        "data": {
+          "reply": "Security audit complete: Payload verified clean. (Policy Level 3).",
+          "plan_status": "COMPLETED"
+        }
+      },
+      {
+        "test_name": "agent_data_analysis",
+        "status": "PASS",
+        "latency_ms": 16.54,
+        "ram_mb": 803.16,
+        "evidence": "Plan: COMPLETED. Reply: Data analysis engine nominal: Python Built-in Statistics & CSV Engine.",
+        "data": {
+          "reply": "Data analysis engine nominal: Python Built-in Statistics & CSV Engine.",
+          "plan_status": "COMPLETED"
+        }
+      }
+    ],
+    "TEST_2_VOICE": [
+      {
+        "test_name": "wake_word_armed",
+        "status": "PASS",
+        "latency_ms": 146.38,
+        "ram_mb": 836.06,
+        "evidence": "Armed: True, Sensitivity: 0.5",
+        "data": {}
+      },
+      {
+        "test_name": "wake_word_silence_rejection",
+        "status": "PASS",
+        "latency_ms": 7.21,
+        "ram_mb": 836.2,
+        "evidence": "Silence rejection verified (detected: None)",
+        "data": {}
+      },
+      {
+        "test_name": "vad_silence_detection",
+        "status": "PASS",
+        "latency_ms": 0.97,
+        "ram_mb": 836.21,
+        "evidence": "Silence speech prob: 0.000",
+        "data": {}
+      },
+      {
+        "test_name": "vad_audio_energy_metering",
+        "status": "PASS",
+        "latency_ms": 0.21,
+        "ram_mb": 836.23,
+        "evidence": "RMS Energy: 0.3235 > Threshold: 0.015",
+        "data": {}
+      },
+      {
+        "test_name": "tts_synthesis_english",
+        "status": "PASS",
+        "latency_ms": 1172.96,
+        "ram_mb": 832.59,
+        "evidence": "Generated: speech_1794079915248.mp3 (19296 bytes)",
+        "data": {}
+      },
+      {
+        "test_name": "tts_synthesis_hindi",
+        "status": "PASS",
+        "latency_ms": 1152.17,
+        "ram_mb": 832.3,
+        "evidence": "Generated: speech_1794079916422.mp3 (25344 bytes)",
+        "data": {}
+      },
+      {
+        "test_name": "echo_suppression_and_interrupt",
+        "status": "PASS",
+        "latency_ms": 0.93,
+        "ram_mb": 832.3,
+        "evidence": "Acoustic feedback suppressed while TTS active; interrupt confirmed.",
+        "data": {}
+      }
+    ],
+    "TEST_3_COMPUTER": [
+      {
+        "test_name": "create_test_file",
+        "status": "PASS",
+        "latency_ms": 0.97,
+        "ram_mb": 832.32,
+        "evidence": "File created: D:\\matrix_data\\test_workspace\\autonomy_test.txt (47 bytes)",
+        "data": {}
+      },
+      {
+        "test_name": "read_and_analyze_file",
+        "status": "PASS",
+        "latency_ms": 0.84,
+        "ram_mb": 832.34,
+        "evidence": "Read text: 'JARVIS Computer Autonomy Verification Fi'",
+        "data": {}
+      },
+      {
+        "test_name": "search_folders",
+        "status": "PASS",
+        "latency_ms": 0.24,
+        "ram_mb": 832.36,
+        "evidence": "Found 1 files in D:\\matrix_data\\test_workspace",
+        "data": {}
+      },
+      {
+        "test_name": "safe_system_command",
+        "status": "PASS",
+        "latency_ms": 88.81,
+        "ram_mb": 832.54,
+        "evidence": "Output: 'pc-lenovo\\ali raza zaidi'",
+        "data": {}
+      },
+      {
+        "test_name": "open_application",
+        "status": "PASS",
+        "latency_ms": 1157.33,
+        "ram_mb": 831.87,
+        "evidence": "App: calc, Running: calc.exe",
+        "data": {}
+      },
+      {
+        "test_name": "inspect_screen_contents",
+        "status": "PASS",
+        "latency_ms": 26.41,
+        "ram_mb": 856.06,
+        "evidence": "Captured: 1920x1080 via GDI_Direct",
+        "data": {}
+      },
+      {
+        "test_name": "error_recovery_unapproved_app",
+        "status": "PASS",
+        "latency_ms": 0.09,
+        "ram_mb": 856.06,
+        "evidence": "Gracefully intercepted: 'Application 'unknown' is not in the authorized pre-approved allowlist.'",
+        "data": {}
+      }
+    ],
+    "TEST_4_BROWSER": [
+      {
+        "test_name": "real_web_search",
+        "status": "PASS",
+        "latency_ms": 5750.32,
+        "ram_mb": 832.39,
+        "evidence": "Retrieved 5 search results",
+        "data": {}
+      },
+      {
+        "test_name": "open_website_and_extract",
+        "status": "PASS",
+        "latency_ms": 4569.36,
+        "ram_mb": 833.12,
+        "evidence": "Page Title: 'Example Domain', Length: 917 chars",
+        "data": {}
+      },
+      {
+        "test_name": "compare_sources_and_summarize",
+        "status": "PASS",
+        "latency_ms": 5066.24,
+        "ram_mb": 833.34,
+        "evidence": "Compiled dossier from 5 sources with links.",
+        "data": {}
+      },
+      {
+        "test_name": "handle_unavailable_website",
+        "status": "PASS",
+        "latency_ms": 5391.1,
+        "ram_mb": 833.9,
+        "evidence": "Handled error cleanly: 'Navigation failed: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://nonexistent-domain-404-xyz.org/\nCall log:\n  - navigating to \"https://nonexistent-domain-404-xyz.org/\", waiting until \"domcontentloaded\"\n | Fallback: [Errno 11001] getaddrinfo failed'",
+        "data": {}
+      }
+    ],
+    "TEST_5_VISION": [
+      {
+        "test_name": "desktop_screenshot",
+        "status": "PASS",
+        "latency_ms": 24.12,
+        "ram_mb": 858.05,
+        "evidence": "Resolution: 1920x1080 via GDI_Direct",
+        "data": {}
+      },
+      {
+        "test_name": "screen_text_ocr",
+        "status": "PASS",
+        "latency_ms": 35.96,
+        "ram_mb": 860.95,
+        "evidence": "Extracted 0 lines using Windows OCR",
+        "data": {}
+      },
+      {
+        "test_name": "camera_capture",
+        "status": "PASS",
+        "latency_ms": 2068.97,
+        "ram_mb": 861.02,
+        "evidence": "Camera status: True, File: D:\\matrix_data\\cache\\vision\\cam_1794079941745.jpg",
+        "data": {}
+      },
+      {
+        "test_name": "perceptual_scene_analysis",
+        "status": "PASS",
+        "latency_ms": 59.96,
+        "ram_mb": 875.97,
+        "evidence": "Scene: Visual Frame (1920x1080): Captured scene is dark/low-light (brightness: 0.0/255), featuring soft/diffuse elements (sharpness: 0.0) with low-detail/smooth structural density.",
+        "data": {}
+      },
+      {
+        "test_name": "camera_error_handling",
+        "status": "PASS",
+        "latency_ms": 402.21,
+        "ram_mb": 852.06,
+        "evidence": "Graceful error: 'Camera index 99 is busy or unavailable.'",
+        "data": {}
+      }
+    ],
+    "TEST_6_REPO_ENGINE": [
+      {
+        "test_name": "search_all_65_repositories",
+        "status": "PASS",
+        "latency_ms": 0.18,
+        "ram_mb": 852.08,
+        "evidence": "Catalog contains 65 repos; found 5 matches for 'security'",
+        "data": {}
+      },
+      {
+        "test_name": "select_best_tool_independently",
+        "status": "PASS",
+        "latency_ms": 0.09,
+        "ram_mb": 852.08,
+        "evidence": "Best selected: K-Dense-AI/scientific-agent-skills (Adapter: scientific-agent-skillsAdapter)",
+        "data": {}
+      },
+      {
+        "test_name": "reuse_existing_adapters",
+        "status": "PASS",
+        "latency_ms": 0.0,
+        "ram_mb": 852.08,
+        "evidence": "Cached instance identity confirmed: True",
+        "data": {}
+      },
+      {
+        "test_name": "detect_incompatible_hardware",
+        "status": "PASS",
+        "latency_ms": 0.01,
+        "ram_mb": 852.08,
+        "evidence": "Detected CUDA barrier: Requires dedicated NVIDIA CUDA GPU with minimum 16GB VRAM. R",
+        "data": {}
+      },
+      {
+        "test_name": "policy_installation_boundary",
+        "status": "PASS",
+        "latency_ms": 3.89,
+        "ram_mb": 852.11,
+        "evidence": "Untrusted package blocked from auto-install (Level: 3)",
+        "data": {}
+      }
+    ],
+    "TEST_7_MEMORY": [
+      {
+        "test_name": "save_user_preference",
+        "status": "PASS",
+        "latency_ms": 11.62,
+        "ram_mb": 852.13,
+        "evidence": "Saved key 'test_preference_theme' -> 'matrix_cyan'",
+        "data": {}
+      },
+      {
+        "test_name": "retrieve_preference_new_session",
+        "status": "PASS",
+        "latency_ms": 2.57,
+        "ram_mb": 852.16,
+        "evidence": "Retrieved 7 memories; test key found: True",
+        "data": {}
+      },
+      {
+        "test_name": "update_preference",
+        "status": "PASS",
+        "latency_ms": 17.06,
+        "ram_mb": 852.18,
+        "evidence": "Updated key 'test_preference_theme' -> 'jarvis_gold'",
+        "data": {}
+      },
+      {
+        "test_name": "context_memory_adapter_recall",
+        "status": "PASS",
+        "latency_ms": 0.03,
+        "ram_mb": 852.18,
+        "evidence": "ContextMemoryAdapter stored & recalled 1 items",
+        "data": {}
+      },
+      {
+        "test_name": "delete_test_memory",
+        "status": "PASS",
+        "latency_ms": 6.5,
+        "ram_mb": 852.21,
+        "evidence": "Test key purged cleanly (still present: False)",
+        "data": {}
+      },
+      {
+        "test_name": "sqlite_persistence_verified",
+        "status": "PASS",
+        "latency_ms": 1.0,
+        "ram_mb": 852.21,
+        "evidence": "Database: D:\\matrix_data\\matrix.db (303104 bytes)",
+        "data": {}
+      }
+    ],
+    "TEST_8_ANDROID": [
+      {
+        "test_name": "apk_build_verified",
+        "status": "PASS",
+        "latency_ms": 0.16,
+        "ram_mb": 852.21,
+        "evidence": "APK file: app-debug.apk (14.9 MB)",
+        "data": {}
+      },
+      {
+        "test_name": "generate_pairing_token",
+        "status": "PASS",
+        "latency_ms": 0.06,
+        "ram_mb": 852.21,
+        "evidence": "Token: mtx_pair_c13987528782470f, QR: matrix://pair?token=mtx_pair_c13987528782470f&host=127.0.0.1:8000",
+        "data": {}
+      },
+      {
+        "test_name": "device_pairing_db_registration",
+        "status": "PASS",
+        "latency_ms": 6.1,
+        "ram_mb": 852.22,
+        "evidence": "Device registered in SQLite: android_test_device_99",
+        "data": {}
+      },
+      {
+        "test_name": "adb_device_discovery",
+        "status": "PARTIAL",
+        "latency_ms": 109.99,
+        "ram_mb": 852.32,
+        "evidence": "ADB daemon active; attached physical devices: 0",
+        "data": {}
+      }
+    ],
+    "TEST_9_PERFORMANCE": [
+      {
+        "test_name": "system_cpu_utilization",
+        "status": "PASS",
+        "latency_ms": 506.68,
+        "ram_mb": 852.32,
+        "evidence": "Current CPU usage: 1.8% across 16 threads",
+        "data": {}
+      },
+      {
+        "test_name": "system_ram_envelope",
+        "status": "PASS",
+        "latency_ms": 506.68,
+        "ram_mb": 852.32,
+        "evidence": "Total RAM: 7.38 GB, Used: 92.3%, Available: 579.1 MB",
+        "data": {}
+      },
+      {
+        "test_name": "matrix_process_ram",
+        "status": "PASS",
+        "latency_ms": 506.68,
+        "ram_mb": 852.32,
+        "evidence": "MATRIX process footprint: 852.3 MB (Budget: 1200 MB with local LLM resident)",
+        "data": {}
+      },
+      {
+        "test_name": "local_llm_warm_latency",
+        "status": "PASS",
+        "latency_ms": 0.23,
+        "ram_mb": 852.32,
+        "evidence": "Local Qwen GGUF model resident and warm (0.2ms, model: qwen2.5-0.5b-instruct-q4_k_m)",
+        "data": {}
+      }
+    ],
+    "TEST_10_SECURITY": [
+      {
+        "test_name": "block_destructive_format",
+        "status": "PASS",
+        "latency_ms": 15.75,
+        "ram_mb": 852.37,
+        "evidence": "Reply: 'Security policy requires explicit authorization (Risk Level 0). P'",
+        "data": {}
+      },
+      {
+        "test_name": "block_destructive_rmdir",
+        "status": "PASS",
+        "latency_ms": 15.09,
+        "ram_mb": 852.39,
+        "evidence": "Reply: 'Security policy requires explicit authorization (Risk Level 3). P'",
+        "data": {}
+      },
+      {
+        "test_name": "sandbox_path_traversal_blocked",
+        "status": "PASS",
+        "latency_ms": 1.36,
+        "ram_mb": 852.4,
+        "evidence": "Path traversal rejected: 'Access denied: 'C:\\Windows\\System32\\drivers\\etc\\hosts' is outside approved MATRIX partitions.'",
+        "data": {}
+      },
+      {
+        "test_name": "audit_log_persistence",
+        "status": "PASS",
+        "latency_ms": 2.83,
+        "ram_mb": 852.42,
+        "evidence": "Verified 5 tamper-evident audit records in SQLite",
+        "data": {}
+      }
+    ]
+  }
+}

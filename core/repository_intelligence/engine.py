@@ -135,7 +135,7 @@ class RepositoryIntelligenceEngine:
         elif any(w in q for w in ["security", "port", "vulnerability", "audit", "scan", "header", "cyber"]):
             candidates = self.search_repositories("security", "Security & MCP")
         elif any(w in q for w in ["code", "ast", "lint", "refactor", "syntax", "python script", "programming"]):
-            candidates = self.search_repositories("coding", "Coding & DevTools")
+            candidates = self.search_repositories("code", "Coding & DevTools")
         elif any(w in q for w in ["android", "mobile", "adb", "apk", "phone"]):
             candidates = self.search_repositories("mobile", "Mobile & Android")
         elif any(w in q for w in ["memory", "context", "history", "recall", "episodic"]):

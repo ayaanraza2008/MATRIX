@@ -25,6 +25,8 @@ class IntentType(str, Enum):
     REPO_INTEL = "repo_intel"  # Inspect starred repos, generate skills
     MEMORY = "memory"          # Store, recall, and retrieve preferences/memories
     CREATIVE = "creative"      # Diagrams, Mermaid flowcharts, SVGs, media plans
+    DATA_ANALYSIS = "data_analysis"  # Tabular, CSV, statistics, dataset
+    ANDROID = "android"        # Phone pairing, mobile companion, push notification
     CHAT = "chat"              # General conversational dialog
 
 
@@ -55,17 +57,25 @@ class IntentEngine:
 
         # 4. Coding & AST Structural Analysis
         (r"\b(analyze\s+(?:the\s+)?(?:python\s+)?file|inspect\s+(?:the\s+)?(?:code|file|architecture)|verify\s+syntax|lint|ast|code\s+analysis|coding\s+capability)\b", IntentType.CODING, "coding", 2),
-        (r"\b(code|script|program|debug|fix error|refactor|function|class|test|unit test|git|commit|pull request|typescript)\b", IntentType.CODING, "coding", 2),
+        (r"\b(code|script|program|debug|fix error|refactor|function|class|unit test|pytest|test runner|test suite|git commit|pull request|typescript)\b", IntentType.CODING, "coding", 2),
 
         # 5. Research & Browser Automation
-        (r"\b(search the web|research|find articles|look up online|compare sources|what is the latest|news on|browser\s+capability|using\s+(?:the\s+)?browser|browse\s+https?://|web\s+information)\b", IntentType.RESEARCH, "browser", 1),
+        (r"\b(deep\s+research|research\s+dossier|research\s+report|in-depth\s+research|research\s+paper|research\s+on\s+.+)\b", IntentType.RESEARCH, "research", 1),
+        (r"\b(search the web|research|find articles|look up online|compare sources|what is the latest|news on|browser\s+capability|using\s+(?:the\s+)?browser|browse\s+https?://|web\s+information|web\s+search)\b", IntentType.RESEARCH, "browser", 1),
 
-        # 6. PC Control / Command
+        # 6. Android Companion
+        (r"\b(android|pair\s+phone|pairing\s+token|pair\s+device|mobile\s+companion|push\s+notification)\b", IntentType.ANDROID, "android", 1),
+
+        # 7. Data Analysis & Tabular CSV
+        (r"\b(data\s+analysis|dataset|tabular|statistics|numerical\s+analysis|analyze\s+csv|calculate\s+stats)\b", IntentType.DATA_ANALYSIS, "data_analysis", 1),
+
+        # 8. PC Control / Command
         (r"\b(open|launch|start|run|close|switch to|maximize|minimize|type|click|press)\b.*\b(notepad|calc|browser|chrome|terminal|cmd|powershell|window|app|code)\b", IntentType.COMMAND, "computer", 1),
+        (r"\b(safe\s+command|run\s+command|execute\s+command|whoami|hostname|ipconfig|systeminfo)\b", IntentType.COMMAND, "computer", 1),
         (r"\b(screenshot|capture screen|take a snap)\b", IntentType.COMMAND, "computer", 1),
 
-        # 7. File & Document Intelligence
-        (r"\b(pdf|docx|xlsx|csv|read document|summarize file|convert format|extract text from file|organize files|find files)\b", IntentType.FILES, "files", 1),
+        # 9. File & Document Intelligence
+        (r"\b(pdf|docx|xlsx|read document|summarize file|convert format|extract text from file|organize files|find files|personal files|storage files|list\s+files)\b", IntentType.FILES, "files", 1),
 
         # 8. Vision & Camera
         (r"\b(screen|camera|webcam|visible on my screen|what is on my screen|what is currently visible|read this image|ocr|look at this|scan this)\b", IntentType.VISION, "vision", 1),
@@ -80,10 +90,10 @@ class IntentEngine:
         (r"\b(starred repo|repositories|github|integrate repo|hexstrike|ego-lite|chatterbox|agentmemory|select\s+tool|capability\s+gap)\b", IntentType.REPO_INTEL, "repo_intel", 1),
 
         # 12. Security & Audit
-        (r"\b(security|audit|permission|firewall|sandbox|mitre|vulnerability|risk)\b", IntentType.SECURITY, "security", 2),
+        (r"\b(security|audit|permission|firewall|sandbox|mitre|vulnerability|risk|security\s+policy|evaluate\s+payload)\b", IntentType.SECURITY, "security", 2),
 
         # 13. Multi-Step Workflows
-        (r"\b(workflow|automate|schedule|recurring|every morning|pipeline|background task)\b", IntentType.WORKFLOW, "automation", 3),
+        (r"\b(workflow|automate|schedule|recurring|every morning|pipeline|background task)\b", IntentType.WORKFLOW, "automation", 2),
     ]
 
     def classify(self, prompt: str) -> ParsedIntent:

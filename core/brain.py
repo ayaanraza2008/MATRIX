@@ -187,6 +187,7 @@ class MatrixBrain:
         return {
             "session_id": session_id,
             "response": reply_content,
+            "reply": reply_content,
             "plan_status": orch_res.plan.status,
             "plan_title": orch_res.plan.title,
             "steps_count": len(orch_res.plan.steps),

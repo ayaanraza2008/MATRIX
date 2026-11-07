@@ -46,15 +46,21 @@ class ComputerAgent(BaseAgent):
         if "window" in action_lower or "running apps" in raw_prompt:
             return await self._list_windows(start_time)
 
-        # 4. Launch Application
+        # 4. Controlled Command Execution
+        if "command" in action_lower or "cmd" in action_lower or any(c in raw_prompt for c in ["whoami", "hostname", "ipconfig", "systeminfo", "dir"]):
+            cmd = parameters.get("command", "")
+            if not cmd:
+                for sc in self.SAFE_COMMAND_ALLOWLIST:
+                    if sc in raw_prompt:
+                        cmd = sc
+                        break
+            if cmd:
+                return await self._execute_controlled_command(cmd, start_time)
+
+        # 5. Launch Application
         if any(w in action_lower or w in raw_prompt for w in ["open", "launch", "start", "run"]):
             app_target = self._detect_target_app(raw_prompt)
             return await self._launch_app(app_target, start_time)
-
-        # 5. Controlled Command Execution
-        if "command" in action_lower or "cmd" in action_lower:
-            cmd = parameters.get("command", "")
-            return await self._execute_controlled_command(cmd, start_time)
 
         # 6. Keyboard & Mouse Simulation
         if "type" in action_lower or "press" in action_lower or "click" in action_lower:

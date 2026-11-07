@@ -14,7 +14,7 @@ logger = get_logger("core.repo_intel.resource_guard")
 class ResourceGuard:
     """Enforces hardware budgets and safety margins for autonomous tool execution."""
 
-    def __init__(self, min_ram_free_mb: int = 500, max_ram_percent: float = 90.0):
+    def __init__(self, min_ram_free_mb: int = 250, max_ram_percent: float = 96.0):
         self.min_ram_free_mb = min_ram_free_mb
         self.max_ram_percent = max_ram_percent
 

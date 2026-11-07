@@ -105,6 +105,20 @@ class ResponseGenerator:
                 return f"Speech synthesized ({data.get('text')})."
             elif action == "evaluate_payload":
                 return f"Security audit complete: {data.get('reason')} (Policy Level {data.get('policy_level')})."
+            elif action in ["generate_pairing_token", "pair"]:
+                return f"Android companion pairing token generated: `{data.get('pairing_token')}`. Protocol: `{data.get('qr_protocol')}` (Expires in {data.get('expires_in_seconds')}s)."
+            elif action in ["data_status", "analyze_csv"]:
+                num_s = data.get("numerical_summary", {})
+                if num_s:
+                    cols_desc = ", ".join([f"{k} (mean: {v.get('mean')})" for k, v in list(num_s.items())[:3]])
+                    return f"Tabular data analysis complete: {data.get('rows_count', 0)} rows analyzed. Summary: {cols_desc}."
+                return f"Data analysis engine nominal: {data.get('engine', 'Python statistics engine')}."
+            elif action == "create_workflow":
+                return f"Autonomous workflow '{data.get('title')}' created and checkpoint saved (Task ID: `{data.get('task_id')}`)."
+            elif action == "personal_assist":
+                return f"I am {data.get('assistant_name', 'MATRIX')}, your personal AI ecosystem. System is operational and all specialized agents are ready."
+            elif action in ["list_storage_files", "scan_files"]:
+                return f"Storage partition `{data.get('partition', 'D:\\\\matrix_data')}` inspected: {len(data.get('files', []))} items found."
             else:
                 return f"Action '{action}' executed and verified by agent {res.agent_name}."
 
