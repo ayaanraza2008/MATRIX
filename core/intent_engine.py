@@ -56,7 +56,7 @@ class IntentEngine:
         (r"\b(pdf|docx|xlsx|csv|read document|summarize file|convert format|extract text from file|organize files|find files)\b", IntentType.FILES, "files", 1),
 
         # Vision & Camera
-        (r"\b(camera|webcam|what is on my screen|read this image|ocr|look at this|scan this)\b", IntentType.VISION, "vision", 1),
+        (r"\b(screen|camera|webcam|visible on my screen|what is on my screen|what is currently visible|read this image|ocr|look at this|scan this)\b", IntentType.VISION, "vision", 1),
 
         # JARVIS Voice
         (r"\b(speak|say out loud|voice|volume|mute|listen|unmute|talk in hindi|bolna)\b", IntentType.VOICE, "voice", 0),

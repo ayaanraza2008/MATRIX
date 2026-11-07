@@ -104,6 +104,17 @@ class ReasoningEngine:
                 verification_hook="verify_repos_matched"
             ))
 
+        elif intent.intent_type == IntentType.VISION:
+            steps.append(PlanStep(
+                step_id=1,
+                title="Inspect Screen & Read Display via OCR",
+                agent_name="vision",
+                tool_name="inspect_screen",
+                arguments={"query": intent.raw_prompt},
+                risk_level=1,
+                verification_hook="verify_vision_inspected"
+            ))
+
         else:
             # Direct conversational or answer step
             steps.append(PlanStep(

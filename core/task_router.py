@@ -48,7 +48,10 @@ class TaskRouter:
         }
 
     def get_agent(self, agent_name: str) -> Optional[BaseAgent]:
-        return self._agents.get(agent_name.lower())
+        name_clean = agent_name.lower().strip()
+        if name_clean == "core":
+            return self._agents.get("personal")
+        return self._agents.get(name_clean)
 
     def list_agents(self) -> Dict[str, str]:
         return {name: agent.description for name, agent in self._agents.items()}

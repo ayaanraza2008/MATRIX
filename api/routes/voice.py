@@ -1,6 +1,7 @@
 """MATRIX Voice System API Route.
 Provides endpoints for speech synthesis, microphone audio transcription,
-wake-word toggling, audio device discovery, and speech stop controls.
+end-to-end voice loop (Speech -> STT -> Brain -> TTS -> Audio),
+audio file serving, wake-word toggling, audio device discovery, and speech stop controls.
 """
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, status
 from fastapi.responses import FileResponse, JSONResponse
@@ -12,6 +13,7 @@ import asyncio
 from voice.text_to_speech.engine import tts_engine
 from voice.speech_to_text.engine import stt_engine
 from voice.wake_word.engine import wake_word_detector
+from core.brain import brain
 from config.settings import settings
 from config.logging_config import get_logger
 
@@ -31,6 +33,22 @@ class ToggleListenRequest(BaseModel):
 class RecordRequest(BaseModel):
     duration_seconds: float = 3.0
     language: Optional[str] = None
+
+
+@router.get("/audio/{filename}")
+async def get_audio_file(filename: str):
+    """Serve a synthesized speech audio file to the frontend UI or Android client."""
+    safe_name = Path(filename).name
+    candidate_paths = [
+        settings.cache_dir / "voice" / safe_name,
+        settings.cache_dir / "audio" / safe_name,
+    ]
+    for p in candidate_paths:
+        if p.exists() and p.is_file():
+            media_type = "audio/mpeg" if p.suffix.lower() == ".mp3" else "audio/wav"
+            return FileResponse(path=str(p), media_type=media_type, filename=safe_name)
+
+    raise HTTPException(status_code=404, detail="Audio file not found.")
 
 
 @router.post("/speak")
@@ -60,7 +78,7 @@ async def transcribe_audio(
     file: UploadFile = File(...),
     language: Optional[str] = Form(None)
 ):
-    """Transcribe an uploaded audio file using Faster-Whisper."""
+    """Transcribe an uploaded audio recording using Faster-Whisper."""
     upload_dir = settings.cache_dir / "uploads"
     upload_dir.mkdir(parents=True, exist_ok=True)
     temp_path = upload_dir / f"upload_{int(time.time() * 1000)}_{file.filename}"
@@ -73,6 +91,58 @@ async def transcribe_audio(
     return {
         "status": "OK",
         "transcription": result
+    }
+
+
+@router.post("/chat-voice")
+async def chat_voice_loop(
+    file: UploadFile = File(...),
+    session_id: Optional[str] = Form("sess_voice_default"),
+    language: Optional[str] = Form(None)
+):
+    """Full End-to-End Voice Cycle:
+    USER SPEECH -> STT -> MATRIX BRAIN -> TTS -> ASSISTANT AUDIO + TRANSCRIPT
+    """
+    start_time = time.perf_counter()
+    upload_dir = settings.cache_dir / "uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    temp_path = upload_dir / f"voice_in_{int(time.time() * 1000)}_{file.filename}"
+
+    with open(temp_path, "wb") as f:
+        content = await file.read()
+        f.write(content)
+
+    # 1. Speech to Text
+    stt_res = await stt_engine.transcribe(temp_path, language=language)
+    user_text = stt_res.get("text", "").strip()
+
+    if not user_text:
+        return {
+            "status": "ERROR",
+            "error": "No speech detected in audio file",
+            "user_text": "",
+            "reply_text": "I could not hear any speech. Please try speaking again.",
+            "audio_url": None
+        }
+
+    # 2. Process through MATRIX Brain
+    brain_res = await brain.process_user_request(session_id=session_id, user_prompt=user_text)
+    reply_text = brain_res.get("response", "")
+
+    # 3. Text to Speech
+    audio_path = await tts_engine.speak(reply_text)
+    audio_url = f"/api/v1/voice/audio/{audio_path.name}" if (audio_path and audio_path.exists()) else None
+
+    total_latency = (time.perf_counter() - start_time) * 1000
+
+    return {
+        "status": "OK",
+        "user_text": user_text,
+        "reply_text": reply_text,
+        "audio_url": audio_url,
+        "session_id": session_id,
+        "plan_status": brain_res.get("plan_status"),
+        "latency_ms": round(total_latency, 2)
     }
 
 
@@ -98,25 +168,21 @@ async def record_and_transcribe(payload: RecordRequest):
 
     out_dir = settings.cache_dir / "audio"
     out_dir.mkdir(parents=True, exist_ok=True)
-    wav_path = out_dir / f"mic_{int(time.time() * 1000)}.wav"
+    temp_wav = out_dir / f"mic_{int(time.time() * 1000)}.wav"
+    sf.write(str(temp_wav), recording, sr)
 
-    sf.write(str(wav_path), recording, sr)
-    rms = float(np.sqrt(np.mean(recording**2)))
-
-    result = await stt_engine.transcribe(wav_path, language=payload.language)
-
+    result = await stt_engine.transcribe(temp_wav, language=payload.language)
     return {
         "status": "OK",
-        "duration_recorded": duration,
-        "energy_rms": round(rms, 6),
-        "filepath": str(wav_path),
+        "duration": duration,
+        "audio_file": str(temp_wav),
         "transcription": result
     }
 
 
 @router.post("/toggle-listen")
-async def toggle_listen(payload: ToggleListenRequest):
-    """Enable or disable wake-word listening."""
+async def toggle_listening(payload: ToggleListenRequest):
+    """Enable or disable wake-word continuous listening."""
     if payload.enable:
         wake_word_detector.start_listening()
     else:

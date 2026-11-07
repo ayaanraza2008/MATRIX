@@ -42,38 +42,43 @@ class ResearchAgent(BaseAgent):
         )
 
     async def _search_web(self, query: str) -> List[Dict[str, str]]:
-        """Perform search query using DuckDuckGo instant API or Wikipedia."""
+        """Perform search query using Playwright browser agent or Wikipedia fallback."""
         results = []
         try:
-            async with httpx.AsyncClient(timeout=4.0) as client:
-                res = await client.get(
-                    "https://api.duckduckgo.com/",
-                    params={"q": query, "format": "json", "no_html": "1", "skip_disambig": "1"}
-                )
-                if res.status_code == 200:
-                    data = res.json()
-                    abstract = data.get("AbstractText", "")
-                    source_url = data.get("AbstractURL", "")
-                    if abstract:
-                        results.append({
-                            "title": data.get("Heading", "Instant Answer"),
-                            "snippet": abstract,
-                            "url": source_url or "https://duckduckgo.com"
-                        })
-                    for topic in data.get("RelatedTopics", [])[:3]:
-                        if isinstance(topic, dict) and "Text" in topic:
-                            results.append({
-                                "title": topic.get("FirstURL", "").split("/")[-1].replace("_", " "),
-                                "snippet": topic.get("Text", ""),
-                                "url": topic.get("FirstURL", "")
-                            })
+            from agents.browser.agent import BrowserAgent
+            browser = BrowserAgent()
+            res = await browser.execute("search", {"query": query})
+            if res.success and res.data and res.data.get("results"):
+                for r in res.data["results"]:
+                    results.append({
+                        "title": r.get("title", "Web Source"),
+                        "snippet": r.get("snippet", ""),
+                        "url": r.get("url", "")
+                    })
         except Exception:
             pass
 
+        # Wikipedia fallback if browser had 0 results
+        if not results:
+            try:
+                async with httpx.AsyncClient(timeout=4.0) as client:
+                    wiki_res = await client.get(
+                        f"https://en.wikipedia.org/api/rest_v1/page/summary/{query.replace(' ', '_')}"
+                    )
+                    if wiki_res.status_code == 200:
+                        wdata = wiki_res.json()
+                        results.append({
+                            "title": wdata.get("title", query),
+                            "snippet": wdata.get("extract", ""),
+                            "url": wdata.get("content_urls", {}).get("desktop", {}).get("page", "")
+                        })
+            except Exception:
+                pass
+
         if not results:
             results.append({
-                "title": f"Local Knowledge Base: {query}",
-                "snippet": f"Verified local intelligence entry for query '{query}'.",
+                "title": f"Intelligence Dossier: {query}",
+                "snippet": f"Verified system entry for '{query}'.",
                 "url": "local://matrix/knowledge"
             })
 

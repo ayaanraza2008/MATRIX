@@ -9,6 +9,7 @@ import {
   VolumeX,
   Radio,
   Clock,
+  Square,
 } from 'lucide-react';
 import { HealthData, LiveMetricsData } from '../../types';
 
@@ -20,6 +21,8 @@ interface TopNavbarProps {
   onToggleVoice: () => void;
   audioMuted: boolean;
   onToggleMute: () => void;
+  isSpeaking?: boolean;
+  onStopSpeaking?: () => void;
 }
 
 export const TopNavbar: React.FC<TopNavbarProps> = ({
@@ -30,6 +33,8 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   onToggleVoice,
   audioMuted,
   onToggleMute,
+  isSpeaking = false,
+  onStopSpeaking,
 }) => {
   const cpuPercent = metrics?.cpu?.percent ?? health?.system?.cpu_percent ?? 0;
   const ramPercent = metrics?.memory?.percent ?? health?.system?.ram_percent ?? 0;
@@ -71,7 +76,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         {/* Active AI Model Badge */}
         <div className="hidden lg:flex items-center gap-2 text-xs font-mono bg-matrix-cyan/10 border border-matrix-cyan/30 text-matrix-cyan px-3 py-1.5 rounded-md">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>MODEL: {health?.models?.candidate_local ?? 'Qwen2.5 1.5B Q4'}</span>
+          <span>MODEL: {health?.models?.candidate_local ?? 'Qwen2.5 0.5B Q4'}</span>
           <span className="text-[10px] uppercase px-1.5 py-0.2 rounded bg-matrix-cyan/20 border border-matrix-cyan/30">
             LOCAL-FIRST
           </span>
@@ -79,7 +84,19 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
       </div>
 
       {/* Right: Live Telemetry Gauges & Controls */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        {/* Interrupt / Stop Speaking Button */}
+        {isSpeaking && (
+          <button
+            onClick={onStopSpeaking}
+            className="px-3 py-1.5 rounded-md bg-matrix-red/20 border border-matrix-red text-matrix-red text-xs font-mono font-bold flex items-center gap-1.5 animate-pulse hover:bg-matrix-red/40 transition-all shadow-[0_0_12px_rgba(255,0,85,0.4)]"
+            title="Interrupt and Stop Speaking"
+          >
+            <Square className="w-3.5 h-3.5 fill-matrix-red" />
+            <span>STOP SPEAKING</span>
+          </button>
+        )}
+
         {/* CPU Utilization Gauge */}
         <div className="flex items-center gap-2 bg-slate-900/70 border border-slate-800 px-3 py-1 rounded-md text-xs font-mono">
           <Cpu className="w-3.5 h-3.5 text-matrix-cyan" />
@@ -114,7 +131,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           </div>
         </div>
 
-        {/* Wake Word Microphone Status */}
+        {/* Microphone Status */}
         <button
           onClick={onToggleVoice}
           className={`p-2 rounded-md border text-xs font-mono flex items-center gap-1.5 transition-all ${
@@ -122,10 +139,10 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               ? 'bg-matrix-green/15 border-matrix-green/40 text-matrix-green shadow-[0_0_10px_rgba(0,255,157,0.2)]'
               : 'bg-slate-900/70 border-slate-800 text-slate-400 hover:text-slate-200'
           }`}
-          title={voiceActive ? 'Wake Word Active (Hey Matrix)' : 'Voice Inactive'}
+          title={voiceActive ? 'Microphone Active' : 'Push to Talk'}
         >
-          <Radio className={`w-3.5 h-3.5 ${voiceActive ? 'animate-pulse' : ''}`} />
-          <span className="hidden sm:inline">{voiceActive ? 'LISTENING' : 'VOICE'}</span>
+          <Radio className={`w-3.5 h-3.5 ${voiceActive ? 'animate-pulse text-matrix-green' : ''}`} />
+          <span className="hidden sm:inline">{voiceActive ? 'LISTENING' : 'MIC'}</span>
         </button>
 
         {/* Audio Output Mute Toggle */}

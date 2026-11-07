@@ -18,62 +18,68 @@ import { DevicesView } from './components/modules/DevicesView';
 import { SettingsView } from './components/modules/SettingsView';
 
 import {
-  NavSection,
-  HologramState,
   HealthData,
   LiveMetricsData,
   SystemInfoData,
   CapabilityItem,
   SessionItem,
   MessageItem,
+  HologramState,
+  NavSection,
 } from './types';
 
 export const App: React.FC = () => {
+  // Navigation
   const [currentSection, setCurrentSection] = useState<NavSection>('dashboard');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
 
-  // Connectivity & Telemetry State
-  const [connected, setConnected] = useState(false);
+  // System & Connection State
+  const [connected, setConnected] = useState<boolean>(false);
   const [health, setHealth] = useState<HealthData | null>(null);
   const [metrics, setMetrics] = useState<LiveMetricsData | null>(null);
   const [systemInfo, setSystemInfo] = useState<SystemInfoData | null>(null);
-  const [capabilities, setCapabilities] = useState<CapabilityItem[]>([]);
+  const [capabilities, setCapabilities] = useState<CapabilityItem[] | null>(null);
+
+  // Hologram & Voice State
   const [hologramState, setHologramState] = useState<HologramState>('idle');
+  const [voiceActive, setVoiceActive] = useState<boolean>(false);
+  const [audioMuted, setAudioMuted] = useState<boolean>(false);
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+  const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
 
-  // Voice & Audio Controls
-  const [voiceActive, setVoiceActive] = useState(false);
-  const [audioMuted, setAudioMuted] = useState(false);
+  // Audio Recording (Push-to-Talk)
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
-  // Chat Sessions & Messages State
+  // Conversational Data
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageItem[]>([]);
-  const [chatLoading, setChatLoading] = useState(false);
+  const [chatLoading, setChatLoading] = useState<boolean>(false);
 
+  // WebSocket & Timeout Refs
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
 
-  // 1. Fetch Initial Telemetries & Health via REST
+  // 1. Fetch Health & Telemetry
   const fetchHealthAndMetrics = useCallback(async () => {
     try {
-      const [healthRes, metricsRes, infoRes, capsRes] = await Promise.all([
+      const [hRes, mRes, infoRes, capsRes] = await Promise.all([
         fetch('/api/v1/health').catch(() => null),
         fetch('/api/v1/system/metrics').catch(() => null),
         fetch('/api/v1/system/info').catch(() => null),
         fetch('/api/v1/capabilities').catch(() => null),
       ]);
 
-      if (healthRes && healthRes.ok) {
-        const hData = await healthRes.json();
+      if (hRes && hRes.ok) {
+        const hData = await hRes.json();
         setHealth(hData);
-        setConnected(true);
-      } else {
-        setConnected(false);
-        setHologramState('offline');
+        setConnected(hData.status === 'OK');
       }
 
-      if (metricsRes && metricsRes.ok) {
-        const mData = await metricsRes.json();
+      if (mRes && mRes.ok) {
+        const mData = await mRes.json();
         setMetrics(mData);
       }
 
@@ -102,7 +108,6 @@ export const App: React.FC = () => {
         if (data.length > 0 && !activeSessionId) {
           setActiveSessionId(data[0].session_id);
         } else if (data.length === 0) {
-          // Auto create initial session
           createSession();
         }
       }
@@ -187,7 +192,6 @@ export const App: React.FC = () => {
       ws.onclose = () => {
         setConnected(false);
         setHologramState('offline');
-        // Exponential backoff reconnect
         reconnectTimeoutRef.current = window.setTimeout(() => {
           connectWebSocket();
         }, 3000);
@@ -198,9 +202,6 @@ export const App: React.FC = () => {
       };
     } catch {
       // Reconnect after delay
-      reconnectTimeoutRef.current = window.setTimeout(() => {
-        connectWebSocket();
-      }, 3000);
     }
   }, []);
 
@@ -218,16 +219,75 @@ export const App: React.FC = () => {
     };
   }, [fetchHealthAndMetrics, fetchSessions, connectWebSocket]);
 
-  // 4. Command Dispatch Logic
+  // 4. Speech Synthesis Playback Helper
+  const playSpeech = async (text: string) => {
+    try {
+      setHologramState('speaking');
+      setIsSpeaking(true);
+      const res = await fetch('/api/v1/voice/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        setAudioPlayer(audio);
+        audio.onended = () => {
+          setHologramState('idle');
+          setIsSpeaking(false);
+        };
+        audio.onerror = () => {
+          setHologramState('idle');
+          setIsSpeaking(false);
+        };
+        await audio.play();
+      } else {
+        setHologramState('idle');
+        setIsSpeaking(false);
+      }
+    } catch {
+      setHologramState('idle');
+      setIsSpeaking(false);
+    }
+  };
+
+  const handleStopSpeaking = async () => {
+    if (audioPlayer) {
+      audioPlayer.pause();
+      audioPlayer.currentTime = 0;
+    }
+    setIsSpeaking(false);
+    setHologramState('idle');
+    try {
+      await fetch('/api/v1/voice/stop', { method: 'POST' });
+    } catch {
+      // ignore
+    }
+  };
+
+  // 5. Genuine Command & Interaction Dispatch
   const handleSendCommand = async (commandText: string, agent: string = 'core') => {
     if (!activeSessionId) return;
 
     setChatLoading(true);
     setHologramState('thinking');
 
+    // Optimistically append user message
+    const tempUserMsg: MessageItem = {
+      id: Date.now(),
+      session_id: activeSessionId,
+      role: 'user',
+      content: commandText,
+      agent_name: agent,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, tempUserMsg]);
+
     try {
-      // 1. Post user message to backend
-      const res = await fetch(`/api/v1/sessions/${activeSessionId}/messages`, {
+      // Call genuine MATRIX Brain interaction endpoint
+      const res = await fetch(`/api/v1/sessions/${activeSessionId}/interact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -238,46 +298,137 @@ export const App: React.FC = () => {
       });
 
       if (res.ok) {
-        const userMsg: MessageItem = await res.json();
-        setMessages((prev) => [...prev, userMsg]);
+        const data = await res.json();
+        const assistantMsg: MessageItem = {
+          id: Date.now() + 1,
+          session_id: activeSessionId,
+          role: 'assistant',
+          content: data.reply,
+          agent_name: agent,
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
 
-        // Simulate core response for Phase 1 verification
-        setHologramState('executing');
-        setTimeout(async () => {
-          const replyRes = await fetch(`/api/v1/sessions/${activeSessionId}/messages`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              role: 'assistant',
-              content: `MATRIX received directive: "${commandText}". Command verified under Policy Level 3. Execution telemetry logged to SQLite.`,
-              agent_name: agent,
-            }),
-          });
-          if (replyRes.ok) {
-            const assistantMsg: MessageItem = await replyRes.json();
-            setMessages((prev) => [...prev, assistantMsg]);
-          }
+        // Synthesize audio response if unmuted
+        if (!audioMuted && data.reply) {
+          playSpeech(data.reply);
+        } else {
           setHologramState('idle');
-          setChatLoading(false);
-        }, 600);
+        }
+      } else {
+        setHologramState('error');
+        setTimeout(() => setHologramState('idle'), 2000);
       }
     } catch {
       setHologramState('error');
-      setChatLoading(false);
       setTimeout(() => setHologramState('idle'), 2000);
+    } finally {
+      setChatLoading(false);
     }
   };
 
-  const handleToggleVoice = () => {
-    setVoiceActive((prev) => {
-      const next = !prev;
-      setHologramState(next ? 'listening' : 'idle');
-      return next;
-    });
+  // 6. Real Microphone Voice Recording & Chat
+  const handleToggleVoice = async () => {
+    if (isRecording) {
+      // Stop active recording and transmit
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      setIsRecording(false);
+      setVoiceActive(false);
+      setHologramState('thinking');
+    } else {
+      // Request mic permission and start recording
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunksRef.current.push(e.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          stream.getTracks().forEach((track) => track.stop());
+
+          if (audioBlob.size > 0) {
+            setChatLoading(true);
+            setHologramState('thinking');
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'mic.webm');
+            formData.append('session_id', activeSessionId || 'sess_default');
+
+            try {
+              const res = await fetch('/api/v1/voice/chat-voice', {
+                method: 'POST',
+                body: formData,
+              });
+              const data = await res.json();
+              if (res.ok && data.user_text) {
+                const uMsg: MessageItem = {
+                  id: Date.now(),
+                  session_id: activeSessionId || 'sess_default',
+                  role: 'user',
+                  content: data.user_text,
+                  agent_name: 'voice',
+                  created_at: new Date().toISOString(),
+                };
+                const aMsg: MessageItem = {
+                  id: Date.now() + 1,
+                  session_id: activeSessionId || 'sess_default',
+                  role: 'assistant',
+                  content: data.reply_text,
+                  agent_name: 'voice',
+                  created_at: new Date().toISOString(),
+                };
+                setMessages((prev) => [...prev, uMsg, aMsg]);
+
+                if (data.audio_url && !audioMuted) {
+                  setHologramState('speaking');
+                  setIsSpeaking(true);
+                  const audio = new Audio(data.audio_url);
+                  setAudioPlayer(audio);
+                  audio.onended = () => {
+                    setHologramState('idle');
+                    setIsSpeaking(false);
+                  };
+                  audio.onerror = () => {
+                    setHologramState('idle');
+                    setIsSpeaking(false);
+                  };
+                  await audio.play();
+                } else {
+                  setHologramState('idle');
+                }
+              }
+            } catch {
+              setHologramState('error');
+              setTimeout(() => setHologramState('idle'), 2000);
+            } finally {
+              setChatLoading(false);
+            }
+          }
+        };
+
+        mediaRecorder.start();
+        setIsRecording(true);
+        setVoiceActive(true);
+        setHologramState('listening');
+      } catch (err) {
+        console.error('Microphone access denied:', err);
+        setHologramState('error');
+        setTimeout(() => setHologramState('idle'), 2000);
+      }
+    }
   };
 
   const handleToggleMute = () => {
     setAudioMuted((prev) => !prev);
+    if (!audioMuted && isSpeaking) {
+      handleStopSpeaking();
+    }
   };
 
   return (
@@ -301,6 +452,8 @@ export const App: React.FC = () => {
           onToggleVoice={handleToggleVoice}
           audioMuted={audioMuted}
           onToggleMute={handleToggleMute}
+          isSpeaking={isSpeaking}
+          onStopSpeaking={handleStopSpeaking}
         />
 
         {/* Dynamic Section Content */}
@@ -310,7 +463,7 @@ export const App: React.FC = () => {
               health={health}
               metrics={metrics}
               hologramState={hologramState}
-              capabilities={capabilities}
+              capabilities={capabilities || []}
               onQuickAction={(cmd) => {
                 setCurrentSection('chat');
                 handleSendCommand(cmd);
@@ -344,6 +497,8 @@ export const App: React.FC = () => {
             <VoiceView
               voiceActive={voiceActive}
               onToggleVoice={handleToggleVoice}
+              isSpeaking={isSpeaking}
+              onStopSpeaking={handleStopSpeaking}
             />
           )}
 
