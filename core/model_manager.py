@@ -1,9 +1,13 @@
 """MATRIX Multi-Model Intelligence Manager.
 Handles model discovery, health checks, resource-aware routing, memory benchmarking,
-and failover between local GGUF models, Ollama, FreeLLMAPI, Gemini, and OpenAI-compatible endpoints.
+and failover between local GGUF models (llama-cpp-python), Ollama, Gemini Cloud,
+and the internal deterministic rule engine.
 """
-from typing import Dict, Any, List, Optional, AsyncGenerator
+from typing import Dict, Any, List, Optional
 import os
+import gc
+import asyncio
+import time
 import httpx
 import psutil
 from pathlib import Path
@@ -46,9 +50,12 @@ class ModelManager:
     """Manages AI model connectivity, memory-aware routing, and fallbacks."""
 
     def __init__(self):
-        self.active_provider: str = "rule_engine"
-        self.active_model_name: str = settings.local_model_name
+        self.active_provider: str = "local_gguf"
+        self.active_model_name: str = "qwen2.5-0.5b-instruct-q4_k_m"
         self.ollama_base_url = "http://localhost:11434"
+        self._llama_instance = None
+        self._loaded_model_path: Optional[Path] = None
+        self._gemini_failed: bool = False
 
     def benchmark_memory(self) -> MemoryBenchmark:
         """Evaluate system memory and calculate safe model parameter boundaries.
@@ -60,16 +67,12 @@ class ModelManager:
         used_mb = vm.used / (1024 * 1024)
 
         warnings = []
-        if available_mb < 1200:
+        if available_mb < 600:
             warnings.append(
-                f"Available RAM is {available_mb:.0f} MB (< 1200 MB). Local LLMs may cause OS swapping. "
-                "Cloud fallback or 1.5B Q4 quantization strongly advised."
+                f"Critically low free memory: {available_mb:.0f} MB (< 600 MB). "
+                "Rule engine or cloud routing recommended to prevent OS thrashing."
             )
 
-        # Calculate max safe parameters:
-        # A 1.5B Q4 model requires ~1,100 MB RAM.
-        # A 3B Q4 model requires ~2,100 MB RAM.
-        # A 7B Q4 model requires ~4,500 MB RAM.
         if available_mb > 3000:
             rec = "qwen2.5-3b-instruct-q4_k_m"
             max_p = 3.5
@@ -79,7 +82,6 @@ class ModelManager:
         else:
             rec = "qwen2.5-0.5b-instruct-q4_k_m"
             max_p = 0.8
-            warnings.append("Low free memory detected: recommend cloud routing or 0.5B model.")
 
         return MemoryBenchmark(
             total_ram_mb=round(total_mb, 1),
@@ -89,6 +91,74 @@ class ModelManager:
             max_safe_params_billion=max_p,
             warnings=warnings
         )
+
+    def find_local_gguf_model(self) -> Optional[Path]:
+        """Discover existing GGUF model files in designated storage partitions."""
+        # 1. Check configured path in settings
+        configured = Path(settings.local_model_path)
+        if configured.exists() and configured.is_file():
+            return configured
+
+        # 2. Check 0.5B default in models directory
+        default_05b = settings.models_dir / "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+        if default_05b.exists():
+            return default_05b
+
+        # 3. Check any .gguf in models directory
+        if settings.models_dir.exists():
+            candidates = list(settings.models_dir.glob("*.gguf"))
+            if candidates:
+                return candidates[0]
+
+        return None
+
+    def is_local_model_available(self) -> bool:
+        """Check if a local GGUF model exists and llama_cpp is importable."""
+        try:
+            import llama_cpp
+            return self.find_local_gguf_model() is not None
+        except ImportError:
+            return False
+
+    def load_local_model(self) -> bool:
+        """Load the local GGUF model into memory using llama-cpp-python."""
+        model_path = self.find_local_gguf_model()
+        if not model_path:
+            logger.warning("No local GGUF model file found on disk.")
+            return False
+
+        if self._llama_instance is not None and self._loaded_model_path == model_path:
+            return True
+
+        try:
+            from llama_cpp import Llama
+            logger.info(f"Loading local GGUF model: {model_path.name} (CPU AVX2, threads=4)...")
+            t0 = time.perf_counter()
+            self._llama_instance = Llama(
+                model_path=str(model_path),
+                n_ctx=2048,
+                n_threads=min(4, settings.cpu_cores),
+                verbose=False
+            )
+            self._loaded_model_path = model_path
+            self.active_model_name = model_path.stem
+            self.active_provider = "local_gguf"
+            elapsed = time.perf_counter() - t0
+            logger.info(f"Local LLM {model_path.name} loaded successfully in {elapsed:.2f}s.")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to load local GGUF model: {e}")
+            self._llama_instance = None
+            self._loaded_model_path = None
+            return False
+
+    def unload_local_model(self):
+        """Unload local model from memory to free RAM."""
+        if self._llama_instance is not None:
+            logger.info("Unloading local GGUF model from RAM...")
+            self._llama_instance = None
+            self._loaded_model_path = None
+            gc.collect()
 
     async def check_ollama(self) -> bool:
         """Check if local Ollama daemon is reachable."""
@@ -102,24 +172,24 @@ class ModelManager:
     async def list_available_models(self) -> List[ModelCapability]:
         """Discover all configured local and cloud model capabilities."""
         models: List[ModelCapability] = []
-        bench = self.benchmark_memory()
+        local_model_path = self.find_local_gguf_model()
+        local_exists = local_model_path is not None
 
         # 1. Local GGUF Candidate
-        local_exists = Path(settings.local_model_path).exists()
         models.append(ModelCapability(
-            name=settings.local_model_name,
+            name=local_model_path.stem if local_model_path else settings.local_model_name,
             provider="local_gguf",
             is_local=True,
-            context_window=32768,
-            estimated_ram_mb=1150.0,
+            context_window=2048,
+            estimated_ram_mb=450.0 if "0.5b" in str(local_model_path or "").lower() else 1150.0,
             is_available=local_exists,
-            description="Qwen2.5 1.5B Instruct (Q4_K_M GGUF) - Blazing fast AVX2 CPU inference."
+            description="Qwen2.5 Instruct GGUF - High-speed on-device AVX2 CPU inference (llama.cpp)."
         ))
 
         # 2. Ollama Local Endpoint
         ollama_online = await self.check_ollama()
         models.append(ModelCapability(
-            name="ollama:qwen2.5:1.5b",
+            name="ollama:qwen2.5",
             provider="ollama",
             is_local=True,
             context_window=32768,
@@ -158,7 +228,7 @@ class ModelManager:
             provider="rule_engine",
             is_local=True,
             context_window=8192,
-            estimated_ram_mb=10.0,
+            estimated_ram_mb=0.0,
             is_available=True,
             description="Zero-dependency deterministic rule, intent & tool-calling engine."
         ))
@@ -170,17 +240,20 @@ class ModelManager:
         prompt: str,
         system_prompt: Optional[str] = None,
         temperature: float = 0.7,
-        max_tokens: int = 1024
+        max_tokens: int = 512
     ) -> ModelResponse:
         """Generate response with automatic multi-provider fallback.
-        Priority: Gemini Cloud (if key provided) -> Ollama -> Local GGUF -> Rule Engine.
+        Priority:
+          1. Gemini Cloud (if key explicitly provided)
+          2. Local GGUF Model via llama-cpp-python (Offline, Zero Cloud Cost)
+          3. Ollama (if local daemon running)
+          4. Deterministic Neural Rule Engine (Instant fallback)
         """
-        import time
         start_time = time.perf_counter()
 
-        # Try Gemini API if configured
+        # 1. Try Gemini API if configured and healthy
         gemini_key = settings.gemini_api_key or os.getenv("GEMINI_API_KEY")
-        if gemini_key:
+        if gemini_key and not self._gemini_failed:
             try:
                 import google.genai as genai
                 client = genai.Client(api_key=gemini_key)
@@ -199,9 +272,19 @@ class ModelManager:
                     is_local=False
                 )
             except Exception as e:
-                logger.warning(f"Gemini API request failed, falling back: {e}")
+                self._gemini_failed = True
+                logger.warning(f"Gemini API request failed ({e}); falling back to local GGUF model.")
 
-        # Try Ollama if online
+        # 2. Try Local GGUF Model via llama-cpp-python
+        if self.is_local_model_available():
+            try:
+                res = await self._infer_local_gguf(prompt, system_prompt, temperature, max_tokens)
+                if res:
+                    return res
+            except Exception as e:
+                logger.warning(f"Local GGUF inference failed, falling back: {e}")
+
+        # 3. Try Ollama if online
         if await self.check_ollama():
             try:
                 async with httpx.AsyncClient(timeout=30.0) as client:
@@ -228,7 +311,7 @@ class ModelManager:
             except Exception as e:
                 logger.warning(f"Ollama request failed: {e}")
 
-        # Fallback to Deterministic Neural Rule Engine (Instant, 100% offline)
+        # 4. Fallback to Deterministic Neural Rule Engine (Instant, 100% offline)
         latency = (time.perf_counter() - start_time) * 1000
         fallback_reply = self._generate_rule_based_response(prompt)
         return ModelResponse(
@@ -236,6 +319,49 @@ class ModelManager:
             model_name="matrix-neural-rule-engine",
             provider="rule_engine",
             tokens_used=len(fallback_reply.split()),
+            latency_ms=round(latency, 2),
+            is_local=True
+        )
+
+    async def _infer_local_gguf(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: int = 512
+    ) -> Optional[ModelResponse]:
+        """Run non-blocking local inference in a thread pool."""
+        if self._llama_instance is None:
+            loaded = self.load_local_model()
+            if not loaded:
+                return None
+
+        start_time = time.perf_counter()
+
+        def _blocking_call():
+            messages = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            messages.append({"role": "user", "content": prompt})
+
+            output = self._llama_instance.create_chat_completion(
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature
+            )
+            return output
+
+        output = await asyncio.to_thread(_blocking_call)
+        latency = (time.perf_counter() - start_time) * 1000
+
+        content = output["choices"][0]["message"]["content"].strip()
+        tokens = output.get("usage", {}).get("completion_tokens", len(content.split()))
+
+        return ModelResponse(
+            content=content,
+            model_name=self.active_model_name,
+            provider="local_gguf",
+            tokens_used=tokens,
             latency_ms=round(latency, 2),
             is_local=True
         )

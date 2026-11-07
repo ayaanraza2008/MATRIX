@@ -1,18 +1,25 @@
 """MATRIX PC Computer Control Agent.
-Performs application launching, window detection, screenshot capture, mouse/keyboard automation,
-and system commands under strict policy verification on Windows 11.
+Performs application launching, window detection, window switching, screenshot capture,
+mouse/keyboard automation, and controlled system commands under strict policy verification on Windows 11.
 """
 from typing import Dict, Any, Optional
 import subprocess
 import time
 import os
+import ctypes
 from pathlib import Path
 from agents.base_agent import BaseAgent, AgentResult
 from config.settings import settings
+from vision.screenshot.capture import desktop_screen_capture
 
 
 class ComputerAgent(BaseAgent):
     """Controls the Windows 11 desktop environment."""
+
+    SAFE_COMMAND_ALLOWLIST = [
+        "dir", "echo", "hostname", "ipconfig", "systeminfo", "tasklist",
+        "whoami", "ver", "date /t", "time /t", "get-process", "get-service"
+    ]
 
     def __init__(self):
         super().__init__(
@@ -30,14 +37,28 @@ class ComputerAgent(BaseAgent):
         if "screenshot" in action_lower or "screenshot" in raw_prompt:
             return await self._take_screenshot(start_time)
 
-        # 2. Launch Application
-        if any(w in action_lower or w in raw_prompt for w in ["open", "launch", "start", "run"]):
-            app_target = self._detect_target_app(raw_prompt)
-            return await self._launch_app(app_target, start_time)
+        # 2. Window Switching
+        if "switch" in action_lower or "focus" in action_lower:
+            target = parameters.get("target", parameters.get("window", ""))
+            return await self._switch_window(target, start_time)
 
         # 3. Window Listing
         if "window" in action_lower or "running apps" in raw_prompt:
             return await self._list_windows(start_time)
+
+        # 4. Launch Application
+        if any(w in action_lower or w in raw_prompt for w in ["open", "launch", "start", "run"]):
+            app_target = self._detect_target_app(raw_prompt)
+            return await self._launch_app(app_target, start_time)
+
+        # 5. Controlled Command Execution
+        if "command" in action_lower or "cmd" in action_lower:
+            cmd = parameters.get("command", "")
+            return await self._execute_controlled_command(cmd, start_time)
+
+        # 6. Keyboard & Mouse Simulation
+        if "type" in action_lower or "press" in action_lower or "click" in action_lower:
+            return await self._simulate_input(action_lower, parameters, start_time)
 
         # Default fallback
         latency = (time.perf_counter() - start_time) * 1000
@@ -51,45 +72,19 @@ class ComputerAgent(BaseAgent):
         )
 
     async def _take_screenshot(self, start_time: float) -> AgentResult:
-        """Capture screen and save into D:\\matrix_data\\cache\\screenshot.png."""
-        try:
-            import pyautogui
-            screenshot_dir = settings.cache_dir / "screenshots"
-            screenshot_dir.mkdir(parents=True, exist_ok=True)
-            target_path = screenshot_dir / f"screen_{int(time.time())}.png"
+        """Capture screen using the multi-tier desktop capture engine."""
+        res = desktop_screen_capture.capture()
+        latency = (time.perf_counter() - start_time) * 1000
+        verified = res.get("success", False)
 
-            img = pyautogui.screenshot()
-            img.save(str(target_path))
-
-            verified = target_path.exists() and target_path.stat().st_size > 0
-            latency = (time.perf_counter() - start_time) * 1000
-
-            return AgentResult(
-                success=verified,
-                agent_name=self.name,
-                action_taken="capture_screenshot",
-                data={"filepath": str(target_path), "size_bytes": target_path.stat().st_size if verified else 0},
-                verification={"file_exists": verified, "verified": verified},
-                execution_time_ms=round(latency, 2)
-            )
-        except Exception as e:
-            from PIL import Image, ImageDraw
-            fallback_img = Image.new("RGB", (1920, 1080), color=(10, 15, 29))
-            draw = ImageDraw.Draw(fallback_img)
-            draw.rectangle([(20, 20), (1900, 1060)], outline=(0, 240, 255), width=2)
-            draw.text((60, 60), "MATRIX Desktop Monitor [Session Locked / Headless Buffer]", fill=(0, 240, 255))
-            fallback_img.save(str(target_path))
-
-            verified = target_path.exists() and target_path.stat().st_size > 0
-            latency = (time.perf_counter() - start_time) * 1000
-            return AgentResult(
-                success=verified,
-                agent_name=self.name,
-                action_taken="capture_screenshot",
-                data={"filepath": str(target_path), "size_bytes": target_path.stat().st_size, "mode": "virtual_buffer"},
-                verification={"file_exists": verified, "verified": verified},
-                execution_time_ms=round(latency, 2)
-            )
+        return AgentResult(
+            success=verified,
+            agent_name=self.name,
+            action_taken="capture_screenshot",
+            data=res,
+            verification={"file_exists": verified, "verified": verified},
+            execution_time_ms=round(latency, 2)
+        )
 
     async def _launch_app(self, app_name: str, start_time: float) -> AgentResult:
         """Launch authorized common Windows applications."""
@@ -118,7 +113,6 @@ class ComputerAgent(BaseAgent):
         try:
             subprocess.Popen([executable], shell=True)
             time.sleep(0.5)
-            # Verify process is running
             verified = self._is_process_running(executable.replace(".exe", ""))
             latency = (time.perf_counter() - start_time) * 1000
 
@@ -145,7 +139,8 @@ class ComputerAgent(BaseAgent):
         """List active visible Windows titles."""
         try:
             import pygetwindow as gw
-            titles = [w.title for w in gw.getAllWindows() if w.title.strip()]
+            windows = gw.getAllWindows()
+            titles = [w.title for w in windows if w.title.strip()]
             latency = (time.perf_counter() - start_time) * 1000
             return AgentResult(
                 success=True,
@@ -163,6 +158,122 @@ class ComputerAgent(BaseAgent):
                 action_taken="list_windows",
                 data={"os": "Windows 11", "status": "Desktop active"},
                 verification={"verified": True},
+                execution_time_ms=round(latency, 2)
+            )
+
+    async def _switch_window(self, target_title: str, start_time: float) -> AgentResult:
+        """Activate and bring to foreground a window matching the title."""
+        try:
+            import pygetwindow as gw
+            matching = [w for w in gw.getAllWindows() if target_title.lower() in w.title.lower()]
+            if matching:
+                w = matching[0]
+                if w.isMinimized:
+                    w.restore()
+                w.activate()
+                latency = (time.perf_counter() - start_time) * 1000
+                return AgentResult(
+                    success=True,
+                    agent_name=self.name,
+                    action_taken="switch_window",
+                    data={"target_window": w.title, "switched": True},
+                    verification={"verified": True},
+                    execution_time_ms=round(latency, 2)
+                )
+            else:
+                latency = (time.perf_counter() - start_time) * 1000
+                return AgentResult(
+                    success=False,
+                    agent_name=self.name,
+                    action_taken="switch_window",
+                    error=f"No window matching '{target_title}' found.",
+                    verification={"verified": False},
+                    execution_time_ms=round(latency, 2)
+                )
+        except Exception as e:
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken="switch_window",
+                error=str(e),
+                verification={"verified": False},
+                execution_time_ms=round(latency, 2)
+            )
+
+    async def _execute_controlled_command(self, cmd: str, start_time: float) -> AgentResult:
+        """Run an authorized non-destructive diagnostic command."""
+        cmd_clean = cmd.strip()
+        first_token = cmd_clean.split()[0].lower() if cmd_clean else ""
+
+        is_allowed = any(cmd_clean.lower().startswith(allowed) for allowed in self.SAFE_COMMAND_ALLOWLIST)
+        if not is_allowed:
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken="execute_command",
+                error=f"Command '{first_token}' is not permitted by MATRIX policy gate.",
+                verification={"verified": False},
+                execution_time_ms=round(latency, 2)
+            )
+
+        try:
+            res = subprocess.run(cmd_clean, shell=True, capture_output=True, text=True, timeout=8)
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=(res.returncode == 0),
+                agent_name=self.name,
+                action_taken="execute_command",
+                data={
+                    "command": cmd_clean,
+                    "stdout": res.stdout[:500] if res.stdout else "",
+                    "returncode": res.returncode
+                },
+                verification={"verified": res.returncode == 0},
+                execution_time_ms=round(latency, 2)
+            )
+        except Exception as e:
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken="execute_command",
+                error=str(e),
+                verification={"verified": False},
+                execution_time_ms=round(latency, 2)
+            )
+
+    async def _simulate_input(self, action: str, params: Dict[str, Any], start_time: float) -> AgentResult:
+        """Simulate mouse/keyboard input safely with fail-safes."""
+        try:
+            import pyautogui
+            pyautogui.FAILSAFE = True
+
+            if "type" in action:
+                text = params.get("text", "")
+                pyautogui.write(text, interval=0.02)
+            elif "press" in action:
+                key = params.get("key", "enter")
+                pyautogui.press(key)
+
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=True,
+                agent_name=self.name,
+                action_taken="simulate_input",
+                data={"simulated_action": action},
+                verification={"verified": True},
+                execution_time_ms=round(latency, 2)
+            )
+        except Exception as e:
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken="simulate_input",
+                error=str(e),
+                verification={"verified": False},
                 execution_time_ms=round(latency, 2)
             )
 

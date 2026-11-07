@@ -1,61 +1,59 @@
 """MATRIX Vision System API Route.
-Provides camera capture and desktop screenshot analysis endpoints.
+Provides camera capture, desktop screenshot analysis, and perceptual vision inspection.
 """
 from fastapi import APIRouter, HTTPException, status
-from fastapi.responses import FileResponse
-from vision.camera.capture import camera_capture
+from pydantic import BaseModel
+from typing import Optional
 from pathlib import Path
-import pyautogui
-import time
-from config.settings import settings
+from vision.camera.capture import camera_capture
+from vision.screenshot.capture import desktop_screen_capture
+from vision.detection.analyzer import vision_analyzer
+from config.logging_config import get_logger
 
+logger = get_logger("api.vision")
 router = APIRouter(prefix="/vision", tags=["Vision System"])
+
+
+class AnalyzeRequest(BaseModel):
+    filepath: str
+    question: Optional[str] = "Describe this scene"
 
 
 @router.post("/camera")
 async def capture_camera():
-    """Capture a single frame from the Integrated Camera."""
+    """Capture a single frame from the physical Integrated Camera."""
     result = camera_capture.capture_frame()
     if not result.get("success"):
         raise HTTPException(status_code=500, detail=result.get("error", "Camera capture failed."))
+
+    # Enrich with vision analysis
+    if result.get("filepath"):
+        analysis = vision_analyzer.analyze_image(Path(result["filepath"]))
+        result["analysis"] = analysis
 
     return result
 
 
 @router.post("/screenshot")
 async def capture_screen():
-    """Capture instant desktop screenshot and save to D:\\matrix_data\\cache."""
-    from PIL import Image, ImageDraw, ImageFont
-    screenshot_dir = settings.cache_dir / "vision"
-    screenshot_dir.mkdir(parents=True, exist_ok=True)
-    target_path = screenshot_dir / f"screenshot_{int(time.time())}.png"
+    """Capture instant desktop screenshot with session security awareness."""
+    result = desktop_screen_capture.capture()
+    if not result.get("success"):
+        raise HTTPException(status_code=500, detail=result.get("error", "Screenshot capture failed."))
 
-    try:
-        img = pyautogui.screenshot()
-        img.save(str(target_path))
-        return {
-            "success": True,
-            "filepath": str(target_path),
-            "width": img.width,
-            "height": img.height,
-            "mode": "interactive_display"
-        }
-    except Exception as e:
-        # Graceful fallback when desktop session is locked or running in headless task
-        width, height = 1920, 1080
-        fallback_img = Image.new("RGB", (width, height), color=(10, 15, 29))
-        draw = ImageDraw.Draw(fallback_img)
-        draw.rectangle([(20, 20), (width - 20, height - 20)], outline=(0, 240, 255), width=2)
-        draw.text((60, 60), "MATRIX Desktop Visual Monitor [Display Locked / Headless Mode]", fill=(0, 240, 255))
-        draw.text((60, 100), f"Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}", fill=(107, 122, 153))
-        draw.text((60, 140), "Resolution: 1920x1080 (Virtual Display Buffer)", fill=(0, 255, 157))
-        fallback_img.save(str(target_path))
+    if result.get("filepath"):
+        analysis = vision_analyzer.analyze_image(Path(result["filepath"]))
+        result["analysis"] = analysis
 
-        return {
-            "success": True,
-            "filepath": str(target_path),
-            "width": width,
-            "height": height,
-            "mode": "headless_virtual_buffer",
-            "note": "Desktop session is locked or headless; virtual diagnostic buffer captured."
-        }
+    return result
+
+
+@router.post("/analyze")
+async def analyze_frame(payload: AnalyzeRequest):
+    """Analyze an image file and compute perceptual visual metrics."""
+    target_path = Path(payload.filepath)
+    if not target_path.exists():
+        raise HTTPException(status_code=404, detail="Image file not found.")
+
+    res = await vision_analyzer.describe_scene(target_path, prompt=payload.question)
+    return res

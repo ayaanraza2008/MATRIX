@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -171,7 +172,7 @@ fun MatrixMobileApp(apiClient: MatrixApiClient) {
                 .background(MatrixBackground)
                 .padding(innerPadding)
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterVertically
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Central Holographic Ring
             Box(
@@ -212,10 +213,9 @@ fun MatrixMobileApp(apiClient: MatrixApiClient) {
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = if (isUser) Color(0xFF0F1A30) else MatrixCard,
-                            border = ButtonDefaults.outlinedButtonBorder.copy(
-                                brush = androidx.compose.ui.graphics.SolidColor(
-                                    if (isUser) MatrixBlue else MatrixCyan.copy(alpha = 0.3f)
-                                )
+                            border = BorderStroke(
+                                1.dp,
+                                if (isUser) MatrixBlue else MatrixCyan.copy(alpha = 0.3f)
                             ),
                             modifier = Modifier.widthIn(max = 280.dp)
                         ) {

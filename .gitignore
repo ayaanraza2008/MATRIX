@@ -60,3 +60,9 @@ desktop/ui/.vite/
 # OS specific
 .DS_Store
 Thumbs.db
+
+# Android Gradle build artifacts
+mobile/android_app/.gradle/
+mobile/android_app/build/
+mobile/android_app/app/build/
+mobile/android_app/local.properties
