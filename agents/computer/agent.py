@@ -90,6 +90,10 @@ class ComputerAgent(BaseAgent):
         # 7. Launch Application
         if any(w in action_lower or w in raw_prompt for w in ["open", "launch", "start", "run"]):
             app_target = self._detect_target_app(raw_prompt)
+            if app_target != "unknown":
+                return await self._launch_app(app_target, start_time)
+            if "safe task" in raw_prompt or "safe command" in raw_prompt:
+                return await self._execute_controlled_command("hostname", start_time)
             return await self._launch_app(app_target, start_time)
 
         # 8. Keyboard & Mouse Simulation

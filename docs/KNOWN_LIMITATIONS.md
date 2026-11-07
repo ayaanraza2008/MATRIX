@@ -50,3 +50,18 @@ This document provides a transparent, evidence-based ledger of hardware constrai
 ## 6. Cloud API Independence
 
 - The entire system is architected for **zero cloud dependence**. All core intelligence (Qwen2.5 GGUF), wake-word spotting (openWakeWord ONNX), voice activity detection (Silero VAD ONNX), speech recognition (Faster-Whisper INT8), offline speech synthesis (SAPI5), and optical character recognition (Windows 11 Native OCR) operate 100% offline.
+
+---
+
+## 7. Hardware & CUDA GPU Barriers on AMD Vega APU
+
+- **Host GPU:** AMD Radeon Graphics (Renoir/Lucienne Vega 8 iGPU with 512 MB dedicated VRAM, shared system memory).
+- **Incompatible Repositories:** Exactly 4 repositories in the catalog requiring NVIDIA CUDA GPU drivers (`airllm`, `mocha`, `diorama`, `dramaclaw`) are classified as `hardware_incompatible` by the Capability Registry.
+- **Handling:** Rather than attempting unsupported CUDA calls that would crash the Python interpreter, MATRIX flags them as `hardware_incompatible`, documents them transparently, and automatically uses CPU AVX2-accelerated tool alternatives.
+
+---
+
+## 8. Level 3 Destructive Action Gate
+
+- **Safety Gate:** Level 3 commands (e.g. `format c:`, `rmdir /s`, `drop table`, `reg delete`) are detected via regex and token inspection in `core/intent_engine.py` and `core/autonomy_policy/`.
+- **Enforcement:** Such commands are blocked from autonomous execution and transition the task into `WAITING_FOR_INPUT` state with an explicit warning: `"Security policy requires explicit authorization (Level 3)"`.

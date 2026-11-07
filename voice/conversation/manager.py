@@ -228,7 +228,7 @@ class HandsFreeManager:
                     return
 
                 # Directive B: Cancel that task
-                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix cancel that task", "cancel that task", "cancel task", "stop task"]):
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix cancel that task", "cancel that task", "cancel task", "stop task", "matrix cancel the current task", "cancel the current task"]):
                     from core.orchestrator import orchestrator
                     orchestrator.cancel_active()
                     self.state = HandsFreeState.SPEAKING
@@ -247,8 +247,8 @@ class HandsFreeManager:
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
 
-                # Directive D: Listen
-                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix listen", "listen", "suno"]):
+                # Directive D: Listen / Continuous Listening
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix listen", "listen", "suno", "continue listening", "matrix continue listening after answering", "continue listening after answering"]):
                     self.set_mode(ConversationMode.CONTINUOUS)
                     self.state = HandsFreeState.LISTENING
                     vad_engine.reset()
@@ -256,7 +256,7 @@ class HandsFreeManager:
                     return
 
                 # Directive E: What are you doing?
-                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix what are you doing", "what are you doing", "kya kar rahe ho"]):
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix what are you doing", "what are you doing", "kya kar rahe ho", "matrix explain what you are currently doing", "explain what you are currently doing"]):
                     from core.agent_coordinator import agent_coordinator
                     dashboard = agent_coordinator.get_agent_dashboard()
                     recent = dashboard.get("recent_tasks_count", 0)
@@ -331,3 +331,4 @@ class HandsFreeManager:
 
 # Global Hands-Free Manager singleton
 hands_free_manager = HandsFreeManager()
+conversation_manager = hands_free_manager

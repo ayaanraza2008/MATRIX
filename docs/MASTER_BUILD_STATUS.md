@@ -28,6 +28,8 @@
 | **Multi-Model Intelligence** | Verified | **UNIFIED ROUTER & 8 GB MEMORY GUARD** | [`core/model_manager.py`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/core/model_manager.py) |
 | **Minimal JARVIS Hologram UI** | Built | **11 HOLOGRAM STATES & COLLAPSIBLE HUD** | [`desktop/ui/dist/index.html`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/desktop/ui/dist/index.html) |
 | **Canonical Workflows A through H** | Not Tested | **8/8 PASSED (100.0%)** | [`docs/production_acceptance_raw.json`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/docs/production_acceptance_raw.json) |
+| **12 Canonical Real-World Commands** | Not Tested | **12/12 PASSED (100.0%)** | [`docs/final_12_commands_raw.json`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/docs/final_12_commands_raw.json) |
+| **Edge Case & Fault-Tolerance Suite**| Not Tested | **8/8 PASSED (100.0%)** | [`docs/edge_case_raw.json`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/docs/edge_case_raw.json) |
 
 ---
 

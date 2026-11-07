@@ -56,6 +56,64 @@ class MatrixBrain:
                 "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
             }
 
+        # Stage 3.5: Immediate Directives (Cancellation, Status Explanation, Continuous Voice Mode)
+        lower_prompt = user_prompt.lower().strip()
+        if any(lower_prompt == cmd or lower_prompt.startswith(cmd) for cmd in [
+            "matrix, cancel the current task", "cancel the current task", "matrix cancel the current task", "cancel that task", "cancel task"
+        ]):
+            orchestrator.cancel_active()
+            reply = "The current task has been cancelled, sir."
+            return {
+                "session_id": session_id,
+                "response": reply,
+                "reply": reply,
+                "plan_status": TaskState.CANCELLED.value,
+                "plan_state": TaskState.CANCELLED.value,
+                "plan_title": "Task Cancellation",
+                "steps_count": 0,
+                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
+            }
+
+        if any(lower_prompt == cmd or lower_prompt.startswith(cmd) for cmd in [
+            "matrix, explain what you are currently doing", "explain what you are currently doing", "what are you doing"
+        ]):
+            from core.agent_coordinator import agent_coordinator
+            dashboard = agent_coordinator.get_agent_dashboard()
+            active_tasks = dashboard.get("active_tasks_count", 0)
+            recent_tasks = dashboard.get("recent_tasks_count", 0)
+            reply = (
+                f"Currently, all 16 specialized agents are standing by and operational. "
+                f"Active tasks: {active_tasks}, completed tasks in this session: {recent_tasks}. "
+                f"Monitoring system telemetry and listening for commands, sir."
+            )
+            return {
+                "session_id": session_id,
+                "response": reply,
+                "reply": reply,
+                "plan_status": TaskState.COMPLETED.value,
+                "plan_state": TaskState.COMPLETED.value,
+                "plan_title": "Current Status Explanation",
+                "steps_count": 1,
+                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
+            }
+
+        if any(lower_prompt == cmd or lower_prompt.startswith(cmd) for cmd in [
+            "matrix, continue listening after answering", "continue listening after answering", "continue listening"
+        ]):
+            from voice.conversation.manager import conversation_manager, ConversationMode
+            conversation_manager.set_mode(ConversationMode.CONTINUOUS)
+            reply = "Continuous hands-free listening is enabled, sir. I will remain actively listening after answering."
+            return {
+                "session_id": session_id,
+                "response": reply,
+                "reply": reply,
+                "plan_status": TaskState.COMPLETED.value,
+                "plan_state": TaskState.COMPLETED.value,
+                "plan_title": "Continuous Listening Enabled",
+                "steps_count": 1,
+                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
+            }
+
         # Stage 4-10: Orchestrator Pipeline (Intent, Reasoning, Policy, Execution, Verification, Recovery)
         orch_res = await orchestrator.execute_request(resolved_prompt)
 

@@ -51,7 +51,7 @@ class AgentCoordinator:
         """Return real-time agent activity telemetry for the dashboard UI."""
         return {
             "timestamp": time.time(),
-            "registered_agents_count": len(task_router.list_agents()),
+            "registered_agents_count": len(task_router._agents),
             "agents": {
                 name: {
                     "description": ag.description,
@@ -59,7 +59,7 @@ class AgentCoordinator:
                     "status": "IDLE" if name not in self._active_agents else "BUSY",
                     "tools": ag.discover_tools()
                 }
-                for name, ag in task_router.list_agents().items()
+                for name, ag in task_router._agents.items()
             },
             "recent_tasks_count": len(self._execution_history)
         }

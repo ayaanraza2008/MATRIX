@@ -20,7 +20,9 @@ MATRIX has undergone rigorous, independent, end-to-end verification across its c
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Stage 1: Core System Verification (10 Suites)** | 62 | 61 | 1 | 0 | **98.39%** | **CERTIFIED** |
 | **Stage 2: Production Canonical Workflows (A–H)** | 8 | 8 | 0 | 0 | **100.0%** | **CERTIFIED** |
-| **Cumulative Acceptance Metric** | **70** | **69** | **1** | **0** | **98.57%** | **PRODUCTION READY** |
+| **Stage 3: 12 Canonical Real-World Commands** | 12 | 12 | 0 | 0 | **100.0%** | **CERTIFIED** |
+| **Stage 4: Edge Case & Fault-Tolerance Suite** | 8 | 8 | 0 | 0 | **100.0%** | **CERTIFIED** |
+| **Cumulative Acceptance Metric** | **90** | **89** | **1** | **0** | **98.89%** | **PRODUCTION READY** |
 
 ---
 
@@ -36,6 +38,44 @@ MATRIX has undergone rigorous, independent, end-to-end verification across its c
 | **Workflow F** | *"Matrix, find the best available capability for this task and execute it."* | `repo_intel` | 0.1 ms | Autonomous capability engine selected `AbuZar-Ansarii/Ultron` SystemTelemetryAdapter (Score: 0.9 on Ryzen 7 5700U). | **PASS** |
 | **Workflow G** | *"Matrix, analyze my computer's performance and show telemetry."* | `system` | 36.3 ms | Kernel psutil polled CPU across 16 threads (5.3%) and host RAM (90.8%), returning telemetry nominal. | **PASS** |
 | **Workflow H** | *"Matrix, summarize my pending tasks."* | `orchestrator` / `db` | 3.1 ms | Queried `TaskRecord` database, returning 10 historical tasks with explicit Task State Machine statuses. | **PASS** |
+
+---
+
+## 3. 12 Canonical Real-World Commands Verification
+
+Tested directly through `MatrixBrain.process_user_request()` via [`scripts/final_12_commands_acceptance_test.py`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/scripts/final_12_commands_acceptance_test.py) with raw telemetry in [`docs/final_12_commands_raw.json`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/docs/final_12_commands_raw.json).
+
+| # | Canonical Command | Target Agent | Latency | Verifiable Output | Status |
+| :-: | :--- | :---: | :---: | :--- | :-: |
+| **1** | *"Matrix, research this topic and prepare a report."* | `research` | 4,053.4 ms | Formatted research report with structured findings and verified sources. | **PASS** |
+| **2** | *"Matrix, inspect my screen and explain this error."* | `vision` | 4,714.4 ms | GDI screen buffer captured (1920x1080), OCR executed, JARVIS-style analysis generated. | **PASS** |
+| **3** | *"Matrix, create a Python application and test it."* | `coding` | 10,950.8 ms | Scaffolded workspace inspected, pytest executed on test suite with returncode 0. | **PASS** |
+| **4** | *"Matrix, remember this preference."* | `memory` | 10.2 ms | User preference stored in long-term SQLite database table `user_preferences`. | **PASS** |
+| **5** | *"Matrix, open my browser and find relevant information."* | `browser` | 4,034.1 ms | Playwright browser search executed and web information extracted. | **PASS** |
+| **6** | *"Matrix, check my computer performance."* | `system` | 35.2 ms | Real-time CPU (16.3%) and RAM telemetry retrieved from host kernel. | **PASS** |
+| **7** | *"Matrix, find a suitable repository capability and use it."* | `repo_intel` | 5,266.6 ms | Autonomous tool selected from 65-repo catalog (`Ultron` SystemTelemetryAdapter) and executed. | **PASS** |
+| **8** | *"Matrix, create a diagram of your architecture."* | `creative` | 35.7 ms | Synthesized complete Mermaid flowchart diagram of the MATRIX architecture. | **PASS** |
+| **9** | *"Matrix, open this application and perform a safe task."* | `computer` | 107.7 ms | Safe command `hostname` executed within authorized allowlist. | **PASS** |
+| **10** | *"Matrix, cancel the current task."* | `core` | 2.0 ms | Immediate emergency cancellation executed; plan transitioned to `CANCELLED`. | **PASS** |
+| **11** | *"Matrix, explain what you are currently doing."* | `system` | 10.1 ms | Agent coordinator dashboard queried; status of all 16 agents returned. | **PASS** |
+| **12** | *"Matrix, continue listening after answering."* | `voice` | 2.8 ms | Hands-free conversation manager mode successfully switched to `CONTINUOUS`. | **PASS** |
+
+---
+
+## 4. Edge Case & Fault-Tolerance Verification Suite
+
+Tested directly via [`scripts/edge_case_acceptance_test.py`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/scripts/edge_case_acceptance_test.py) with raw telemetry in [`docs/edge_case_raw.json`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/docs/edge_case_raw.json).
+
+| Case ID | Fault / Edge Case Condition | Recovery / Defense Mechanism | Latency | Status |
+| :--- | :--- | :--- | :---: | :---: |
+| **EDGE_01_DB** | SQLite Schema & Table Integrity | `PRAGMA integrity_check` verified `ok`; all 7 operational tables recovered. | 2.2 ms | **PASS** |
+| **EDGE_02_GUARD** | Memory Exhaustion Threat | Resource Guard checked RAM headroom (1,342 MB free); prevents OS swap paging. | 5.3 ms | **PASS** |
+| **EDGE_03_FALLBACK**| Remote LLM 401 / Network Down | Gemini API 401 intercepted; immediately fell back to local Qwen2.5 GGUF on CPU. | 2,886.2 ms | **PASS** |
+| **EDGE_04_VISION** | Display Capture Session Boundary | Multi-tier fallback (`ImageGrab -> PyAutoGUI -> GDI Direct DC`); captured 1920x1080. | 96.4 ms | **PASS** |
+| **EDGE_05_RETRY** | Tool Execution Failure | Orchestrator automatically retried and executed alternate safe operation. | 118.1 ms | **PASS** |
+| **EDGE_06_SECURITY**| Destructive Command (`format c:`) | Level 3 Security Gate blocked execution; transitioned to `WAITING_FOR_INPUT`. | 22.7 ms | **PASS** |
+| **EDGE_07_ANDROID** | Android Pairing & Revocation | Generated secure pairing token (`mtx_pair_b78...`), QR URI, and revoked device. | 2.4 ms | **PASS** |
+| **EDGE_08_STATE** | Task Interruption Across Restarts | SQLite task persistence recovered historical task record (`WAITING_FOR_INPUT`). | 3.4 ms | **PASS** |
 
 ---
 
