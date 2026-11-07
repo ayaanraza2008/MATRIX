@@ -104,6 +104,24 @@ class Orchestrator:
             "intent": intent.intent_type.value
         })
 
+        # Check for unavailable capability gap (e.g. CUDA-only diorama / mocha)
+        from core.repository_intelligence.engine import repo_intelligence
+        gap = repo_intelligence.detect_capability_gap(prompt)
+        if gap.has_gap and not gap.is_compatible:
+            gap_explanation = (
+                f"Autonomous Capability Assessment: The requested capability '{gap.required_capability}' "
+                f"(repository '{gap.suggested_repo}') cannot run natively on this PC. "
+                f"{gap.incompatibility_reason} "
+                f"Autonomous Alternative: {gap.alternative_suggestion}"
+            )
+            await self._log_audit_checkpoint("CAPABILITY_GAP_INCOMPATIBLE", gap_explanation, "HANDLED")
+            return OrchestrationResult(
+                plan=reasoning_engine.create_plan(intent),
+                results=[],
+                response_text=gap_explanation,
+                total_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+            )
+
         # 2. PLAN: Formulate multi-step ExecutionPlan
         plan = reasoning_engine.create_plan(intent)
         total_steps = len(plan.steps)

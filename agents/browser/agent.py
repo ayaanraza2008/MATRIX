@@ -149,6 +149,16 @@ class BrowserAgent(BaseAgent):
                 await browser.close()
                 latency = (time.perf_counter() - start_time) * 1000
 
+                if not results:
+                    # Fallback to BrowserUse adapter
+                    adp_res = await self.execute_tool_adapter(
+                        adapter_id="adapter_browser_use",
+                        operation="search_web",
+                        parameters={"query": query}
+                    )
+                    if adp_res.success and adp_res.data and adp_res.data.get("results"):
+                        return adp_res
+
                 return AgentResult(
                     success=True,
                     agent_name=self.name,
@@ -162,7 +172,18 @@ class BrowserAgent(BaseAgent):
                     execution_time_ms=round(latency, 2)
                 )
         except Exception as e:
-            logger.error(f"Search failed: {e}")
+            logger.warning(f"Playwright search failed ({e}); falling back to BrowserUse adapter...")
+            try:
+                adp_res = await self.execute_tool_adapter(
+                    adapter_id="adapter_browser_use",
+                    operation="search_web",
+                    parameters={"query": query}
+                )
+                if adp_res.success:
+                    return adp_res
+            except Exception:
+                pass
+
             latency = (time.perf_counter() - start_time) * 1000
             return AgentResult(
                 success=False,

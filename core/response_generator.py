@@ -20,6 +20,8 @@ class ResponseGenerator:
                 return f"Action encountered an impediment: {res.error or 'Verification check failed'}."
 
             action = res.action_taken
+            if ":" in action:
+                action = action.split(":", 1)[1]
             data = res.data or {}
 
             if action == "inspect_screen":
@@ -43,17 +45,45 @@ class ResponseGenerator:
                 filename = data.get("filename", "file")
                 summary = data.get("summary", "")
                 return f"Executive Summary for '{filename}':\n\n{summary}"
-            elif action == "search_web":
+            elif action == "inspect_code_architecture":
+                fn = data.get("file", "target module")
+                loc = data.get("loc", 0)
+                classes = data.get("classes", [])
+                funcs = data.get("functions", [])
+                return (
+                    f"AST Code Architecture Analysis for `{fn}` ({loc} lines of code):\n"
+                    f"- **Classes Identified ({len(classes)})**: {', '.join(classes) if classes else 'None'}\n"
+                    f"- **Key Functions ({len(funcs)})**: {', '.join(funcs[:8]) if funcs else 'None'}\n"
+                    f"- **Syntax Integrity**: Clean and valid Python AST structure verified."
+                )
+            elif action == "generate_mermaid":
+                code = data.get("mermaid_code", "")
+                return f"Mermaid Architecture Diagram generated successfully:\n\n```mermaid\n{code}\n```"
+            elif action in ["save_memory", "store_context"]:
+                key = data.get("key", "preference")
+                val = data.get("value", "")
+                return f"Preference stored in persistent long-term memory: `{key}` -> `{val}`."
+            elif action in ["list_memory", "retrieve_memory", "search_memory"]:
+                mems = data.get("stored_memories", data.get("matches", []))
+                if isinstance(mems, list) and mems:
+                    items = "\n".join([f"- **{m.get('key')}**: {m.get('value')}" for m in mems[:5]])
+                    return f"Retrieved memories from persistent store:\n{items}"
+                return "Memory store queried: No previous entries found for this key."
+            elif action in ["search_web", "navigate_url"]:
                 count = data.get("count", 0)
                 items = data.get("results", [])
-                lines = [f"Found {count} web results for '{data.get('query')}':\n"]
-                for i, it in enumerate(items[:4], 1):
-                    lines.append(f"**[{i}] {it.get('title')}**")
-                    if it.get('snippet'):
-                        lines.append(f"> {it.get('snippet')}")
-                    if it.get('url'):
-                        lines.append(f"Source: {it.get('url')}\n")
-                return "\n".join(lines)
+                if items:
+                    lines = [f"Found {len(items)} web results:\n"]
+                    for i, it in enumerate(items[:4], 1):
+                        lines.append(f"**[{i}] {it.get('title', 'Web Source')}**")
+                        if it.get('snippet'):
+                            lines.append(f"> {it.get('snippet')}")
+                        if it.get('url'):
+                            lines.append(f"Source: {it.get('url')}\n")
+                    return "\n".join(lines)
+                elif data.get("title"):
+                    return f"Web page '{data.get('title')}' loaded successfully ({data.get('total_chars', 0)} characters):\n> {data.get('text_sample', '')[:300]}"
+                return f"Web operation completed: {data.get('url', 'URL checked')}."
             elif action == "launch_application":
                 return f"Application '{data.get('application')}' is open and verified running."
             elif action == "execute_command":

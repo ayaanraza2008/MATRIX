@@ -25,16 +25,20 @@ class VoiceAgent(BaseAgent):
         action_lower = action.lower()
 
         # 1. Synthesize Speech
-        if "speak" in action_lower or "say" in action_lower:
+        if "speak" in action_lower or "say" in action_lower or "synthesize" in action_lower:
             text = parameters.get("text", parameters.get("query", "MATRIX Voice active."))
-            audio_path = await tts_engine.speak(text)
+            import re
+            cleaned_text = re.sub(r'^(?:speak|say)(?:\s+out\s+loud)?(?:\s+using\s+voice)?(?:\s*:\s*|\s+that\s+|\s+)', '', text, flags=re.IGNORECASE).strip()
+            if not cleaned_text:
+                cleaned_text = text
+            audio_path = await tts_engine.speak(cleaned_text)
             latency = (time.perf_counter() - start_time) * 1000
             verified = audio_path is not None and audio_path.exists()
             return AgentResult(
                 success=verified,
                 agent_name=self.name,
                 action_taken="synthesize_speech",
-                data={"audio_file": str(audio_path) if audio_path else None, "text": text},
+                data={"audio_file": str(audio_path) if audio_path else None, "text": cleaned_text},
                 verification={"audio_created": verified, "verified": verified},
                 execution_time_ms=round(latency, 2)
             )

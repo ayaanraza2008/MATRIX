@@ -21,18 +21,27 @@ class CodingAgent(BaseAgent):
 
     async def execute(self, action: str, parameters: Dict[str, Any]) -> AgentResult:
         start_time = time.perf_counter()
-        raw_prompt = parameters.get("instruction", "").lower()
+        raw_prompt = parameters.get("instruction", parameters.get("raw_prompt", "")).lower()
 
-        # 1. Run Tests
+        # 1. Architectural Code Analysis (via Gravitas Adapter)
+        if "architecture" in action.lower() or "inspect_code" in action.lower() or "analyze" in raw_prompt:
+            file_path = parameters.get("file_path", "core/brain.py")
+            return await self.execute_tool_adapter(
+                adapter_id="adapter_gravitas",
+                operation="inspect_code_architecture",
+                parameters={"file_path": file_path}
+            )
+
+        # 2. Run Tests
         if "test" in action.lower() or "test" in raw_prompt:
             return await self._run_pytest(start_time)
 
-        # 2. Syntax Validation
+        # 3. Syntax Validation
         if "syntax" in action.lower() or "validate" in raw_prompt:
             code_snippet = parameters.get("code", "")
             return self._validate_syntax(code_snippet, start_time)
 
-        # 3. Workspace Inspection
+        # 4. Workspace Inspection
         return await self._inspect_workspace(start_time)
 
     async def _run_pytest(self, start_time: float) -> AgentResult:

@@ -18,7 +18,24 @@ class CreativeAgent(BaseAgent):
 
     async def execute(self, action: str, parameters: Dict[str, Any]) -> AgentResult:
         start_time = time.perf_counter()
-        prompt = parameters.get("prompt", "futuristic HUD graphic")
+        act_lower = action.lower()
+        prompt = parameters.get("prompt", parameters.get("query", "futuristic HUD graphic")).lower()
+
+        # 1. Mermaid Architecture Diagram Generation (via Diagram Design Adapter)
+        if "mermaid" in act_lower or "diagram" in act_lower or "mermaid" in prompt or "flowchart" in prompt:
+            return await self.execute_tool_adapter(
+                adapter_id="adapter_diagram_design",
+                operation="generate_mermaid",
+                parameters={"title": "MATRIX Personal AI Ecosystem Architecture"}
+            )
+
+        # 2. SVG Blueprint Generation
+        if "svg" in act_lower or "svg" in prompt:
+            return await self.execute_tool_adapter(
+                adapter_id="adapter_diagram_design",
+                operation="generate_svg",
+                parameters={"width": 500, "height": 300}
+            )
 
         latency = (time.perf_counter() - start_time) * 1000
         return AgentResult(

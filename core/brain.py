@@ -42,8 +42,11 @@ class MatrixBrain:
         language_hint = " Respond in natural conversational Hinglish." if is_hinglish_requested else ""
 
         # 3. Intelligent Model Enrichment:
-        # A. Direct Conversational / QA Intent
-        if orch_res.plan.steps and orch_res.plan.steps[0].tool_name == "generate_answer":
+        # A. Direct Conversational / QA Intent (only if not an explicit capability gap or security gate block)
+        if orch_res.plan.steps and orch_res.plan.steps[0].tool_name == "generate_answer" and not (
+            "Autonomous Capability Assessment" in orch_res.response_text or
+            "Security policy requires explicit authorization" in orch_res.response_text
+        ):
             history_context = context_manager.format_history_for_llm(session_id)
             model_res = await model_manager.generate_response(
                 prompt=f"{history_context}\n\nASSISTANT:{language_hint}",
