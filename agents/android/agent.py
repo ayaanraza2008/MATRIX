@@ -8,6 +8,7 @@ from sqlalchemy import select, delete
 from agents.base_agent import BaseAgent, AgentResult, AgentCapability
 from database.session import AsyncSessionLocal
 from database.models import Device as DeviceModel
+from core.pairing_manager import pairing_manager
 
 
 class AndroidAgent(BaseAgent):
@@ -32,17 +33,15 @@ class AndroidAgent(BaseAgent):
 
         # 1. Generate Pairing Token
         if "pair" in action_lower or "token" in action_lower:
-            pairing_token = f"mtx_pair_{uuid.uuid4().hex[:16]}"
+            port = parameters.get("port", 8000)
+            ttl = parameters.get("ttl", 300)
+            token_data = pairing_manager.create_token(ttl_seconds=ttl, port=port)
             latency = (time.perf_counter() - start_time) * 1000
             return AgentResult(
                 success=True,
                 agent_name=self.name,
                 action_taken="generate_pairing_token",
-                data={
-                    "pairing_token": pairing_token,
-                    "qr_protocol": f"matrix://pair?token={pairing_token}&host=127.0.0.1:8000",
-                    "expires_in_seconds": 300
-                },
+                data=token_data,
                 verification={"verified": True},
                 execution_time_ms=round(latency, 2)
             )

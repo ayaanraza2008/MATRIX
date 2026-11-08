@@ -1,16 +1,16 @@
 {
   "test_suite": "edge_case_and_fault_tolerance",
-  "timestamp": 1794081696.2249758,
+  "timestamp": 1794111745.1594725,
   "total_cases": 8,
   "passed_cases": 8,
   "failed_cases": 0,
-  "total_execution_ms": 3136.58,
+  "total_execution_ms": 3219.12,
   "results": [
     {
       "case_id": "EDGE_01_DB",
       "title": "Database Integrity & SQLite Table Recovery",
       "status": "PASS",
-      "latency_ms": 2.18,
+      "latency_ms": 9.72,
       "evidence": "SQLite integrity: ok, Tables found: 7 (devices, user_preferences, sessions, tasks)",
       "data": {}
     },
@@ -18,13 +18,13 @@
       "case_id": "EDGE_02_GUARD",
       "title": "Resource Guard (RAM/CPU Protection)",
       "status": "PASS",
-      "latency_ms": 5.27,
-      "evidence": "RAM Avail: 1342.4MB, CPU: 9.3%, Headroom: True",
+      "latency_ms": 0.89,
+      "evidence": "RAM Avail: 1130.9MB, CPU: 9.0%, Headroom: True",
       "data": {
-        "ram_available_mb": 1342.4,
-        "ram_percent": 82.2,
-        "cpu_percent": 9.3,
-        "disk_free_gb": 124.6,
+        "ram_available_mb": 1130.9,
+        "ram_percent": 85.0,
+        "cpu_percent": 9.0,
+        "disk_free_gb": 124.59,
         "required_ram_mb": 100
       }
     },
@@ -32,7 +32,7 @@
       "case_id": "EDGE_03_FALLBACK",
       "title": "Remote API 401 -> Local GGUF Fallback",
       "status": "PASS",
-      "latency_ms": 2886.17,
+      "latency_ms": 2986.8,
       "evidence": "Fallback model used: 'qwen2.5-0.5b-instruct-q4_k_m' (Provider: local_gguf, Local: True), Tokens: 13",
       "data": {}
     },
@@ -40,7 +40,7 @@
       "case_id": "EDGE_04_VISION",
       "title": "Multi-Tier Screen Grab Fallback",
       "status": "PASS",
-      "latency_ms": 96.4,
+      "latency_ms": 112.14,
       "evidence": "Capture method: GDI_Direct, Resolution: 1920x1080",
       "data": {}
     },
@@ -48,7 +48,7 @@
       "case_id": "EDGE_05_RETRY",
       "title": "Tool Failure Recovery & Orchestrator Resiliency",
       "status": "PASS",
-      "latency_ms": 118.05,
+      "latency_ms": 83.56,
       "evidence": "Plan completed in state 'COMPLETED' with 1 steps",
       "data": {}
     },
@@ -56,7 +56,7 @@
       "case_id": "EDGE_06_SECURITY",
       "title": "Level 3 Mandatory Security Gate Interception",
       "status": "PASS",
-      "latency_ms": 22.71,
+      "latency_ms": 21.05,
       "evidence": "Destructive command blocked by Level 3 Security Gate (State: WAITING_FOR_INPUT)",
       "data": {}
     },
@@ -64,16 +64,16 @@
       "case_id": "EDGE_07_ANDROID",
       "title": "Android Companion QR Pairing & Revocation",
       "status": "PASS",
-      "latency_ms": 2.41,
-      "evidence": "Generated token (mtx_pair_b78...), QR: matrix://pair?token=mtx_pair..., Revoked: True",
+      "latency_ms": 2.35,
+      "evidence": "Generated token (mtx_pair_54e...), QR: matrix://pair?token=mtx_pair..., Revoked: True",
       "data": {}
     },
     {
       "case_id": "EDGE_08_STATE",
       "title": "Task State Machine Persistence Across Interruption",
       "status": "PASS",
-      "latency_ms": 3.39,
-      "evidence": "Recovered task from SQLite: id=plan_d8847e6a47, status=WAITING_FOR_INPUT, title=Plan: COMMAND (rmdir /s)",
+      "latency_ms": 2.61,
+      "evidence": "Recovered task from SQLite: id=plan_14add85dc3, status=WAITING_FOR_INPUT, title=Plan: COMMAND (rmdir /s)",
       "data": {}
     }
   ]

@@ -1,5 +1,5 @@
 {
-  "timestamp": 1794080773.7824829,
+  "timestamp": 1794111690.298548,
   "total_workflows": 8,
   "total_tests": 8,
   "passed": 8,
@@ -9,10 +9,10 @@
       {
         "name": "browser_research_execution",
         "status": "PASS",
-        "latency_ms": 5911.61,
+        "latency_ms": 7016.73,
         "evidence": "Reply: 'Found 5 web results:\n\n**[1] Matrix Olympiad Foundation | National...'",
         "data": {
-          "reply": "Found 5 web results:\n\n**[1] Matrix Olympiad Foundation | National Olympiad Exam 2026**\n> Register for Matrix Olympiad Foundation 2026 and compete with students nationwide. Get scholarships, awards, study resources, \u2026\nSource: https://www.bing.com/ck/a?!&&p=420cc3a94588f934030578d4358323da43f457e5d5c2"
+          "reply": "Found 5 web results:\n\n**[1] Matrix Olympiad Foundation | National Olympiad Exam 2026**\n> Register for Matrix Olympiad Foundation 2026 and compete with students nationwide. Get scholarships, awards, study resources, \u2026\nSource: https://www.bing.com/ck/a?!&&p=9f045728cf141a1c20d987a983c0960ab0dcd56f78f7"
         }
       }
     ],
@@ -20,7 +20,7 @@
       {
         "name": "screen_visual_ocr_inspection",
         "status": "PASS",
-        "latency_ms": 6320.74,
+        "latency_ms": 7166.31,
         "evidence": "Reply: 'Hi there! I'm Matrix, your personal AI assistant. Let's get start...'",
         "data": {
           "reply": "Hi there! I'm Matrix, your personal AI assistant. Let's get started.\n\nFirst, I'll check your screen to see what's visible. I see dark, low-light scenes with soft, diffuse elements. The sharpness is at a low level, and the detail is smooth and smooth. I don't see any text on the screen.\n\nIs there any"
@@ -31,14 +31,14 @@
       {
         "name": "scaffold_and_test_python_app",
         "status": "PASS",
-        "latency_ms": 1147.52,
+        "latency_ms": 1641.05,
         "evidence": "Project: autonomy_calc_app, Tests passed: True",
         "data": {
           "success": true,
-          "stdout": "============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.2.0, pluggy-1.7.0 -- C:\\Users\\Ali Raza Zaidi\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\Ali Raza Zaidi\\Desktop\\matrix\nplugins: anyio-4.16.0, asyncio-1.4.1.post1\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollecting ... collected 1 item\n\n::test_addition PASSED                                                   [100%]\n\n============================== 1 passed in 0.02s ==============================\n",
+          "stdout": "============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.2.0, pluggy-1.7.0 -- C:\\Users\\Ali Raza Zaidi\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\Ali Raza Zaidi\\Desktop\\matrix\nplugins: anyio-4.16.0, asyncio-1.4.1.post1\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollecting ... collected 1 item\n\n::test_addition PASSED                                                   [100%]\n\n============================== 1 passed in 0.05s ==============================\n",
           "stderr": "C:\\Users\\Ali Raza Zaidi\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python312\\site-packages\\pytest_asyncio\\plugin.py:300: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the \"fixture\" caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to \"function\" scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n",
           "returncode": 0,
-          "latency_ms": 864.26
+          "latency_ms": 1328.31
         }
       }
     ],
@@ -46,7 +46,7 @@
       {
         "name": "remember_preference_sqlite",
         "status": "PASS",
-        "latency_ms": 39.82,
+        "latency_ms": 48.47,
         "evidence": "Persisted key 'favorite_code_theme' -> 'Matrix Dark Cyan'",
         "data": {
           "key": "favorite_code_theme",
@@ -58,10 +58,10 @@
       {
         "name": "voice_synthesis_and_continuous_listen",
         "status": "PASS",
-        "latency_ms": 6772.57,
-        "evidence": "Audio: speech_1794080771912.mp3 (37728 bytes), State: listening",
+        "latency_ms": 12868.79,
+        "evidence": "Audio: speech_1794111681362.mp3 (37728 bytes), State: listening",
         "data": {
-          "file": "D:\\matrix_data\\cache\\audio\\speech_1794080771912.mp3"
+          "file": "D:\\matrix_data\\cache\\audio\\speech_1794111681362.mp3"
         }
       }
     ],
@@ -69,7 +69,7 @@
       {
         "name": "autonomous_capability_selection",
         "status": "PASS",
-        "latency_ms": 0.14,
+        "latency_ms": 0.12,
         "evidence": "Selected Tool: SystemTelemetryAdapter from AbuZar-Ansarii/Ultron (Score: 0.9)",
         "data": {
           "adapter": "SystemTelemetryAdapter",
@@ -81,10 +81,10 @@
       {
         "name": "system_performance_telemetry",
         "status": "PASS",
-        "latency_ms": 36.32,
-        "evidence": "Reply: 'Telemetry nominal: CPU at 5.3%, RAM utilization at 90.8%....'",
+        "latency_ms": 48.82,
+        "evidence": "Reply: 'Telemetry nominal: CPU at 10.0%, RAM utilization at 90.8%....'",
         "data": {
-          "reply": "Telemetry nominal: CPU at 5.3%, RAM utilization at 90.8%."
+          "reply": "Telemetry nominal: CPU at 10.0%, RAM utilization at 90.8%."
         }
       }
     ],
@@ -92,14 +92,14 @@
       {
         "name": "task_state_summarization",
         "status": "PASS",
-        "latency_ms": 3.15,
-        "evidence": "Retrieved 10 persisted tasks. Latest: plan_d150fca655: Plan: SYSTEM (performance) [COMPLETED]",
+        "latency_ms": 2.75,
+        "evidence": "Retrieved 10 persisted tasks. Latest: plan_d12b8d9fa0: Plan: SYSTEM (performance) [COMPLETED]",
         "data": {
           "count": 10,
           "samples": [
-            "plan_d150fca655: Plan: SYSTEM (performance) [COMPLETED]",
-            "plan_a87ed26680: Plan: MEMORY (remember) [COMPLETED]",
-            "plan_6ffa65fdd4: Plan: VISION (screen) [COMPLETED]"
+            "plan_d12b8d9fa0: Plan: SYSTEM (performance) [COMPLETED]",
+            "plan_59c605e394: Plan: MEMORY (remember) [COMPLETED]",
+            "plan_7eac678233: Plan: VISION (inspect my screen) [COMPLETED]"
           ]
         }
       }

@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from database.session import get_db
 from database.models import Device as DeviceModel
 from config.logging_config import get_logger
+from core.pairing_manager import pairing_manager
 
 logger = get_logger("api.devices")
 router = APIRouter(prefix="/devices", tags=["Device Pairing & Synchronization"])
@@ -25,6 +26,11 @@ class PairRequest(BaseModel):
     pairing_token: str
 
 
+class CreateTokenRequest(BaseModel):
+    ttl_seconds: int = 300
+    port: int = 8000
+
+
 class DeviceResponse(BaseModel):
     id: int
     device_id: str
@@ -35,12 +41,26 @@ class DeviceResponse(BaseModel):
     created_at: datetime
 
 
+@router.post("/token", status_code=status.HTTP_200_OK)
+async def create_token(payload: Optional[CreateTokenRequest] = None):
+    """Generate a fresh pairing token and QR code protocol URI with detected LAN IP."""
+    ttl = payload.ttl_seconds if payload else 300
+    port = payload.port if payload else 8000
+    return pairing_manager.create_token(ttl_seconds=ttl, port=port)
+
+
+@router.get("/tokens", status_code=status.HTTP_200_OK)
+async def list_tokens():
+    """List currently active, unconsumed pairing tokens."""
+    return pairing_manager.list_active_tokens()
+
+
 @router.post("/pair", status_code=status.HTTP_200_OK)
 async def pair_device(payload: PairRequest, db: AsyncSession = Depends(get_db)):
     """Authorize and pair a new client device (such as the Android app)."""
-    # Verify pairing token format
-    if not payload.pairing_token.startswith("mtx_pair_"):
-        raise HTTPException(status_code=400, detail="Invalid pairing token format.")
+    valid, message = pairing_manager.validate_and_consume(payload.pairing_token, payload.device_id)
+    if not valid:
+        raise HTTPException(status_code=400, detail=message)
 
     stmt = select(DeviceModel).where(DeviceModel.device_id == payload.device_id)
     res = await db.execute(stmt)
@@ -51,6 +71,8 @@ async def pair_device(payload: PairRequest, db: AsyncSession = Depends(get_db)):
 
     if existing:
         existing.is_paired = True
+        existing.name = payload.name
+        existing.platform = payload.platform
         existing.auth_token_hash = token_hash
         existing.last_seen_at = datetime.now(timezone.utc)
     else:

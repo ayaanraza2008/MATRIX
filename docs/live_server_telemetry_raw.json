@@ -1,0 +1,279 @@
+{
+  "test_suite": "live_server_telemetry_acceptance",
+  "timestamp": 1794111751.171992,
+  "total_endpoints": 7,
+  "passed": 7,
+  "failed": 0,
+  "total_latency_ms": 1270.76,
+  "results": [
+    {
+      "endpoint": "/api/v1/system/telemetry",
+      "status": "PASS",
+      "latency_ms": 1023.65,
+      "evidence": "Status 200, CPU: 11.1%, Threads: 16, RAM Avail: 1241.4MB, Uptime: 1616.7s",
+      "data": {
+        "status": "nominal",
+        "timestamp": 1794111750.9155796,
+        "uptime_seconds": 1616.7,
+        "cpu": {
+          "percent": 11.1,
+          "per_cpu_percent": [
+            15.2,
+            7.1,
+            17.4,
+            8.1,
+            13.5,
+            17.3,
+            12.9,
+            6.9,
+            11.6,
+            6.2,
+            15.4,
+            6.7,
+            13.4,
+            5.9,
+            12.0,
+            6.1
+          ],
+          "frequency_mhz": 1801.0,
+          "physical_cores": 8,
+          "logical_threads": 16,
+          "architecture": "AMD64"
+        },
+        "memory": {
+          "percent": 83.6,
+          "used_mb": 6320.5,
+          "available_mb": 1241.4,
+          "total_mb": 7561.9,
+          "swap_used_mb": 1004.8,
+          "low_ram_mode": true
+        },
+        "storage": {
+          "C:": {
+            "total_gb": 181.75,
+            "free_gb": 15.71,
+            "used_gb": 166.04,
+            "used_percent": 91.4
+          },
+          "D:": {
+            "total_gb": 146.48,
+            "free_gb": 124.59,
+            "used_gb": 21.9,
+            "used_percent": 14.9
+          }
+        },
+        "battery": null,
+        "process_count": 245,
+        "host": {
+          "os": "Windows",
+          "release": "11",
+          "hostname": "PC-LENOVO"
+        }
+      }
+    },
+    {
+      "endpoint": "/api/v1/telemetry (alias)",
+      "status": "PASS",
+      "latency_ms": 40.92,
+      "evidence": "Status 200, Alias correctly resolved; RAM Avail: 1233.7MB",
+      "data": {
+        "status": "nominal",
+        "timestamp": 1794111750.9580486,
+        "uptime_seconds": 1616.7,
+        "cpu": {
+          "percent": 13.0,
+          "per_cpu_percent": [
+            0.0,
+            33.3,
+            0.0,
+            33.3,
+            0.0,
+            33.3,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            50.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "frequency_mhz": 1801.0,
+          "physical_cores": 8,
+          "logical_threads": 16,
+          "architecture": "AMD64"
+        },
+        "memory": {
+          "percent": 83.7,
+          "used_mb": 6328.2,
+          "available_mb": 1233.7,
+          "total_mb": 7561.9,
+          "swap_used_mb": 1004.8,
+          "low_ram_mode": true
+        },
+        "storage": {
+          "C:": {
+            "total_gb": 181.75,
+            "free_gb": 15.71,
+            "used_gb": 166.04,
+            "used_percent": 91.4
+          },
+          "D:": {
+            "total_gb": 146.48,
+            "free_gb": 124.59,
+            "used_gb": 21.9,
+            "used_percent": 14.9
+          }
+        },
+        "battery": null,
+        "process_count": 245,
+        "host": {
+          "os": "Windows",
+          "release": "11",
+          "hostname": "PC-LENOVO"
+        }
+      }
+    },
+    {
+      "endpoint": "/api/v1/system/metrics",
+      "status": "PASS",
+      "latency_ms": 27.56,
+      "evidence": "Status 200, CPU: 3.0%, RAM: 83.7%, Status: nominal",
+      "data": {
+        "cpu": {
+          "percent": 3.0,
+          "frequency_mhz": 1801.0
+        },
+        "memory": {
+          "percent": 83.7,
+          "used_mb": 6328.3,
+          "available_mb": 1233.5,
+          "total_mb": 7561.9
+        },
+        "status": "nominal"
+      }
+    },
+    {
+      "endpoint": "/api/v1/system/info",
+      "status": "PASS",
+      "latency_ms": 25.59,
+      "evidence": "Status 200, CPU: AMD Ryzen 7 5700U with Radeon Graphics, RAM: 7.38GB",
+      "data": {
+        "os": {
+          "system": "Windows",
+          "release": "11",
+          "version": "10.0.26300",
+          "architecture": "AMD64",
+          "processor": "AMD64 Family 23 Model 104 Stepping 1, AuthenticAMD"
+        },
+        "python": {
+          "version": "3.12.10",
+          "implementation": "CPython"
+        },
+        "hardware": {
+          "cpu_name": "AMD Ryzen 7 5700U with Radeon Graphics",
+          "physical_cores": 8,
+          "logical_processors": 16,
+          "avx2_supported": true,
+          "gpu_name": "AMD Radeon(TM) Graphics (Integrated APU)",
+          "total_ram_bytes": 7929192448,
+          "total_ram_gb": 7.38
+        },
+        "storage_layout": {
+          "data_root": "D:\\matrix_data",
+          "models_root": "D:\\matrix_data\\models",
+          "cache_root": "D:\\matrix_data\\cache",
+          "logs_root": "logs"
+        }
+      }
+    },
+    {
+      "endpoint": "/api/v1/health",
+      "status": "PASS",
+      "latency_ms": 21.22,
+      "evidence": "Status 200, Overall: healthy, DB Connected: True, Latency: 1.24ms",
+      "data": {
+        "status": "healthy",
+        "app_name": "MATRIX",
+        "version": "1.0.0",
+        "environment": "development",
+        "database": {
+          "connected": true,
+          "type": "SQLite (Async aiosqlite)",
+          "path": "D:\\matrix_data\\matrix.db",
+          "latency_ms": 1.24
+        },
+        "system": {
+          "cpu_percent": 4.3,
+          "cpu_cores_physical": 8,
+          "cpu_threads_logical": 16,
+          "ram_total_mb": 7561.87,
+          "ram_available_mb": 1231.58,
+          "ram_used_mb": 6330.29,
+          "ram_percent": 83.7,
+          "low_ram_mode": true
+        },
+        "storage": {
+          "C:": {
+            "total_gb": 181.75,
+            "free_gb": 15.71,
+            "used_percent": 91.4
+          },
+          "D:": {
+            "total_gb": 146.48,
+            "free_gb": 124.59,
+            "used_percent": 14.9
+          }
+        },
+        "models": {
+          "candidate_local": "qwen2.5-0.5b-instruct-q4_k_m",
+          "model_path": "D:\\matrix_data\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+          "model_installed": true,
+          "cloud_enabled": true
+        },
+        "active_autonomy_level": 3
+      }
+    },
+    {
+      "endpoint": "OpenAPI Route Conformance",
+      "status": "PASS",
+      "latency_ms": 79.94,
+      "evidence": "Status 200, Verified 58 routes in OpenAPI schema. Missing expected: []",
+      "data": {
+        "total_routes": 58
+      }
+    },
+    {
+      "endpoint": "WebSocket /ws/events",
+      "status": "PASS",
+      "latency_ms": 51.88,
+      "evidence": "WebSocket protocol verified. Frames: ['handshake', 'telemetry_update', 'ack'], Handshake: True, Telemetry: True, Ack: True",
+      "data": {
+        "handshake": {
+          "type": "handshake",
+          "payload": {
+            "system_status": "ONLINE",
+            "hologram_state": "idle",
+            "message": "MATRIX Core Link Established"
+          }
+        },
+        "telemetry_update": {
+          "type": "telemetry_update",
+          "payload": {
+            "cpu_percent": 7.4,
+            "ram_percent": 83.8,
+            "ram_used_mb": 6335.3,
+            "ram_available_mb": 1226.6,
+            "status": "nominal"
+          }
+        },
+        "ack": {
+          "type": "ack",
+          "received": "{\"type\": \"ping\", \"client\": \"telemetry_test\"}"
+        }
+      }
+    }
+  ]
+}

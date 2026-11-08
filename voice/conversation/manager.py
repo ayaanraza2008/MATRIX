@@ -219,6 +219,10 @@ class HandsFreeManager:
                     "language": stt_result.get("detected_language", "en")
                 })
 
+                from core.brain import brain
+                from core.orchestrator import orchestrator
+                from core.agent_coordinator import agent_coordinator
+
                 # 2. Check for Immediate Voice Directives
                 lower_text = transcript.lower().strip()
 
@@ -229,7 +233,6 @@ class HandsFreeManager:
 
                 # Directive B: Cancel that task
                 if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix cancel that task", "cancel that task", "cancel task", "stop task", "matrix cancel the current task", "cancel the current task"]):
-                    from core.orchestrator import orchestrator
                     orchestrator.cancel_active()
                     self.state = HandsFreeState.SPEAKING
                     await self.emit_event("SPEAKING", {"text": "Task cancelled, sir."})
@@ -257,7 +260,6 @@ class HandsFreeManager:
 
                 # Directive E: What are you doing?
                 if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix what are you doing", "what are you doing", "kya kar rahe ho", "matrix explain what you are currently doing", "explain what you are currently doing"]):
-                    from core.agent_coordinator import agent_coordinator
                     dashboard = agent_coordinator.get_agent_dashboard()
                     recent = dashboard.get("recent_tasks_count", 0)
                     msg = f"System is fully operational, sir. All 16 agents are standing by, with {recent} tasks recorded in this session."
@@ -270,7 +272,6 @@ class HandsFreeManager:
 
                 # Directive F: Open browser
                 if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix open my browser", "open my browser", "open browser"]):
-                    from core.brain import brain
                     self.state = HandsFreeState.SPEAKING
                     ack_audio = await tts_engine.speak("Opening browser now, sir.")
                     await brain.interact("Open browser", session_id=self.active_session_id)

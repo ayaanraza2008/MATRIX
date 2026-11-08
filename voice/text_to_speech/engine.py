@@ -27,10 +27,15 @@ class TTSEngine:
         self._stop_requested: bool = False
 
     def stop(self):
-        """Request immediate cancellation of speech."""
+        """Request immediate cancellation of speech and halt audio playback."""
         self._stop_requested = True
         self.is_speaking = False
-        logger.info("Speech stop requested.")
+        try:
+            import sounddevice as sd
+            sd.stop()
+        except Exception:
+            pass
+        logger.info("Speech stop requested and speaker playback halted.")
 
     def select_voice(self, text: str, voice_override: Optional[str] = None) -> str:
         """Select appropriate neural voice for English, Hindi, or Hinglish."""
@@ -49,8 +54,26 @@ class TTSEngine:
         # JARVIS-style English persona
         return "en-US-ChristopherNeural"
 
-    async def speak(self, text: str, voice_override: Optional[str] = None) -> Optional[Path]:
-        """Synthesize text to audio and return the audio file path."""
+    async def _play_audio(self, path: Path):
+        """Play audio file through sounddevice asynchronously with interruption monitoring."""
+        try:
+            import soundfile as sf
+            import sounddevice as sd
+            data, sr = sf.read(str(path))
+            sd.play(data, samplerate=sr)
+            duration = len(data) / sr
+            start = time.time()
+            while (time.time() - start) < duration:
+                if self._stop_requested:
+                    sd.stop()
+                    logger.info("Audio playback interrupted by user.")
+                    break
+                await asyncio.sleep(0.05)
+        except Exception as e:
+            logger.warning(f"Audio playback encountered an exception: {e}")
+
+    async def speak(self, text: str, voice_override: Optional[str] = None, play_audio: bool = True) -> Optional[Path]:
+        """Synthesize text to audio, optionally play through speakers, and return audio file path."""
         self._stop_requested = False
         self.is_speaking = True
         target_path = self.output_dir / f"speech_{int(time.time() * 1000)}.mp3"
@@ -70,6 +93,8 @@ class TTSEngine:
 
             if target_path.exists() and target_path.stat().st_size > 0:
                 logger.info(f"Synthesized neural speech ({voice}): {target_path.name}")
+                if play_audio and not self._stop_requested:
+                    await self._play_audio(target_path)
                 self.is_speaking = False
                 return target_path
         except Exception as e:
@@ -85,6 +110,8 @@ class TTSEngine:
             engine.runAndWait()
             if wav_path.exists() and wav_path.stat().st_size > 0:
                 logger.info(f"Synthesized offline SAPI5 speech: {wav_path.name}")
+                if play_audio and not self._stop_requested:
+                    await self._play_audio(wav_path)
                 self.is_speaking = False
                 return wav_path
         except Exception as e:

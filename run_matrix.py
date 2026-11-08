@@ -99,18 +99,23 @@ def preflight_check():
 
 def main():
     preflight_check()
-    host = "127.0.0.1"
+    from core.pairing_manager import get_lan_ip
+    lan_ip = get_lan_ip()
+    bind_host = "0.0.0.0"
     port = 8000
-    url = f"http://{host}:{port}/"
+    local_url = f"http://127.0.0.1:{port}/"
+    lan_url = f"http://{lan_ip}:{port}/"
     
-    print(f"\n[+] Starting MATRIX Core Server at {url}...")
+    print(f"\n[+] Starting MATRIX Core Server on {bind_host}:{port}...")
+    print(f"[+] Local Desktop HUD : {local_url}")
+    print(f"[+] Mobile Companion  : {lan_url}")
     print("[+] Press CTRL+C to safely terminate the system.\n")
     
     # Open browser after a slight delay
     def open_browser():
         time.sleep(2.0)
         try:
-            webbrowser.open(url)
+            webbrowser.open(local_url)
         except Exception:
             pass
 
@@ -119,7 +124,7 @@ def main():
 
     # Launch uvicorn
     import uvicorn
-    uvicorn.run("api.server:app", host=host, port=port, reload=False, log_level="info")
+    uvicorn.run("api.server:app", host=bind_host, port=port, reload=False, log_level="info")
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,103 @@
+{
+  "test_suite": "voice_real_world_verification",
+  "timestamp": 1794111765.8487098,
+  "total_tests": 12,
+  "passed": 12,
+  "failed": 0,
+  "total_latency_ms": 6650.48,
+  "results": [
+    {
+      "test_name": "Windows Audio Device Enumeration",
+      "status": "PASS",
+      "latency_ms": 0.12,
+      "evidence": "Found 15 audio devices (Inputs: 8, Outputs: 7, Default In: 1, Default Out: 3)",
+      "data": {
+        "total_devices": 15,
+        "inputs_count": 8,
+        "outputs_count": 7
+      }
+    },
+    {
+      "test_name": "Wake-Word Models Ready ('Matrix' & 'Snap')",
+      "status": "PASS",
+      "latency_ms": 1.19,
+      "evidence": "Models: matrix.onnx (404189B), snap.onnx (404189B), Armed: True",
+      "data": {}
+    },
+    {
+      "test_name": "Silero VAD Speech & Energy Gating",
+      "status": "PASS",
+      "latency_ms": 9.11,
+      "evidence": "Silence recognized: True, Real Speech recognized: True (Silero VAD prob: 0.624)",
+      "data": {}
+    },
+    {
+      "test_name": "Faster-Whisper STT Transcription",
+      "status": "PASS",
+      "latency_ms": 1911.29,
+      "evidence": "Faster-Whisper Tiny executed; result text: '', Duration: 1.0s",
+      "data": {
+        "text": "",
+        "detected_language": "en",
+        "language_probability": 1,
+        "duration": 1.0
+      }
+    },
+    {
+      "test_name": "Edge TTS Neural Speech Synthesis",
+      "status": "PASS",
+      "latency_ms": 1879.62,
+      "evidence": "Synthesized audio: speech_1794111761117.mp3 (14400 bytes)",
+      "data": {}
+    },
+    {
+      "test_name": "Speaker Playback & Barge-In Cut",
+      "status": "PASS",
+      "latency_ms": 308.79,
+      "evidence": "Interruption aborted playback; stop_requested: True, is_speaking: False",
+      "data": {}
+    },
+    {
+      "test_name": "Voice Directive: 'Matrix, stop'",
+      "status": "PASS",
+      "latency_ms": 312.25,
+      "evidence": "Directive 'Stop' transitioned manager from SPEAKING to listening",
+      "data": {}
+    },
+    {
+      "test_name": "Voice Directive: 'Matrix, cancel that task'",
+      "status": "PASS",
+      "latency_ms": 1.29,
+      "evidence": "Directive 'Cancel task' set cancel_requested: True",
+      "data": {}
+    },
+    {
+      "test_name": "Voice Directive: 'Matrix, go to sleep'",
+      "status": "PASS",
+      "latency_ms": 1.78,
+      "evidence": "Mode: wake_word_only, State: sleeping",
+      "data": {}
+    },
+    {
+      "test_name": "Voice Directive: 'Matrix, listen / continuous'",
+      "status": "PASS",
+      "latency_ms": 1.67,
+      "evidence": "Mode: continuous, State: listening",
+      "data": {}
+    },
+    {
+      "test_name": "Privacy Pause Audio Ingestion Protection",
+      "status": "PASS",
+      "latency_ms": 1.57,
+      "evidence": "Privacy mode successfully suppressed audio ingestion: {'status': 'paused'}",
+      "data": {}
+    },
+    {
+      "test_name": "Full Voice Turn Cycle & Auto-Resumption",
+      "status": "PASS",
+      "latency_ms": 2221.8,
+      "evidence": "Cycle complete: Wake->listening, Brain->'Telemetry nominal: CPU at 11.6%, RA...', TTS->speech_1794111763902.mp3, Resumed->listening",
+      "data": {}
+    }
+  ]
+}

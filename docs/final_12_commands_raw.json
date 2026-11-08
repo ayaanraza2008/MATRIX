@@ -1,19 +1,19 @@
 {
   "test_suite": "12_canonical_real_world_commands",
-  "timestamp": 1794081546.3915563,
+  "timestamp": 1794111735.1746018,
   "total_commands": 12,
   "passed_commands": 12,
   "failed_commands": 0,
-  "total_execution_ms": 35031.59,
-  "average_latency_ms": 2919.3,
+  "total_execution_ms": 34275.1,
+  "average_latency_ms": 2856.26,
   "results": [
     {
       "command_number": 1,
       "prompt": "Matrix, research this topic and prepare a report.",
       "target_agent": "research",
       "status": "PASS",
-      "latency_ms": 5474.6,
-      "evidence": "Generated research report (3321 chars): # Research Dossier: Matrix, research this topic and prepare a report.\n\n### Verif...",
+      "latency_ms": 5744.0,
+      "evidence": "Generated research report (3515 chars): # Research Dossier: Matrix, research this topic and prepare a report.\n\n### Verif...",
       "data": {
         "reply_preview": "# Research Dossier: Matrix, research this topic and prepare a report.\n\n### Verified Executive Findings\n\n**[1] Matrix Olympiad Foundation | National Olympiad Exam 2026**\n> Register for Matrix Olympiad Foundation 2026 and compete with students nationwide. Get scholarships, awards, study resources, \u2026\nS",
         "plan_status": "COMPLETED"
@@ -24,7 +24,7 @@
       "prompt": "Matrix, inspect my screen and explain this error.",
       "target_agent": "vision",
       "status": "PASS",
-      "latency_ms": 4714.37,
+      "latency_ms": 4466.43,
       "evidence": "Vision screen analysis verified (115 chars): Hi there! I'm here to help you with anything you need. Could you tell me what yo...",
       "data": {
         "reply_preview": "Hi there! I'm here to help you with anything you need. Could you tell me what you're trying to do with your screen?",
@@ -36,7 +36,7 @@
       "prompt": "Matrix, create a Python application and test it.",
       "target_agent": "coding",
       "status": "PASS",
-      "latency_ms": 13648.99,
+      "latency_ms": 13005.46,
       "evidence": "Generated Python app and verified syntax/tests (1675 chars): To create a Python application that tests and runs on your matrix, you can follo...",
       "data": {
         "reply_preview": "To create a Python application that tests and runs on your matrix, you can follow these steps:\n\n1. **Set up a project directory** and create a Python script file for your application.\n2. **Write your test cases** in the script file.\n3. **Run the script** with your matrix instance to execute your tes",
@@ -48,10 +48,10 @@
       "prompt": "Matrix, remember this preference: my preferred interface color is cyan.",
       "target_agent": "memory",
       "status": "PASS",
-      "latency_ms": 44.58,
-      "evidence": "Preference stored in long-term memory: Preference stored in persistent long-term memory: `pref_1794081535` -> `Matrix, ...",
+      "latency_ms": 35.44,
+      "evidence": "Preference stored in long-term memory: Preference stored in persistent long-term memory: `pref_1794111724` -> `Matrix, ...",
       "data": {
-        "reply_preview": "Preference stored in persistent long-term memory: `pref_1794081535` -> `Matrix, remember this preference: my preferred interface color is cyan.`.",
+        "reply_preview": "Preference stored in persistent long-term memory: `pref_1794111724` -> `Matrix, remember this preference: my preferred interface color is cyan.`.",
         "plan_status": "COMPLETED"
       }
     },
@@ -60,10 +60,10 @@
       "prompt": "Matrix, open my browser and find relevant information.",
       "target_agent": "browser",
       "status": "PASS",
-      "latency_ms": 5688.9,
-      "evidence": "Browser information retrieval verified (1623 chars): Found 5 web results:\n\n**[1] Matrix Olympiad Foundation | National Olympiad Exam ...",
+      "latency_ms": 5341.35,
+      "evidence": "Browser information retrieval verified (1749 chars): Found 5 web results:\n\n**[1] Matrix Olympiad Foundation | National Olympiad Exam ...",
       "data": {
-        "reply_preview": "Found 5 web results:\n\n**[1] Matrix Olympiad Foundation | National Olympiad Exam 2026**\n> Register for Matrix Olympiad Foundation 2026 and compete with students nationwide. Get scholarships, awards, study resources, \u2026\nSource: https://www.bing.com/ck/a?!&&p=00076a3eab98d70f5320f161ff9385116829e6b85f5f",
+        "reply_preview": "Found 5 web results:\n\n**[1] Matrix Olympiad Foundation | National Olympiad Exam 2026**\n> Register for Matrix Olympiad Foundation 2026 and compete with students nationwide. Get scholarships, awards, study resources, \u2026\nSource: https://www.bing.com/ck/a?!&&p=1fac3fa600e646ee9d3d34ced48682ea03cf8611d6b0",
         "plan_status": "COMPLETED"
       }
     },
@@ -72,10 +72,10 @@
       "prompt": "Matrix, check my computer performance.",
       "target_agent": "system",
       "status": "PASS",
-      "latency_ms": 35.19,
-      "evidence": "Hardware telemetry checked: Telemetry nominal: CPU at 16.3%, RAM utilization at 91.1%....",
+      "latency_ms": 29.57,
+      "evidence": "Hardware telemetry checked: Telemetry nominal: CPU at 17.2%, RAM utilization at 89.2%....",
       "data": {
-        "reply_preview": "Telemetry nominal: CPU at 16.3%, RAM utilization at 91.1%.",
+        "reply_preview": "Telemetry nominal: CPU at 17.2%, RAM utilization at 89.2%.",
         "plan_status": "COMPLETED"
       }
     },
@@ -84,7 +84,7 @@
       "prompt": "Matrix, find a suitable repository capability and use it.",
       "target_agent": "repo_intel",
       "status": "PASS",
-      "latency_ms": 5266.57,
+      "latency_ms": 5500.7,
       "evidence": "Repository capability engine executed tool: Matrix, the Autonomous AI architect, has selected the SystemTelemetryAdapter (fr...",
       "data": {
         "reply_preview": "Matrix, the Autonomous AI architect, has selected the SystemTelemetryAdapter (from AbuZar-Ansarii/Ultron) as its autonomous tool. This selection is based on the following factors:\n\n1. **System & Automation -> Agent: System**: The SystemTelemetryAdapter is designed for general task inspection, making",
@@ -96,7 +96,7 @@
       "prompt": "Matrix, create a diagram of your architecture.",
       "target_agent": "creative",
       "status": "PASS",
-      "latency_ms": 35.73,
+      "latency_ms": 29.41,
       "evidence": "Mermaid architecture diagram generated (699 chars): Mermaid Architecture Diagram generated successfully:\n\n```mermaid\ngraph TD\n    %%...",
       "data": {
         "reply_preview": "Mermaid Architecture Diagram generated successfully:\n\n```mermaid\ngraph TD\n    %% Title: MATRIX Personal AI Ecosystem Architecture\n    User[\"User\"] --> Microphone[\"Microphone\"]\n    Microphone[\"Microphone\"] --> Silero_VAD[\"Silero VAD\"]\n    Silero_VAD[\"Silero VAD\"] --> Faster_Whisper_STT[\"Faster Whispe",
@@ -108,7 +108,7 @@
       "prompt": "Matrix, open this application and perform a safe task.",
       "target_agent": "computer",
       "status": "PASS",
-      "latency_ms": 107.7,
+      "latency_ms": 111.86,
       "evidence": "Computer agent executed safe task (COMPLETED): Command `hostname` executed successfully:\n```\nPC-LENOVO\n```...",
       "data": {
         "reply_preview": "Command `hostname` executed successfully:\n```\nPC-LENOVO\n```",
@@ -120,7 +120,7 @@
       "prompt": "Matrix, cancel the current task.",
       "target_agent": "core",
       "status": "PASS",
-      "latency_ms": 2.03,
+      "latency_ms": 2.06,
       "evidence": "Task cancellation verified (State: CANCELLED): The current task has been cancelled, sir.",
       "data": {
         "reply_preview": "The current task has been cancelled, sir.",
@@ -132,7 +132,7 @@
       "prompt": "Matrix, explain what you are currently doing.",
       "target_agent": "system",
       "status": "PASS",
-      "latency_ms": 10.08,
+      "latency_ms": 5.99,
       "evidence": "Live status explanation verified: Currently, all 16 specialized agents are standing by and operational. Active tas...",
       "data": {
         "reply_preview": "Currently, all 16 specialized agents are standing by and operational. Active tasks: 0, completed tasks in this session: 0. Monitoring system telemetry and listening for commands, sir.",
@@ -144,7 +144,7 @@
       "prompt": "Matrix, continue listening after answering.",
       "target_agent": "voice",
       "status": "PASS",
-      "latency_ms": 2.85,
+      "latency_ms": 2.83,
       "evidence": "Voice mode updated to CONTINUOUS (mode: continuous): Continuous hands-free listening is enabled, sir. I will remain actively listenin...",
       "data": {
         "reply_preview": "Continuous hands-free listening is enabled, sir. I will remain actively listening after answering.",

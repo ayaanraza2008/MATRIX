@@ -123,6 +123,12 @@ app.include_router(files.router, prefix="/api/v1")
 app.include_router(audit.router, prefix="/api/v1")
 app.include_router(developer.router, prefix="/api/v1")
 
+# Direct alias for /api/v1/telemetry
+@app.get("/api/v1/telemetry", tags=["System Telemetry"])
+async def get_telemetry_alias():
+    """Direct alias routing /api/v1/telemetry to system telemetry."""
+    return await system.get_system_telemetry()
+
 # Mount React UI static assets if built
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles

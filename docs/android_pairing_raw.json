@@ -1,0 +1,178 @@
+{
+  "suite_name": "android_pairing_and_communication",
+  "timestamp": "2026-11-08T04:22:57Z",
+  "host_lan_ip": "192.168.31.194",
+  "server_base_url": "http://127.0.0.1:8000",
+  "lan_server_url": "http://192.168.31.194:8000",
+  "total_tests": 11,
+  "passed": 10,
+  "blocked": 1,
+  "failed": 0,
+  "apk_metadata": {
+    "app-debug.apk": {
+      "path": "C:\\Users\\Ali Raza Zaidi\\Desktop\\matrix\\mobile\\android_app\\app\\build\\outputs\\apk\\debug\\app-debug.apk",
+      "size_bytes": 15622267,
+      "size_mb": 14.9,
+      "sha256": "51039e2148a718036e3746f8574a6de69e211cbed2b5acbec135fcaa7c9423a4"
+    },
+    "matrix-debug.apk": {
+      "path": "D:\\matrix_data\\apk\\matrix-debug.apk",
+      "size_bytes": 15622267,
+      "size_mb": 14.9,
+      "sha256": "51039e2148a718036e3746f8574a6de69e211cbed2b5acbec135fcaa7c9423a4"
+    }
+  },
+  "tests": [
+    {
+      "test_name": "lan_ip_qr_generation",
+      "description": "Dynamic LAN IP discovery and QR URI generation over LAN endpoint",
+      "status": "PASS",
+      "duration_ms": 122.4,
+      "details": {
+        "pairing_token": "mtx_pair_2ce723639ef84a35",
+        "qr_protocol": "matrix://pair?token=mtx_pair_2ce723639ef84a35&host=192.168.31.194:8000",
+        "host": "192.168.31.194:8000",
+        "lan_ip": "192.168.31.194",
+        "port": 8000,
+        "expires_in_seconds": 300,
+        "created_at": 1794111773.1159716
+      }
+    },
+    {
+      "test_name": "android_agent_token_generation",
+      "description": "AndroidAgent generates valid pairing payload with detected LAN IP",
+      "status": "PASS",
+      "duration_ms": 1.6,
+      "details": {
+        "pairing_token": "mtx_pair_a0ef0776432f4670",
+        "qr_protocol": "matrix://pair?token=mtx_pair_a0ef0776432f4670&host=192.168.31.194:8000",
+        "host": "192.168.31.194:8000",
+        "lan_ip": "192.168.31.194",
+        "port": 8000,
+        "expires_in_seconds": 300,
+        "created_at": 1794111773.734695
+      }
+    },
+    {
+      "test_name": "device_pairing_handshake",
+      "description": "Companion device authorization and secure token exchange",
+      "status": "PASS",
+      "duration_ms": 14.12,
+      "details": {
+        "status": "PAIRED",
+        "device_id": "test_handset_pixel_8",
+        "auth_token": "mtx_auth_a383a719451d43daba9c4e779fb3a356",
+        "server_time": "2026-11-08T04:22:53.748369+00:00"
+      }
+    },
+    {
+      "test_name": "consumed_token_rejection",
+      "description": "Prevent reuse of one-time cryptographic pairing tokens",
+      "status": "PASS",
+      "duration_ms": 23.98,
+      "details": {
+        "status_code": 400,
+        "response": {
+          "detail": "Pairing token has already been consumed by device 'test_handset_pixel_8'."
+        }
+      }
+    },
+    {
+      "test_name": "expired_token_rejection",
+      "description": "Reject pairing tokens exceeding their 300s TTL",
+      "status": "PASS",
+      "duration_ms": 15.51,
+      "details": {
+        "status_code": 400,
+        "response": {
+          "detail": "Pairing token expired 0.5s ago."
+        }
+      }
+    },
+    {
+      "test_name": "malformed_token_rejection",
+      "description": "Reject invalid or non-prefixed pairing tokens",
+      "status": "PASS",
+      "duration_ms": 5.54,
+      "details": {
+        "status_code": 400,
+        "response": {
+          "detail": "Invalid pairing token format. Tokens must begin with 'mtx_pair_'."
+        }
+      }
+    },
+    {
+      "test_name": "device_registry_listing",
+      "description": "Verify registered device persistence in SQLite devices table",
+      "status": "PASS",
+      "duration_ms": 25.38,
+      "details": {
+        "device_count": 3,
+        "registered_devices": [
+          "test_handset_pixel_8",
+          "pixel_e2e_device",
+          "test_pixel_phone_01"
+        ]
+      }
+    },
+    {
+      "test_name": "mobile_command_dispatch",
+      "description": "Simulate OkHttp MatrixApiClient command dispatch over LAN",
+      "status": "PASS",
+      "duration_ms": 1757.67,
+      "details": {
+        "status_code": 200,
+        "reply_snippet": "Here's the status report for your companion display:\n\n1. Display is operational "
+      }
+    },
+    {
+      "test_name": "device_revocation",
+      "description": "Revoke device authorization and remove from database",
+      "status": "PASS",
+      "duration_ms": 10.54,
+      "details": {
+        "revocation_response": {
+          "status": "REVOKED",
+          "device_id": "test_handset_pixel_8"
+        },
+        "remaining_devices": [
+          "pixel_e2e_device",
+          "test_pixel_phone_01"
+        ]
+      }
+    },
+    {
+      "test_name": "android_apk_build_verification",
+      "description": "Verify compiled Android companion APK bytecode artifact",
+      "status": "PASS",
+      "duration_ms": 15.0,
+      "details": {
+        "app-debug.apk": {
+          "path": "C:\\Users\\Ali Raza Zaidi\\Desktop\\matrix\\mobile\\android_app\\app\\build\\outputs\\apk\\debug\\app-debug.apk",
+          "size_bytes": 15622267,
+          "size_mb": 14.9,
+          "sha256": "51039e2148a718036e3746f8574a6de69e211cbed2b5acbec135fcaa7c9423a4"
+        },
+        "matrix-debug.apk": {
+          "path": "D:\\matrix_data\\apk\\matrix-debug.apk",
+          "size_bytes": 15622267,
+          "size_mb": 14.9,
+          "sha256": "51039e2148a718036e3746f8574a6de69e211cbed2b5acbec135fcaa7c9423a4"
+        }
+      }
+    },
+    {
+      "test_name": "physical_adb_hardware_detection",
+      "description": "Physical Android device detection via Android Debug Bridge",
+      "status": "BLOCKED BY MISSING DEVICE",
+      "duration_ms": 25.0,
+      "details": {
+        "adb_installed": true,
+        "adb_path": "C:\\Users\\Ali Raza Zaidi\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe",
+        "attached_devices": [],
+        "adb_output": "List of devices attached",
+        "instruction": "Attach Android device via USB with USB Debugging enabled, or connect over Wi-Fi via 'adb connect <phone_ip>:5555' to pair physical hardware."
+      }
+    }
+  ]
+}

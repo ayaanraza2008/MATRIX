@@ -1,7 +1,7 @@
 """MATRIX Health and Diagnostics API Route.
 Provides real-time system, database, and operational health telemetry.
 """
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 import psutil
 import time
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/health", tags=["Health & Diagnostics"])
 
 
 @router.get("", status_code=status.HTTP_200_OK)
-async def get_health(db: AsyncSession = Depends(get_db)):
+async def get_health(response: Response, db: AsyncSession = Depends(get_db)):
     """Health check endpoint delivering real verified hardware and DB telemetry."""
     start_time = time.perf_counter()
     db_healthy = await check_db_health()
@@ -42,7 +42,15 @@ async def get_health(db: AsyncSession = Depends(get_db)):
     # CPU telemetry
     cpu_percent = psutil.cpu_percent(interval=None)
 
-    overall_status = "healthy" if db_healthy and vm.percent < settings.max_ram_percent else "degraded"
+    # Determine genuine service readiness
+    data_dir_ready = settings.data_dir.exists()
+    if not db_healthy or not data_dir_ready:
+        overall_status = "unhealthy"
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    elif vm.percent >= settings.max_ram_percent:
+        overall_status = "degraded"
+    else:
+        overall_status = "healthy"
 
     return {
         "status": overall_status,
