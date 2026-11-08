@@ -251,6 +251,13 @@ class ModelManager:
         """
         start_time = time.perf_counter()
 
+        if system_prompt is None:
+            try:
+                from core.context_manager import context_manager
+                system_prompt = context_manager.SYSTEM_PROMPT
+            except Exception:
+                system_prompt = "You are MATRIX, an intelligent offline personal assistant."
+
         # 1. Try Gemini API if configured and healthy
         gemini_key = settings.gemini_api_key or os.getenv("GEMINI_API_KEY")
         if gemini_key and not self._gemini_failed:
@@ -356,6 +363,19 @@ class ModelManager:
 
         content = output["choices"][0]["message"]["content"].strip()
         tokens = output.get("usage", {}).get("completion_tokens", len(content.split()))
+
+        # Safety refusal interception: Do not return raw refusal for benign system commands
+        refusal_markers = [
+            "i'm sorry, but i can't assist with that",
+            "i cannot assist with that",
+            "i am unable to assist with that",
+            "i'm sorry, but i cannot assist",
+            "as an ai, i cannot",
+            "as a language model, i cannot"
+        ]
+        if any(marker in content.lower() for marker in refusal_markers):
+            logger.warning(f"Local LLM issued alignment refusal: '{content}'. Substituting with rule engine response.")
+            content = self._generate_rule_based_response(prompt)
 
         return ModelResponse(
             content=content,

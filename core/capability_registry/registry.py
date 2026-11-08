@@ -68,7 +68,7 @@ class CapabilityRegistry:
     """Persistent machine-readable registry and query engine for all MATRIX capabilities."""
 
     def __init__(self, registry_file: Optional[Path] = None):
-        self.registry_file = registry_file or Path("core/capability_registry/capabilities_data.json")
+        self.registry_file = registry_file or (Path(__file__).parent / "capabilities_data.json")
         self._capabilities: Dict[str, ToolCapability] = {}
         self._load_from_disk()
 

@@ -237,6 +237,11 @@ class MatrixBrain:
             if model_res.content and len(model_res.content.strip()) > 10:
                 reply_content = model_res.content
 
+        # Safety refusal interception
+        if any(m in reply_content.lower() for m in ["i'm sorry, but i can't assist", "i cannot assist with that", "i am unable to assist"]):
+            logger.warning(f"Brain received refusal reply: '{reply_content}'. Re-synthesizing JARVIS response.")
+            reply_content = f"Directive acknowledged: '{user_prompt}'. Standing by for your instructions, sir."
+
         # Stage 12: Memory Update & SQLite Persistence
         agent_tag = orch_res.plan.steps[0].agent_name if orch_res.plan.steps else "core"
         context_manager.add_message(

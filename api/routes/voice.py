@@ -15,6 +15,8 @@ import numpy as np
 from voice.text_to_speech.engine import tts_engine
 from voice.speech_to_text.engine import stt_engine
 from voice.wake_word.engine import wake_word_detector
+from voice.snap_detector import snap_detector
+from voice.mic_listener import mic_listener
 from voice.vad.engine import vad_engine
 from voice.conversation.manager import hands_free_manager, ConversationMode, HandsFreeState
 from core.brain import brain
@@ -333,3 +335,47 @@ async def list_audio_devices():
         }
     except Exception as e:
         return {"status": "ERROR", "error": str(e)}
+
+
+@router.get("/mic/diagnostics")
+async def get_mic_diagnostics():
+    """Retrieve live microphone hardware and capture telemetry."""
+    return {
+        "status": "OK",
+        "diagnostics": mic_listener.get_diagnostics()
+    }
+
+
+@router.post("/mic/test")
+async def test_mic_hardware(payload: RecordRequest):
+    """Test live physical microphone audio recording and level analysis."""
+    result = mic_listener.test_capture(duration_seconds=payload.duration_seconds)
+    return result
+
+
+@router.get("/snap/diagnostics")
+async def get_snap_diagnostics():
+    """Retrieve acoustic transient finger-snap detector telemetry."""
+    return {
+        "status": "OK",
+        "diagnostics": snap_detector.get_diagnostics()
+    }
+
+
+@router.post("/snap/toggle")
+async def toggle_snap_detector(payload: ToggleListenRequest):
+    """Enable or disable acoustic transient finger-snap detection."""
+    snap_detector.enabled = payload.enable
+    return {
+        "status": "OK",
+        "enabled": snap_detector.enabled
+    }
+
+
+@router.get("/wake-word/diagnostics")
+async def get_wake_word_diagnostics():
+    """Retrieve openWakeWord model and prediction telemetry."""
+    return {
+        "status": "OK",
+        "diagnostics": wake_word_detector.get_diagnostics()
+    }

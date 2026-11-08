@@ -21,8 +21,8 @@ class WakeWordDetector:
 
     def __init__(
         self,
-        sensitivity: float = 0.5,
-        cooldown_seconds: float = 2.0,
+        sensitivity: float = 0.42,
+        cooldown_seconds: float = 1.5,
         callback: Optional[Callable[[str], None]] = None
     ):
         self.sensitivity = sensitivity
@@ -31,6 +31,9 @@ class WakeWordDetector:
         self.is_listening: bool = False
         self.last_detection_time: float = 0.0
         self.last_detected_word: Optional[str] = None
+        self.last_predictions: Dict[str, float] = {}
+        self.total_detections: int = 0
+        self.frames_processed: int = 0
         self._model = None
         self._initialized: bool = False
         self._audio_chunk_size = 1280  # 80ms at 16kHz
@@ -88,12 +91,18 @@ class WakeWordDetector:
         """Check if currently in post-activation cooldown."""
         return (time.time() - self.last_detection_time) < self.cooldown_seconds
 
-    def process_audio_frame(self, frame: np.ndarray, is_tts_speaking: bool = False) -> Optional[str]:
+    def process_audio_frame(
+        self,
+        frame: np.ndarray,
+        is_tts_speaking: bool = False,
+        trigger_callback: bool = False
+    ) -> Optional[str]:
         """Process incoming 16kHz PCM audio chunk for wake words.
         
         Args:
             frame: 16-bit PCM numpy array (typically 1280 samples = 80ms)
             is_tts_speaking: Whether MATRIX TTS audio is currently playing
+            trigger_callback: Whether to execute self.callback(detected_name)
 
         Returns:
             Wake word string ('matrix' or 'snap') if triggered, else None
@@ -114,9 +123,11 @@ class WakeWordDetector:
             if self._model is None:
                 return None
 
+        self.frames_processed += 1
+
         # Ensure frame is 16-bit integer array
         if frame.dtype != np.int16:
-            frame = (frame * 32767).astype(np.int16)
+            frame = (np.clip(frame, -1.0, 1.0) * 32767.0).astype(np.int16)
 
         # Slice or pad to 1280 samples for openWakeWord
         if len(frame) != self._audio_chunk_size:
@@ -125,8 +136,17 @@ class WakeWordDetector:
             else:
                 frame = np.pad(frame, (0, self._audio_chunk_size - len(frame)))
 
+        # Dynamic gain normalization for quiet laptop microphones
+        peak = int(np.max(np.abs(frame)))
+        if 300 < peak < 12000:
+            scale = min(3.5, 16000.0 / float(peak))
+            normalized_frame = np.clip(frame.astype(np.float32) * scale, -32768, 32767).astype(np.int16)
+        else:
+            normalized_frame = frame
+
         try:
-            predictions = self._model.predict(frame)
+            predictions = self._model.predict(normalized_frame)
+            self.last_predictions = {k: float(round(v, 4)) for k, v in predictions.items()}
             best_model = None
             best_score = 0.0
             for model_name, score in predictions.items():
@@ -139,9 +159,10 @@ class WakeWordDetector:
                 now = time.time()
                 self.last_detection_time = now
                 self.last_detected_word = detected_name
+                self.total_detections += 1
                 logger.info(f"Wake-word DETECTED: '{detected_name}' (model: {best_model}, score: {best_score:.3f})")
 
-                if self.callback:
+                if trigger_callback and self.callback:
                     try:
                         self.callback(detected_name)
                     except Exception as cb_err:
@@ -150,6 +171,23 @@ class WakeWordDetector:
                 return detected_name
         except Exception as e:
             logger.debug(f"Wake-word inference error: {e}")
+
+        return None
+
+    def get_diagnostics(self) -> Dict[str, Any]:
+        """Return diagnostic metrics for wake-word engine."""
+        return {
+            "initialized": self._initialized,
+            "is_listening": self.is_listening,
+            "sensitivity": self.sensitivity,
+            "cooldown_seconds": self.cooldown_seconds,
+            "total_detections": self.total_detections,
+            "frames_processed": self.frames_processed,
+            "last_detected_word": self.last_detected_word,
+            "last_detection_time": self.last_detection_time,
+            "last_predictions": self.last_predictions,
+            "loaded_models": list(self._model.models.keys()) if self._model else []
+        }
 
         return None
 

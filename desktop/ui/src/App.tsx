@@ -447,6 +447,18 @@ export const App: React.FC = () => {
                 } else {
                   setHologramState('idle');
                 }
+              } else {
+                setHologramState('idle');
+                const errMsg = data?.error || data?.reply_text || 'No speech was recognized. Please try speaking clearly.';
+                const feedbackMsg: MessageItem = {
+                  id: Date.now() + 1,
+                  session_id: activeSessionId || 'sess_default',
+                  role: 'assistant',
+                  content: errMsg,
+                  agent_name: 'voice',
+                  created_at: new Date().toISOString(),
+                };
+                setMessages((prev) => [...prev, feedbackMsg]);
               }
             } catch {
               setHologramState('error');
