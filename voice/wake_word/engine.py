@@ -21,7 +21,7 @@ class WakeWordDetector:
 
     def __init__(
         self,
-        sensitivity: float = 0.42,
+        sensitivity: float = 0.35,
         cooldown_seconds: float = 1.5,
         callback: Optional[Callable[[str], None]] = None
     ):

@@ -19,10 +19,10 @@ class SileroVADEngine:
         self,
         model_path: Optional[Path] = None,
         sample_rate: int = 16000,
-        speech_threshold: float = 0.5,
-        silence_duration_ms: int = 1000,
-        min_speech_duration_ms: int = 250,
-        energy_threshold: float = 0.015
+        speech_threshold: float = 0.45,
+        silence_duration_ms: int = 700,
+        min_speech_duration_ms: int = 200,
+        energy_threshold: float = 0.005
     ):
         self.sample_rate = sample_rate
         self.speech_threshold = speech_threshold
@@ -90,25 +90,41 @@ class SileroVADEngine:
             return (rms >= self.energy_threshold), float(min(1.0, rms * 15.0))
 
         try:
-            # Silero expects 512 samples for 16kHz
+            # Silero expects 512-sample (32ms) windows for 16kHz
             float_chunk = chunk.astype(np.float32) / 32768.0
-            if len(float_chunk) != 512:
-                if len(float_chunk) > 512:
-                    float_chunk = float_chunk[:512]
-                else:
-                    float_chunk = np.pad(float_chunk, (0, 512 - len(float_chunk)))
+            win_size = 512
+            
+            # Slice chunk into contiguous 512-sample sub-windows so zero audio is discarded
+            if len(float_chunk) < win_size:
+                windows = [np.pad(float_chunk, (0, win_size - len(float_chunk)))]
+            else:
+                windows = []
+                for s_idx in range(0, len(float_chunk) - win_size + 1, win_size):
+                    windows.append(float_chunk[s_idx:s_idx + win_size])
+                # Check remaining tail
+                rem = len(float_chunk) % win_size
+                if rem > 0 and len(float_chunk) >= win_size:
+                    windows.append(float_chunk[-win_size:])
 
-            inputs = {
-                "input": float_chunk.reshape(1, -1),
-                "sr": np.array(self.sample_rate, dtype=np.int64),
-                "h": self._h,
-                "c": self._c
-            }
-            out, hn, cn = self._session.run(None, inputs)
-            self._h = hn
-            self._c = cn
-            prob = float(out[0][0])
-            return (prob >= self.speech_threshold), prob
+            max_prob = 0.0
+            any_speech = False
+            for win in windows:
+                inputs = {
+                    "input": win.reshape(1, -1),
+                    "sr": np.array(self.sample_rate, dtype=np.int64),
+                    "h": self._h,
+                    "c": self._c
+                }
+                out, hn, cn = self._session.run(None, inputs)
+                self._h = hn
+                self._c = cn
+                prob = float(out[0][0])
+                if prob > max_prob:
+                    max_prob = prob
+                if prob >= self.speech_threshold:
+                    any_speech = True
+
+            return any_speech, max_prob
         except Exception as e:
             logger.debug(f"Silero VAD execution fallback: {e}")
             return (rms >= self.energy_threshold), float(min(1.0, rms * 15.0))

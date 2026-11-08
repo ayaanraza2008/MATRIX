@@ -61,8 +61,7 @@ class STTEngine:
                 audio_path,
                 beam_size=3,
                 language=lang_param,
-                vad_filter=True,
-                vad_parameters=dict(min_silence_duration_ms=500)
+                vad_filter=False
             )
 
             seg_list = list(segments)
