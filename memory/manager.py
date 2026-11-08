@@ -263,5 +263,31 @@ class MemoryManager:
         """Retrieve current short-term conversational context."""
         return list(self._short_term_cache)
 
+    async def store(
+        self,
+        key: str,
+        value: str,
+        category: str = "personal",
+        session_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Convenience alias for add_memory."""
+        return await self.add_memory(key=key, content=value, category=category)
+
+    async def retrieve(
+        self,
+        key: str,
+        session_id: Optional[str] = None
+    ) -> Optional[str]:
+        """Convenience alias for get_memory content."""
+        mem = await self.get_memory(key)
+        return mem.get("content") if mem else None
+
+    async def get_context(
+        self,
+        session_id: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Convenience alias for get_short_term conversational context."""
+        return self.get_short_term()
+
 
 memory_manager = MemoryManager()

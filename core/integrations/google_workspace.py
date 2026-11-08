@@ -356,6 +356,150 @@ class GoogleWorkspaceConnector:
                 return {"success": True, "sent": True, "message_id": res.json().get("id"), "to": to}
             return {"success": False, "error": res.text}
 
+    async def read_email(self, message_id: str) -> Dict[str, Any]:
+        """Read full details and content of a specific email message."""
+        token = await self.get_valid_access_token()
+        if not token:
+            return {"authenticated": False, "message": "Google Workspace is not authenticated."}
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            res = await client.get(
+                f"{GMAIL_API_BASE}/messages/{message_id}",
+                headers={"Authorization": f"Bearer {token}"},
+                params={"format": "full"}
+            )
+            if res.status_code != 200:
+                return {"success": False, "error": res.text, "status_code": res.status_code}
+
+            data = res.json()
+            payload = data.get("payload", {})
+            headers = {h["name"].lower(): h["value"] for h in payload.get("headers", [])}
+
+            # Helper to extract body from multipart structure
+            def _extract_body(part: Dict[str, Any]) -> str:
+                mime_type = part.get("mimeType", "")
+                body_data = part.get("body", {}).get("data", "")
+                if body_data and "text/plain" in mime_type:
+                    try:
+                        return base64.urlsafe_b64decode(body_data + "==").decode("utf-8", errors="replace")
+                    except Exception:
+                        pass
+                for subpart in part.get("parts", []):
+                    text = _extract_body(subpart)
+                    if text:
+                        return text
+                if body_data and "text/html" in mime_type:
+                    try:
+                        return base64.urlsafe_b64decode(body_data + "==").decode("utf-8", errors="replace")
+                    except Exception:
+                        pass
+                return ""
+
+            body_text = _extract_body(payload) or data.get("snippet", "")
+
+            return {
+                "success": True,
+                "id": message_id,
+                "thread_id": data.get("threadId"),
+                "snippet": data.get("snippet", ""),
+                "subject": headers.get("subject", "(No Subject)"),
+                "from": headers.get("from", "Unknown"),
+                "to": headers.get("to", ""),
+                "date": headers.get("date", ""),
+                "message_id": headers.get("message-id", ""),
+                "body": body_text,
+                "label_ids": data.get("labelIds", [])
+            }
+
+    async def reply_email(
+        self,
+        message_id: str,
+        body: str,
+        confirmation_token: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Reply to an existing email message. Enforces Level 4 Supervised confirmation gate."""
+        # 1. Fetch original message for thread headers
+        orig = await self.read_email(message_id)
+        if not orig.get("success"):
+            return {"success": False, "error": f"Failed to retrieve original message: {orig.get('error')}"}
+
+        to_addr = orig.get("from", "")
+        orig_subject = orig.get("subject", "")
+        reply_subject = orig_subject if orig_subject.lower().startswith("re:") else f"Re: {orig_subject}"
+        thread_id = orig.get("thread_id")
+        orig_msg_id = orig.get("message_id")
+
+        # 2. Check security policy
+        eval_res = security_manager.evaluate_action(
+            action="send_external_email",
+            target=to_addr,
+            details={"to": to_addr, "subject": reply_subject, "reply_to_message_id": message_id}
+        )
+        if eval_res.get("requires_confirmation") and not confirmation_token:
+            return {
+                "success": False,
+                "requires_confirmation": True,
+                "request_id": eval_res.get("request_id"),
+                "message": f"Action blocked by Level 4 Supervised Policy: Replying to '{to_addr}' requires user confirmation."
+            }
+
+        token = await self.get_valid_access_token()
+        if not token:
+            return {"authenticated": False, "message": "Google Workspace is not authenticated."}
+
+        headers_str = (
+            f"To: {to_addr}\r\n"
+            f"Subject: {reply_subject}\r\n"
+            f"In-Reply-To: {orig_msg_id}\r\n"
+            f"References: {orig_msg_id}\r\n"
+            f"Content-Type: text/plain; charset=utf-8\r\n\r\n"
+            f"{body}"
+        )
+        encoded = base64.urlsafe_b64encode(headers_str.encode("utf-8")).decode("ascii")
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            res = await client.post(
+                f"{GMAIL_API_BASE}/messages/send",
+                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                json={"raw": encoded, "threadId": thread_id}
+            )
+            if res.status_code in (200, 201):
+                return {
+                    "success": True,
+                    "sent": True,
+                    "reply_id": res.json().get("id"),
+                    "thread_id": thread_id,
+                    "to": to_addr
+                }
+            return {"success": False, "error": res.text, "status_code": res.status_code}
+
+    async def organize_message(
+        self,
+        message_id: str,
+        add_labels: Optional[List[str]] = None,
+        remove_labels: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
+        """Organize message: add/remove Gmail labels (e.g. archive, mark read, apply star)."""
+        token = await self.get_valid_access_token()
+        if not token:
+            return {"authenticated": False, "message": "Google Workspace is not authenticated."}
+
+        payload = {
+            "addLabelIds": add_labels or [],
+            "removeLabelIds": remove_labels or []
+        }
+
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            res = await client.post(
+                f"{GMAIL_API_BASE}/messages/{message_id}/modify",
+                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                json=payload
+            )
+            if res.status_code == 200:
+                data = res.json()
+                return {"success": True, "id": message_id, "label_ids": data.get("labelIds", [])}
+            return {"success": False, "error": res.text, "status_code": res.status_code}
+
     # -------------------------------------------------------------
     # CALENDAR OPERATIONS
     # -------------------------------------------------------------
@@ -477,8 +621,88 @@ class GoogleWorkspaceConnector:
                 return {"success": True, "event_id": item.get("id"), "summary": item.get("summary"), "updated": True}
             return {"success": False, "error": res.text, "status_code": res.status_code}
 
-    async def delete_calendar_event(self, event_id: str) -> Dict[str, Any]:
-        """Delete an event from Google Calendar."""
+    async def get_calendar_event(self, event_id: str) -> Dict[str, Any]:
+        """Retrieve full details of a specific Google Calendar event."""
+        token = await self.get_valid_access_token()
+        if not token:
+            return {"authenticated": False, "message": "Google Workspace is not authenticated."}
+
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            res = await client.get(
+                f"{CALENDAR_API_BASE}/calendars/primary/events/{event_id}",
+                headers={"Authorization": f"Bearer {token}"}
+            )
+            if res.status_code == 200:
+                item = res.json()
+                start = item.get("start", {}).get("dateTime") or item.get("start", {}).get("date")
+                end = item.get("end", {}).get("dateTime") or item.get("end", {}).get("date")
+                return {
+                    "success": True,
+                    "id": item.get("id"),
+                    "summary": item.get("summary", "(No Title)"),
+                    "description": item.get("description", ""),
+                    "start": start,
+                    "end": end,
+                    "location": item.get("location"),
+                    "html_link": item.get("htmlLink"),
+                    "status": item.get("status")
+                }
+            return {"success": False, "error": res.text, "status_code": res.status_code}
+
+    async def search_calendar_events(self, query: str, days_ahead: int = 30) -> Dict[str, Any]:
+        """Search calendar events matching a keyword query."""
+        token = await self.get_valid_access_token()
+        if not token:
+            return {"authenticated": False, "message": "Google Workspace is not authenticated."}
+
+        now = datetime.now(timezone.utc).isoformat()
+        future = (datetime.now(timezone.utc) + timedelta(days=days_ahead)).isoformat()
+
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            res = await client.get(
+                f"{CALENDAR_API_BASE}/calendars/primary/events",
+                headers={"Authorization": f"Bearer {token}"},
+                params={
+                    "q": query,
+                    "timeMin": now,
+                    "timeMax": future,
+                    "singleEvents": "true",
+                    "orderBy": "startTime"
+                }
+            )
+            if res.status_code != 200:
+                return {"success": False, "error": res.text, "status_code": res.status_code}
+
+            data = res.json()
+            events = []
+            for item in data.get("items", []):
+                start = item.get("start", {}).get("dateTime") or item.get("start", {}).get("date")
+                end = item.get("end", {}).get("dateTime") or item.get("end", {}).get("date")
+                events.append({
+                    "id": item.get("id"),
+                    "summary": item.get("summary", "(No Title)"),
+                    "start": start,
+                    "end": end,
+                    "location": item.get("location"),
+                    "html_link": item.get("htmlLink")
+                })
+            return {"success": True, "total_matched": len(events), "events": events}
+
+    async def delete_calendar_event(self, event_id: str, confirmation_token: Optional[str] = None) -> Dict[str, Any]:
+        """Delete an event from Google Calendar. Enforces user confirmation gate for destructive actions."""
+        eval_res = security_manager.evaluate_action(
+            action="delete_calendar_event",
+            target=event_id,
+            details={"event_id": event_id}
+        )
+        if eval_res.get("requires_confirmation") and not confirmation_token:
+            return {
+                "success": False,
+                "requires_confirmation": True,
+                "request_id": eval_res.get("request_id"),
+                "message": f"Action blocked: Deleting calendar event '{event_id}' requires user confirmation."
+            }
+
         token = await self.get_valid_access_token()
         if not token:
             return {"authenticated": False, "message": "Google Workspace is not authenticated."}

@@ -123,6 +123,7 @@ class PairingManager:
         ts_qr_uri = f"matrix://pair?token={token_id}&host={ts_endpoint}" if ts_endpoint else None
 
         return {
+            "token": token_id,
             "pairing_token": token_id,
             "qr_protocol": qr_uri,
             "host": host_endpoint,

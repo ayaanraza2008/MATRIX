@@ -632,6 +632,7 @@ class MatrixBrain:
             logger.warning(f"Could not persist message to DB: {e}")
 
         return {
+            "success": True,
             "session_id": session_id,
             "response": reply_content,
             "reply": reply_content,

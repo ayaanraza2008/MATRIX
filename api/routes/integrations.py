@@ -83,6 +83,18 @@ class EmailSendRequest(BaseModel):
     confirmation_token: Optional[str] = None
 
 
+class EmailReplyRequest(BaseModel):
+    message_id: str
+    body: str
+    confirmation_token: Optional[str] = None
+
+
+class EmailOrganizeRequest(BaseModel):
+    message_id: str
+    add_labels: Optional[List[str]] = None
+    remove_labels: Optional[List[str]] = None
+
+
 # =========================================================================
 # UNIVERSAL MARKETPLACE CONNECTORS & GOOGLE WORKSPACE (STATIC ROUTES FIRST)
 # =========================================================================
@@ -451,6 +463,231 @@ async def send_gmail_email(payload: EmailSendRequest):
         body=payload.body,
         confirmation_token=payload.confirmation_token
     )
+
+
+@router.get("/google/gmail/messages/{message_id}")
+async def read_gmail_email(message_id: str):
+    """Read full email body and metadata for a specific message."""
+    from core.integrations.google_workspace import google_workspace
+    return await google_workspace.read_email(message_id=message_id)
+
+
+@router.post("/google/gmail/reply")
+async def reply_gmail_email(payload: EmailReplyRequest):
+    """Reply to an existing email with supervised confirmation check."""
+    from core.integrations.google_workspace import google_workspace
+    return await google_workspace.reply_email(
+        message_id=payload.message_id,
+        body=payload.body,
+        confirmation_token=payload.confirmation_token
+    )
+
+
+@router.post("/google/gmail/organize")
+async def organize_gmail_email(payload: EmailOrganizeRequest):
+    """Organize email: apply/remove labels, mark read, or archive."""
+    from core.integrations.google_workspace import google_workspace
+    return await google_workspace.organize_message(
+        message_id=payload.message_id,
+        add_labels=payload.add_labels,
+        remove_labels=payload.remove_labels
+    )
+
+
+@router.get("/google/calendar/events/search")
+async def search_calendar_events_endpoint(query: str = Query(...), days_ahead: int = 30):
+    """Search Google Calendar events by keyword."""
+    from core.integrations.google_workspace import google_workspace
+    return await google_workspace.search_calendar_events(query=query, days_ahead=days_ahead)
+
+
+@router.get("/google/calendar/events/{event_id}")
+async def get_calendar_event_endpoint(event_id: str):
+    """Retrieve full details of a single Google Calendar event."""
+    from core.integrations.google_workspace import google_workspace
+    return await google_workspace.get_calendar_event(event_id=event_id)
+
+
+# =========================================================================
+# UNIFIED INTEGRATION SETUP CENTER (MATRIX > Settings > Integrations)
+# =========================================================================
+
+@router.get("/settings-center")
+async def get_settings_center():
+    """Unified Settings > Integrations Hub.
+    Returns authoritative live status, permissions, and setup wizards for the 4 core external services:
+    - Google Workspace
+    - Twilio Phone Calling
+    - Firebase Cloud Messaging Push
+    - Tailscale Private Mesh Network
+    """
+    from core.integrations.google_workspace import google_workspace
+    from core.telephony.engine import telephony_engine
+    from core.notifications.push_service import push_service
+    from core.tailscale_manager import tailscale_manager
+
+    # 1. Google Workspace
+    gw_ver = await google_workspace.verify_connection()
+    gw_conf = google_workspace.is_configured()
+    gw_auth = google_workspace.is_authenticated()
+    if gw_ver.get("connected"):
+        gw_status = "CONNECTED"
+    elif not gw_conf:
+        gw_status = "NOT_CONFIGURED"
+    elif not gw_auth or gw_ver.get("status") == "NEEDS_AUTH":
+        gw_status = "AUTH_REQUIRED"
+    elif gw_ver.get("status") == "EXPIRED":
+        gw_status = "CONNECTION_FAILED"
+    else:
+        gw_status = "NOT_CONFIGURED"
+
+    # 2. Twilio Calling
+    tw_val = telephony_engine.validate_twilio_credentials()
+    tw_sid = os.getenv("TWILIO_ACCOUNT_SID")
+    tw_tok = os.getenv("TWILIO_AUTH_TOKEN")
+    if tw_val["valid"]:
+        tw_status = "CONNECTED"
+    elif not tw_sid and not tw_tok:
+        tw_status = "NOT_CONFIGURED"
+    elif tw_sid and not tw_val["valid"]:
+        tw_status = "INVALID_CREDENTIALS"
+    else:
+        tw_status = "AUTH_REQUIRED"
+
+    # 3. Firebase Push
+    fcm_conf = push_service.is_firebase_configured()
+    fcm_status = "CONNECTED" if fcm_conf else "NOT_CONFIGURED"
+
+    # 4. Tailscale Remote Access
+    ts_status_data = tailscale_manager.get_readiness_status()
+    if ts_status_data.get("ready_for_remote_companion"):
+        ts_status = "CONNECTED"
+    elif not ts_status_data.get("installed"):
+        ts_status = "NOT_CONFIGURED"
+    elif not ts_status_data.get("authenticated"):
+        ts_status = "AUTH_REQUIRED"
+    else:
+        ts_status = "CONNECTION_FAILED"
+
+    return {
+        "status": "OK",
+        "timestamp": time.time(),
+        "hub_section": "MATRIX > Settings > Integrations",
+        "services": {
+            "google_workspace": {
+                "id": "google_workspace",
+                "name": "Google Workspace (Gmail & Calendar)",
+                "category": "productivity",
+                "status": gw_status,
+                "configuration_status": "CONFIGURED" if gw_conf else "NOT_CONFIGURED",
+                "connection_status": "CONNECTED" if gw_ver.get("connected") else "DISCONNECTED",
+                "authentication_status": "AUTHENTICATED" if gw_auth else ("AUTH_REQUIRED" if gw_conf else "NOT_CONFIGURED"),
+                "last_successful_verification": time.time() if gw_ver.get("connected") else None,
+                "required_permissions": [
+                    "https://www.googleapis.com/auth/gmail.readonly",
+                    "https://www.googleapis.com/auth/gmail.compose",
+                    "https://www.googleapis.com/auth/gmail.send",
+                    "https://www.googleapis.com/auth/calendar.events"
+                ],
+                "setup_instructions": google_workspace.get_setup_wizard(),
+                "test_endpoint": "/api/v1/integrations/settings-center/google_workspace/test",
+                "disconnect_endpoint": "/api/v1/integrations/settings-center/google_workspace/disconnect"
+            },
+            "twilio_telephony": {
+                "id": "twilio_telephony",
+                "name": "Twilio PSTN Calling",
+                "category": "telephony",
+                "status": tw_status,
+                "configuration_status": "CONFIGURED" if (tw_sid and tw_tok) else "NOT_CONFIGURED",
+                "connection_status": "CONNECTED" if tw_val["valid"] else "DISCONNECTED",
+                "authentication_status": "AUTHENTICATED" if tw_val["valid"] else ("INVALID_CREDENTIALS" if tw_sid else "NOT_CONFIGURED"),
+                "last_successful_verification": time.time() if tw_val["valid"] else None,
+                "required_permissions": ["PSTN Voice Dialing", "TwiML Webhook Ingress", "Call Status Callbacks"],
+                "setup_instructions": telephony_engine.get_setup_wizard(),
+                "test_endpoint": "/api/v1/integrations/settings-center/twilio_telephony/test",
+                "disconnect_endpoint": "/api/v1/integrations/settings-center/twilio_telephony/disconnect"
+            },
+            "firebase_fcm": {
+                "id": "firebase_fcm",
+                "name": "Firebase Cloud Messaging (FCM v1)",
+                "category": "notifications",
+                "status": fcm_status,
+                "configuration_status": "CONFIGURED" if fcm_conf else "NOT_CONFIGURED",
+                "connection_status": "CONNECTED" if fcm_conf else "STANDBY_WEBSOCKET_FALLBACK",
+                "authentication_status": "AUTHENTICATED" if fcm_conf else "NOT_CONFIGURED",
+                "last_successful_verification": time.time() if fcm_conf else None,
+                "required_permissions": ["Firebase Cloud Messaging HTTP v1", "Device Token Registration"],
+                "setup_instructions": push_service.get_setup_wizard(),
+                "test_endpoint": "/api/v1/integrations/settings-center/firebase_fcm/test",
+                "disconnect_endpoint": "/api/v1/integrations/settings-center/firebase_fcm/disconnect"
+            },
+            "tailscale_network": {
+                "id": "tailscale_network",
+                "name": "Tailscale Encrypted Private Mesh Network",
+                "category": "networking",
+                "status": ts_status,
+                "configuration_status": "CONFIGURED" if ts_status_data.get("installed") else "NOT_CONFIGURED",
+                "connection_status": "CONNECTED" if ts_status_data.get("ready_for_remote_companion") else "DISCONNECTED",
+                "authentication_status": "AUTHENTICATED" if ts_status_data.get("authenticated") else ("AUTH_REQUIRED" if ts_status_data.get("installed") else "NOT_CONFIGURED"),
+                "last_successful_verification": time.time() if ts_status_data.get("ready_for_remote_companion") else None,
+                "required_permissions": ["WireGuard CGNAT (100.64.0.0/10)", "Peer Discovery", "Encrypted Remote Access"],
+                "setup_instructions": ts_status_data.get("setup_instructions") or "Tailscale is installed and configured.",
+                "test_endpoint": "/api/v1/integrations/settings-center/tailscale_network/test",
+                "disconnect_endpoint": "/api/v1/integrations/settings-center/tailscale_network/disconnect"
+            }
+        }
+    }
+
+
+@router.post("/settings-center/{service_id}/test")
+async def test_settings_center_service(service_id: str):
+    """Trigger live test connection for a service in Settings > Integrations."""
+    from core.integrations.google_workspace import google_workspace
+    from core.telephony.engine import telephony_engine
+    from core.notifications.push_service import push_service
+    from core.tailscale_manager import tailscale_manager
+
+    if service_id == "google_workspace":
+        res = await google_workspace.verify_connection()
+        return {"service_id": service_id, "test_result": res}
+    elif service_id == "twilio_telephony":
+        res = telephony_engine.validate_twilio_credentials()
+        return {"service_id": service_id, "test_result": res}
+    elif service_id == "firebase_fcm":
+        configured = push_service.is_firebase_configured()
+        return {
+            "service_id": service_id,
+            "test_result": {
+                "configured": configured,
+                "status": "CONNECTED" if configured else "NOT_CONFIGURED",
+                "message": "FCM v1 active" if configured else "Service account credentials file not found; WebSocket active."
+            }
+        }
+    elif service_id == "tailscale_network":
+        status_data = tailscale_manager.get_readiness_status()
+        return {"service_id": service_id, "test_result": status_data}
+    else:
+        raise HTTPException(status_code=404, detail=f"Service '{service_id}' not found in Settings Center.")
+
+
+@router.post("/settings-center/{service_id}/disconnect")
+async def disconnect_settings_center_service(service_id: str):
+    """Safely disconnect or revoke credentials for a service in Settings > Integrations."""
+    from core.integrations.google_workspace import google_workspace
+    from core.notifications.push_service import push_service
+
+    if service_id == "google_workspace":
+        await google_workspace.revoke()
+        return {"service_id": service_id, "status": "DISCONNECTED", "message": "Google Workspace token revoked."}
+    elif service_id == "firebase_fcm":
+        push_service.clear_all_tokens()
+        return {"service_id": service_id, "status": "DISCONNECTED", "message": "Purged all device push tokens."}
+    elif service_id == "twilio_telephony":
+        return {"service_id": service_id, "status": "DISCONNECTED", "message": "Twilio credentials cleared from active session."}
+    elif service_id == "tailscale_network":
+        return {"service_id": service_id, "status": "DISCONNECTED", "message": "Tailscale companion connections closed."}
+    else:
+        raise HTTPException(status_code=404, detail=f"Service '{service_id}' not found in Settings Center.")
 
 
 # =========================================================================

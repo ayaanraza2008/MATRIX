@@ -209,6 +209,48 @@ async def twilio_call_status(
     return Response(content="<Response/>", media_type="application/xml")
 
 
+class TwilioValidateRequest(BaseModel):
+    account_sid: Optional[str] = None
+    auth_token: Optional[str] = None
+    twilio_number: Optional[str] = None
+
+
+class TwilioTestCallRequest(BaseModel):
+    target_number: str
+    confirm_destination: bool = False
+
+
+@router.post("/twilio/validate-credentials")
+async def validate_twilio_creds(payload: TwilioValidateRequest):
+    """Validate Twilio account SID, auth token, and phone number without placing a call."""
+    return telephony_engine.validate_twilio_credentials(
+        account_sid=payload.account_sid,
+        auth_token=payload.auth_token,
+        twilio_number=payload.twilio_number
+    )
+
+
+@router.post("/twilio/test-call")
+async def execute_twilio_test_call(payload: TwilioTestCallRequest):
+    """Initiate a test call via Twilio with explicit destination confirmation."""
+    return await telephony_engine.initiate_twilio_test_call(
+        target_number=payload.target_number,
+        confirm_destination=payload.confirm_destination
+    )
+
+
+@router.get("/twilio/usage")
+async def get_twilio_usage():
+    """Retrieve Twilio call usage metrics, estimated costs, and spending limits."""
+    return telephony_engine.get_twilio_usage()
+
+
+@router.post("/twilio/calls/{call_sid}/terminate")
+async def terminate_twilio_call_endpoint(call_sid: str):
+    """Terminate an in-progress Twilio call."""
+    return await telephony_engine.terminate_twilio_call(call_sid)
+
+
 # --- Bland AI Telephony Endpoints ---
 
 class BlandCallRequest(BaseModel):

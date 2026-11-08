@@ -139,12 +139,18 @@ class Orchestrator:
         except Exception as e:
             logger.debug(f"Task record persistence error: {e}")
 
-    async def execute_request(self, prompt: str) -> OrchestrationResult:
+    async def execute_request(
+        self,
+        prompt: Optional[str] = None,
+        session_id: Optional[str] = None,
+        user_prompt: Optional[str] = None
+    ) -> OrchestrationResult:
         start_time = time.perf_counter()
         self._cancel_requested = False
+        target_prompt = prompt or user_prompt or ""
 
         # 1. OBSERVE & UNDERSTAND: Intent Extraction
-        intent = intent_engine.classify(prompt)
+        intent = intent_engine.classify(target_prompt)
         logger.info(f"Intent classified: {intent.intent_type.value} -> target agent: {intent.target_agent}")
         await self._emit_progress("AGENT_SELECTED", {
             "agent": intent.target_agent,
@@ -153,7 +159,7 @@ class Orchestrator:
 
         # Check for unavailable capability gap (e.g. CUDA-only diorama / mocha)
         from core.repository_intelligence.engine import repo_intelligence
-        gap = repo_intelligence.detect_capability_gap(prompt)
+        gap = repo_intelligence.detect_capability_gap(target_prompt)
         if gap.has_gap and not gap.is_compatible:
             gap_explanation = (
                 f"Autonomous Capability Assessment: The requested capability '{gap.required_capability}' "

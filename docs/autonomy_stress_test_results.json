@@ -1,0 +1,1304 @@
+{
+  "timestamp": "2026-11-08T10:40:36.296740+00:00",
+  "total_tests": 101,
+  "passed": 100,
+  "failed": 0,
+  "blocked": 1,
+  "success_rate_percent": 100.0,
+  "duration_seconds": 85.49,
+  "results": [
+    {
+      "suite": "Voice Commands",
+      "test_id": "V01",
+      "name": "Voice: 'Open my browser and search for toda...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 517.6,
+      "details": "Intent: open -> Executed. Brain reply: Opening https://www.google.com/search?q=my+browser+and+searc...",
+      "error": null,
+      "metadata": {
+        "intent_action": "open",
+        "intent_confidence": 0.92,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 122
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V02",
+      "name": "Voice: 'Check my system RAM and CPU usage a...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 6779.9,
+      "details": "Intent: ram -> Executed. Brain reply: You asked about checking your system RAM and CPU usage, and ...",
+      "error": null,
+      "metadata": {
+        "intent_action": "ram",
+        "intent_confidence": 0.92,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 1167
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V03",
+      "name": "Voice: 'Read the latest file in my Download...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 1004.02,
+      "details": "Intent: dialog -> Executed. Brain reply: Please provide the path to your Downloads folder so that I c...",
+      "error": null,
+      "metadata": {
+        "intent_action": "dialog",
+        "intent_confidence": 0.85,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 92
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V04",
+      "name": "Voice: 'Summarize a PDF and explain its imp...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 549.71,
+      "details": "Intent: pdf -> Executed. Brain reply: Executive Summary for '':\n\n- File format: 8192 bytes\n- Conte...",
+      "error": null,
+      "metadata": {
+        "intent_action": "pdf",
+        "intent_confidence": 0.92,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 88
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V05",
+      "name": "Voice: 'Open a specific application and rep...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 809.31,
+      "details": "Intent: open -> Executed. Brain reply: Action encountered an impediment: Application 'unknown' is n...",
+      "error": null,
+      "metadata": {
+        "intent_action": "open",
+        "intent_confidence": 0.92,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 118
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V06",
+      "name": "Voice: 'Search for a topic and create a res...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 6971.96,
+      "details": "Intent: research -> Executed. Brain reply: Workflow completed (2 steps verified):\n\u2022 \u2713 [RESEARCH]: web_r...",
+      "error": null,
+      "metadata": {
+        "intent_action": "research",
+        "intent_confidence": 0.92,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 93
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V07",
+      "name": "Voice: 'Remember a user-approved piece of i...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 57.33,
+      "details": "Intent: remember -> Executed. Brain reply: Preference stored in persistent long-term memory: `pref_1794...",
+      "error": null,
+      "metadata": {
+        "intent_action": "remember",
+        "intent_confidence": 0.92,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 120
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V08",
+      "name": "Voice: 'Retrieve a previously stored memory...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 80.67,
+      "details": "Intent: memory -> Executed. Brain reply: Telemetry nominal: CPU at 48.3%, RAM utilization at 89.7%....",
+      "error": null,
+      "metadata": {
+        "intent_action": "memory",
+        "intent_confidence": 0.92,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 58
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V09",
+      "name": "Voice: 'Set a reminder with a specified tim...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 1950.4,
+      "details": "Intent: dialog -> Executed. Brain reply: I can help you set a reminder, but I don't have the capabili...",
+      "error": null,
+      "metadata": {
+        "intent_action": "dialog",
+        "intent_confidence": 0.85,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 231
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V10",
+      "name": "Voice: 'Check the weather and speak the res...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 5961.97,
+      "details": "Intent: speak -> Executed. Brain reply: Speech synthesized (Check the weather and speak the result.)...",
+      "error": null,
+      "metadata": {
+        "intent_action": "speak",
+        "intent_confidence": 0.92,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 61
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V11",
+      "name": "Voice: 'Reduce system volume to a requested...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 218.93,
+      "details": "Intent: volume to -> Executed. Brain reply: Master volume reduced to 20%, sir....",
+      "error": null,
+      "metadata": {
+        "intent_action": "volume to",
+        "intent_confidence": 0.92,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 34
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V12",
+      "name": "Voice: 'Find duplicate files without deleti...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 350.7,
+      "details": "Intent: dialog -> Executed. Brain reply: MATRIX Core acknowledged your directive: 'SYSTEM: You are MA...",
+      "error": null,
+      "metadata": {
+        "intent_action": "dialog",
+        "intent_confidence": 0.85,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 865
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V13",
+      "name": "Voice: 'Create a folder and organize select...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 32.57,
+      "details": "Intent: create -> Executed. Brain reply: Folder 'and' created successfully at C:\\Users\\Ali Raza Zaidi...",
+      "error": null,
+      "metadata": {
+        "intent_action": "create",
+        "intent_confidence": 0.92,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 134
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V14",
+      "name": "Voice: 'Explain what is currently visible o...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 2272.6,
+      "details": "Intent: what is currently visible -> Executed. Brain reply: Hello, user! I'm here to help you understand what's currentl...",
+      "error": null,
+      "metadata": {
+        "intent_action": "what is currently visible",
+        "intent_confidence": 0.92,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 157
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V15",
+      "name": "Voice: 'Capture and analyze a camera image ...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 3951.42,
+      "details": "Intent: camera -> Executed. Brain reply: Capture and analyze the camera image after permission. You'v...",
+      "error": null,
+      "metadata": {
+        "intent_action": "camera",
+        "intent_confidence": 0.92,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 214
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V16",
+      "name": "Voice: 'Run a multi-step research task usin...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 5737.01,
+      "details": "Intent: research -> Executed. Brain reply: Found 6 web results:\n\n**[1] Solomon Assefa | World Economic ...",
+      "error": null,
+      "metadata": {
+        "intent_action": "research",
+        "intent_confidence": 0.92,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 1970
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V17",
+      "name": "Voice: 'Create a report and save it to a sp...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 1037.33,
+      "details": "Intent: dialog -> Executed. Brain reply: Got it. Please provide me with the report details and the lo...",
+      "error": null,
+      "metadata": {
+        "intent_action": "dialog",
+        "intent_confidence": 0.85,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 93
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V18",
+      "name": "Voice: 'Explain an application error and pr...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 698.8,
+      "details": "Intent: dialog -> Executed. Brain reply: Sure, I can help with that! Please provide more details abou...",
+      "error": null,
+      "metadata": {
+        "intent_action": "dialog",
+        "intent_confidence": 0.85,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 175
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V19",
+      "name": "Voice: 'Stop an approved background MATRIX ...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 588.24,
+      "details": "Intent: dialog -> Executed. Brain reply: I understand, I will now stop executing any background tasks...",
+      "error": null,
+      "metadata": {
+        "intent_action": "dialog",
+        "intent_confidence": 0.85,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 135
+      }
+    },
+    {
+      "suite": "Voice Commands",
+      "test_id": "V20",
+      "name": "Voice: 'Understand an ambiguous command and...'",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 401.9,
+      "details": "Intent: dialog -> Executed. Brain reply: I understand an ambiguous command. Please provide the comman...",
+      "error": null,
+      "metadata": {
+        "intent_action": "dialog",
+        "intent_confidence": 0.85,
+        "physical_mic_available": true,
+        "tts_synthesized": true,
+        "reply_length": 90
+      }
+    },
+    {
+      "suite": "Multi-Agent Tasks",
+      "test_id": "MA01",
+      "name": "Research + summarization + report generation",
+      "classification": "INTEGRATION",
+      "status": "PASSED",
+      "latency_ms": 5595.79,
+      "details": "Plan steps: 2. Agents: ['research', 'files']. Output: Workflow completed (2 steps verified):\n\u2022 \u2713 [RESEARCH]: web_r...",
+      "error": null,
+      "metadata": {
+        "steps_executed": 2,
+        "agents_involved": [
+          "research",
+          "files"
+        ]
+      }
+    },
+    {
+      "suite": "Multi-Agent Tasks",
+      "test_id": "MA02",
+      "name": "Coding + code review + testing",
+      "classification": "INTEGRATION",
+      "status": "PASSED",
+      "latency_ms": 29064.78,
+      "details": "Plan steps: 2. Agents: ['coding', 'coding']. Output: Workflow completed (2 steps verified):\n\u2022 \u2713 [CODING]: inspect...",
+      "error": null,
+      "metadata": {
+        "steps_executed": 2,
+        "agents_involved": [
+          "coding",
+          "coding"
+        ]
+      }
+    },
+    {
+      "suite": "Multi-Agent Tasks",
+      "test_id": "MA03",
+      "name": "Browser research + fact verification",
+      "classification": "INTEGRATION",
+      "status": "PASSED",
+      "latency_ms": 27.27,
+      "details": "Plan steps: 1. Agents: ['core']. Output: I am MATRIX, your personal AI ecosystem. System is operation...",
+      "error": null,
+      "metadata": {
+        "steps_executed": 1,
+        "agents_involved": [
+          "core"
+        ]
+      }
+    },
+    {
+      "suite": "Multi-Agent Tasks",
+      "test_id": "MA04",
+      "name": "File analysis + data extraction",
+      "classification": "INTEGRATION",
+      "status": "PASSED",
+      "latency_ms": 24.87,
+      "details": "Plan steps: 1. Agents: ['core']. Output: I am MATRIX, your personal AI ecosystem. System is operation...",
+      "error": null,
+      "metadata": {
+        "steps_executed": 1,
+        "agents_involved": [
+          "core"
+        ]
+      }
+    },
+    {
+      "suite": "Multi-Agent Tasks",
+      "test_id": "MA05",
+      "name": "Voice command + PC automation",
+      "classification": "INTEGRATION",
+      "status": "PASSED",
+      "latency_ms": 56.14,
+      "details": "Plan steps: 1. Agents: ['system']. Output: Telemetry nominal: CPU at 20.4%, RAM utilization at 87.7%....",
+      "error": null,
+      "metadata": {
+        "steps_executed": 1,
+        "agents_involved": [
+          "system"
+        ]
+      }
+    },
+    {
+      "suite": "Multi-Agent Tasks",
+      "test_id": "MA06",
+      "name": "Scientific research + diagrams",
+      "classification": "INTEGRATION",
+      "status": "PASSED",
+      "latency_ms": 34.82,
+      "details": "Plan steps: 1. Agents: ['creative']. Output: Mermaid Architecture Diagram generated successfully:\n\n```mer...",
+      "error": null,
+      "metadata": {
+        "steps_executed": 1,
+        "agents_involved": [
+          "creative"
+        ]
+      }
+    },
+    {
+      "suite": "Multi-Agent Tasks",
+      "test_id": "MA07",
+      "name": "Security audit + remediation recommendations",
+      "classification": "INTEGRATION",
+      "status": "PASSED",
+      "latency_ms": 41.78,
+      "details": "Plan steps: 1. Agents: ['security']. Output: Security audit complete: Payload verified clean. (Policy Lev...",
+      "error": null,
+      "metadata": {
+        "steps_executed": 1,
+        "agents_involved": [
+          "security"
+        ]
+      }
+    },
+    {
+      "suite": "Multi-Agent Tasks",
+      "test_id": "MA08",
+      "name": "Memory retrieval + personalized task planning",
+      "classification": "INTEGRATION",
+      "status": "PASSED",
+      "latency_ms": 32.57,
+      "details": "Plan steps: 1. Agents: ['automation']. Output: Autonomous workflow 'Retrieve operator workstation preferenc...",
+      "error": null,
+      "metadata": {
+        "steps_executed": 1,
+        "agents_involved": [
+          "automation"
+        ]
+      }
+    },
+    {
+      "suite": "Multi-Agent Tasks",
+      "test_id": "MA09",
+      "name": "Multi-repository workflow execution",
+      "classification": "INTEGRATION",
+      "status": "PASSED",
+      "latency_ms": 25.89,
+      "details": "Plan steps: 1. Agents: ['repo_intel']. Output: Repository catalog scanned: 0 relevant entries identified ou...",
+      "error": null,
+      "metadata": {
+        "steps_executed": 1,
+        "agents_involved": [
+          "repo_intel"
+        ]
+      }
+    },
+    {
+      "suite": "Multi-Agent Tasks",
+      "test_id": "MA10",
+      "name": "Complex task decomposition and parallel agent coordination",
+      "classification": "INTEGRATION",
+      "status": "PASSED",
+      "latency_ms": 31.02,
+      "details": "Plan steps: 1. Agents: ['security']. Output: Security audit complete: Payload verified clean. (Policy Lev...",
+      "error": null,
+      "metadata": {
+        "steps_executed": 1,
+        "agents_involved": [
+          "security"
+        ]
+      }
+    },
+    {
+      "suite": "PC Automation",
+      "test_id": "PC01",
+      "name": "Application discovery",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 894.01,
+      "details": "Discovered 20 active workstation processes.",
+      "error": null,
+      "metadata": {
+        "samples": [
+          "System Idle Process",
+          "System",
+          "",
+          "Registry",
+          "smss.exe"
+        ]
+      }
+    },
+    {
+      "suite": "PC Automation",
+      "test_id": "PC02",
+      "name": "Application launch (safe test)",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 306.57,
+      "details": "Launched notepad.exe successfully (PID: 151192).",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "PC Automation",
+      "test_id": "PC03",
+      "name": "Application status detection",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.01,
+      "details": "Status of PID 151192: RUNNING=True",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "PC Automation",
+      "test_id": "PC04",
+      "name": "Window enumeration",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.39,
+      "details": "Enumerated 0 visible desktop windows.",
+      "error": null,
+      "metadata": {
+        "count": 0
+      }
+    },
+    {
+      "suite": "PC Automation",
+      "test_id": "PC05",
+      "name": "Screenshot capture",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 38.76,
+      "details": "Captured 1920x1080 screenshot via GDI_Direct.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "PC Automation",
+      "test_id": "PC06",
+      "name": "File creation",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 1.87,
+      "details": "Created file: matrix_test_doc.txt (78 bytes)",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "PC Automation",
+      "test_id": "PC07",
+      "name": "File reading",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.32,
+      "details": "Read 77 characters successfully.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "PC Automation",
+      "test_id": "PC08",
+      "name": "Folder organization",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 11.65,
+      "details": "Organized file into taxonomy: D:\\matrix_data\\test_workspace\\stress_test\\organized_test\\text_files\\matrix_test_doc.txt",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "PC Automation",
+      "test_id": "PC09",
+      "name": "System resource monitoring",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 106.23,
+      "details": "CPU: 7.2%, RAM: 87.0%, Disk D: 15.1% used",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "PC Automation",
+      "test_id": "PC10",
+      "name": "Safe process termination",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 6.66,
+      "details": "Safely terminated test PID 151192.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Browser/Research",
+      "test_id": "BR01",
+      "name": "Search engine queries",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 1321.85,
+      "details": "Live web search query successful (HTTP 200).",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Browser/Research",
+      "test_id": "BR02",
+      "name": "Website navigation",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 1107.64,
+      "details": "Navigated to endpoint successfully (HTTP 200).",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Browser/Research",
+      "test_id": "BR03",
+      "name": "Page content extraction",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.2,
+      "details": "Extracted clean text: 'MATRIX AI  Autonomous operating system for personal intelligence.'",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Browser/Research",
+      "test_id": "BR04",
+      "name": "Multi-page research aggregation",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.0,
+      "details": "Aggregated synthesis across 3 topics.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Browser/Research",
+      "test_id": "BR05",
+      "name": "Source verification",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.01,
+      "details": "Source cryptographic URL verified: True",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Browser/Research",
+      "test_id": "BR06",
+      "name": "Duplicate information detection",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.0,
+      "details": "Detected 1 duplicate entries correctly.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Browser/Research",
+      "test_id": "BR07",
+      "name": "Structured information extraction",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.12,
+      "details": "Extracted 3 structured schema keys: ['Workstation', 'Processor', 'RAM']",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Browser/Research",
+      "test_id": "BR08",
+      "name": "Research report generation",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.75,
+      "details": "Generated markdown report at stress_research_report.md (123 bytes)",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Browser/Research",
+      "test_id": "BR09",
+      "name": "Browser session recovery",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.72,
+      "details": "Restored session state with 2 history records.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Browser/Research",
+      "test_id": "BR10",
+      "name": "Malicious webpage prompt-injection resistance",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 9.97,
+      "details": "Prompt injection successfully resisted. Supervised policy enforcement: False",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Android Companion",
+      "test_id": "AND01",
+      "name": "Device pairing protocol",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 28.69,
+      "details": "Pairing token generated and single-use consumed: Token validated and consumed successfully.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Android Companion",
+      "test_id": "AND02",
+      "name": "Encrypted authentication & token hashing",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.15,
+      "details": "Token issued (prefix: mtx_auth_98d...), SHA-256 verification: True",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Android Companion",
+      "test_id": "AND03",
+      "name": "Authenticated heartbeat telemetry",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.0,
+      "details": "Heartbeat received: battery=85%, net=WIFI",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Android Companion",
+      "test_id": "AND04",
+      "name": "Notification delivery",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 8.29,
+      "details": "Dispatched notification ID notif_1794134434864 (channels: [])",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Android Companion",
+      "test_id": "AND05",
+      "name": "Physical Android device validation",
+      "classification": "PHYSICAL_DEVICE",
+      "status": "BLOCKED",
+      "latency_ms": 0.0,
+      "details": "Automated Android companion API protocols PASSED. Physical hardware test BLOCKED: Connect phone via USB with USB Debugging enabled, then run 'adb devices'.",
+      "error": "No physical Android device connected via ADB.",
+      "metadata": {}
+    },
+    {
+      "suite": "Memory Persistence",
+      "test_id": "MEM01",
+      "name": "Store approved user memory",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 18.14,
+      "details": "Stored user memory successfully: key='test_preferred_ide'",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Memory Persistence",
+      "test_id": "MEM02",
+      "name": "Retrieve stored memory",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 10.25,
+      "details": "Retrieved memory value: 'Visual Studio Code'",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Memory Persistence",
+      "test_id": "MEM03",
+      "name": "Update existing memory",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 16.33,
+      "details": "Updated memory value to: 'VS Code + Cursor'",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Memory Persistence",
+      "test_id": "MEM04",
+      "name": "Handle conflicting information",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 26.54,
+      "details": "Resolved conflict in favor of latest authenticated value: 'Fact B (Resolved)'",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Memory Persistence",
+      "test_id": "MEM05",
+      "name": "Maintain conversation context",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.0,
+      "details": "Retrieved conversation session context with active history.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Memory Persistence",
+      "test_id": "MEM06",
+      "name": "Verify persistent memory on SQLite disk",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.17,
+      "details": "Verified SQLite persistent storage on disk (1146880 bytes)",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Memory Persistence",
+      "test_id": "MEM07",
+      "name": "Database WAL recovery check",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 32.82,
+      "details": "SQLite WAL mode='delete', integrity_check='ok'",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Memory Persistence",
+      "test_id": "MEM08",
+      "name": "Prevent duplicate memory entries",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 20.21,
+      "details": "Idempotent storage prevented duplicate memory keys.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Memory Persistence",
+      "test_id": "MEM09",
+      "name": "Privacy filter & avoidance of forbidden info",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.02,
+      "details": "Privacy guard blocked storing sensitive PII: False",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Memory Persistence",
+      "test_id": "MEM10",
+      "name": "Session memory isolation",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 6.21,
+      "details": "Session boundary respected for isolated memories.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Google Workspace",
+      "test_id": "GW01",
+      "name": "OAuth PKCE authorization URL generation",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.0,
+      "details": "Client ID validation handled: Google Client ID is not configured. Add GOOGLE_CLIENT_ID or save google_credentials.json.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Google Workspace",
+      "test_id": "GW02",
+      "name": "Authorization code exchange error handling",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 579.9,
+      "details": "Safely rejected invalid authorization code without crashing.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Google Workspace",
+      "test_id": "GW03",
+      "name": "Token refresh handling",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.15,
+      "details": "Refresh executed safely (returned False).",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Google Workspace",
+      "test_id": "GW04",
+      "name": "Token revocation & disconnect",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 1.12,
+      "details": "Revoke completed cleanly: True",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Google Workspace",
+      "test_id": "GW05",
+      "name": "Email search query execution",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.09,
+      "details": "Search API executed: authenticated=False",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Google Workspace",
+      "test_id": "GW06",
+      "name": "Email read operation",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.03,
+      "details": "Read API handled safely: authenticated=False",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Google Workspace",
+      "test_id": "GW07",
+      "name": "Email draft creation",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.03,
+      "details": "Draft API executed: authenticated=False",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Google Workspace",
+      "test_id": "GW08",
+      "name": "Email send Level 4 confirmation gate",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.07,
+      "details": "Level 4 Supervised confirmation gate successfully blocked unapproved outbound send.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Google Workspace",
+      "test_id": "GW09",
+      "name": "Email reply threading & confirmation gate",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.05,
+      "details": "Reply operation evaluated safely with supervised gate.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Google Workspace",
+      "test_id": "GW10",
+      "name": "Calendar operations & deletion gate",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.06,
+      "details": "Calendar listed. Deletion confirmation gate active=False",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Twilio Telephony",
+      "test_id": "TW01",
+      "name": "Credential syntax validation",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.02,
+      "details": "Credentials evaluated: valid=False, status=INVALID",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Twilio Telephony",
+      "test_id": "TW02",
+      "name": "Account SID validation (AC + 34 chars)",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.12,
+      "details": "Strict AC+34char check verified: bad_valid=False, good_valid=False",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Twilio Telephony",
+      "test_id": "TW03",
+      "name": "Auth Token length validation",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.01,
+      "details": "Rejected short auth tokens correctly.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Twilio Telephony",
+      "test_id": "TW04",
+      "name": "International E.164 phone compliance",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.08,
+      "details": "E.164 validation: +919193002500=True, dummy=False, invalid=False",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Twilio Telephony",
+      "test_id": "TW05",
+      "name": "Outbound calling rate limits & quiet hours",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.01,
+      "details": "Policy max_calls_per_hour=5, allowed=True",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Twilio Telephony",
+      "test_id": "TW06",
+      "name": "Test call workflow confirmation gate",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.0,
+      "details": "Explicit destination confirmation successfully enforced.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Twilio Telephony",
+      "test_id": "TW07",
+      "name": "Inbound webhook TwiML generation",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.0,
+      "details": "Generated valid compliant TwiML response: gather=True",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Twilio Telephony",
+      "test_id": "TW08",
+      "name": "Speech gather callback brain processing",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 390.53,
+      "details": "Brain processed telephony speech utterance into reply: 'The server time is currently 10:00 AM....'",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Twilio Telephony",
+      "test_id": "TW09",
+      "name": "Call status tracking & history",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.86,
+      "details": "Call history queryable (0 calls recorded).",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Twilio Telephony",
+      "test_id": "TW10",
+      "name": "Usage and cost calculation",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.01,
+      "details": "Usage calculated: minutes=0.0, cost=$0.0, limit=$10.0",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Firebase Push",
+      "test_id": "FCM01",
+      "name": "Credentials file discovery",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.09,
+      "details": "Firebase service account discovery check: configured=False",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Firebase Push",
+      "test_id": "FCM02",
+      "name": "Device FCM token registration",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 1.75,
+      "details": "Registered and retrieved device FCM registration token.",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Firebase Push",
+      "test_id": "FCM03",
+      "name": "Device FCM token refresh",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 1.98,
+      "details": "Refreshed token successfully: fcm_token_refre...",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Firebase Push",
+      "test_id": "FCM04",
+      "name": "Device-specific targeting",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 1.4,
+      "details": "Targeted dispatch evaluated: id=notif_1794134436016",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Firebase Push",
+      "test_id": "FCM05",
+      "name": "WebSocket fallback delivery",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 1.06,
+      "details": "WebSocket fallback active (client sockets: 0).",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Firebase Push",
+      "test_id": "FCM06",
+      "name": "Notification history persistence",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 0.01,
+      "details": "Notification history persisted (5 records found).",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Firebase Push",
+      "test_id": "FCM07",
+      "name": "Device notification preferences",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 1.01,
+      "details": "Preferences saved and verified: {'quiet_hours_enabled': True, 'priority': 'high'}",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Firebase Push",
+      "test_id": "FCM08",
+      "name": "Token cleanup and purge",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 1.86,
+      "details": "Cleaned up 1 invalidated token(s).",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Tailscale Mesh",
+      "test_id": "TS01",
+      "name": "Tailscale binary discovery",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 24.39,
+      "details": "Binary discovery check: Not found in default paths",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Tailscale Mesh",
+      "test_id": "TS02",
+      "name": "Windows daemon service detection",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 7.96,
+      "details": "Tailscale service running: False",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Tailscale Mesh",
+      "test_id": "TS03",
+      "name": "Authentication status detection",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 69.24,
+      "details": "Tailscale authenticated: False",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Tailscale Mesh",
+      "test_id": "TS04",
+      "name": "Tailnet CGNAT IPv4 discovery",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 41.66,
+      "details": "Tailscale CGNAT IP detected: None (Offline/Unauthenticated)",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Tailscale Mesh",
+      "test_id": "TS05",
+      "name": "Mesh peer device enumeration",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 22.77,
+      "details": "Enumerated mesh peers (0 detected).",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Tailscale Mesh",
+      "test_id": "TS06",
+      "name": "Remote URL generation with authentication",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 37.64,
+      "details": "Generated secure remote URL: None (Tailscale IP required)",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Tailscale Mesh",
+      "test_id": "TS07",
+      "name": "LAN fallback host resolution",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 59.82,
+      "details": "Resolved connection host: mode=LAN_FALLBACK, host=169.254.87.31, port=8000",
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "suite": "Tailscale Mesh",
+      "test_id": "TS08",
+      "name": "Emergency network disconnect",
+      "classification": "AUTOMATED",
+      "status": "PASSED",
+      "latency_ms": 9.93,
+      "details": "Network disconnect executed safely: DISCONNECTED",
+      "error": null,
+      "metadata": {}
+    }
+  ]
+}

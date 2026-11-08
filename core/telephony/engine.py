@@ -407,6 +407,120 @@ class TelephonyEngine:
     def list_call_history(self, limit: int = 20) -> List[Dict[str, Any]]:
         return [c.model_dump() for c in reversed(self._call_history[-limit:])]
 
+    def validate_twilio_credentials(
+        self,
+        account_sid: Optional[str] = None,
+        auth_token: Optional[str] = None,
+        twilio_number: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Validate Twilio credential syntax, account SID format, and phone number compliance."""
+        sid = account_sid or os.getenv("TWILIO_ACCOUNT_SID", "")
+        token = auth_token or os.getenv("TWILIO_AUTH_TOKEN", "")
+        num = twilio_number or os.getenv("TWILIO_PHONE_NUMBER", "")
+
+        errors = []
+        if not sid:
+            errors.append("Twilio Account SID is missing.")
+        elif not (sid.startswith("AC") and len(sid) == 34):
+            errors.append("Invalid Twilio Account SID format. Must begin with 'AC' and be exactly 34 characters.")
+
+        if not token:
+            errors.append("Twilio Auth Token is missing.")
+        elif len(token) < 32:
+            errors.append("Invalid Twilio Auth Token. Must be at least 32 characters.")
+
+        if not num:
+            errors.append("Twilio Phone Number is missing.")
+        elif not is_valid_phone(num):
+            errors.append(f"Twilio Phone Number '{num}' must be valid international E.164 format (e.g. +14155552671) and cannot be a dummy placeholder.")
+
+        valid = len(errors) == 0
+        return {
+            "valid": valid,
+            "account_sid_present": bool(sid),
+            "auth_token_present": bool(token),
+            "phone_number_valid": bool(num and is_valid_phone(num)),
+            "errors": errors,
+            "status": "VALID" if valid else "INVALID"
+        }
+
+    async def terminate_twilio_call(self, call_sid: str) -> Dict[str, Any]:
+        """Terminate an active Twilio PSTN call via Twilio REST API."""
+        sid = os.getenv("TWILIO_ACCOUNT_SID")
+        token = os.getenv("TWILIO_AUTH_TOKEN")
+        if not (sid and token):
+            for cid, rec in list(self._active_calls.items()):
+                if getattr(rec, "twilio_sid", None) == call_sid or cid == call_sid:
+                    self.complete_call(cid, transcript="Call terminated by operator.")
+                    return {"success": True, "call_id": cid, "status": "TERMINATED_LOCAL"}
+            return {"success": False, "error": "Twilio credentials not configured."}
+
+        try:
+            import httpx
+            url = f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Calls/{call_sid}.json"
+            async with httpx.AsyncClient(auth=(sid, token), timeout=8.0) as client:
+                resp = await client.post(url, data={"Status": "completed"})
+                if resp.status_code == 200:
+                    self.update_call_status(call_sid, "COMPLETED")
+                    return {"success": True, "call_sid": call_sid, "status": "TERMINATED"}
+                return {"success": False, "error": resp.text, "status_code": resp.status_code}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_twilio_usage(self) -> Dict[str, Any]:
+        """Calculate call usage statistics, estimated costs, and spending limits."""
+        total_seconds = 0.0
+        twilio_calls = 0
+        for rec in self._call_history:
+            if rec.call_type == "PSTN_TWILIO":
+                twilio_calls += 1
+                total_seconds += (rec.duration_seconds or 0.0)
+
+        total_minutes = round(total_seconds / 60, 2)
+        estimated_cost_usd = round(total_minutes * 0.014, 4)
+
+        return {
+            "total_calls": twilio_calls,
+            "total_duration_seconds": round(total_seconds, 1),
+            "total_duration_minutes": total_minutes,
+            "estimated_cost_usd": estimated_cost_usd,
+            "rate_per_minute_usd": 0.014,
+            "spending_limit_usd": 10.00,
+            "spending_limit_reached": estimated_cost_usd >= 10.00,
+            "max_calls_per_hour": self._policy.max_calls_per_hour,
+            "current_hourly_calls": len(self._hourly_call_timestamps)
+        }
+
+    async def initiate_twilio_test_call(self, target_number: str, confirm_destination: bool = False) -> Dict[str, Any]:
+        """Test call workflow with explicit destination confirmation check."""
+        if not confirm_destination:
+            return {
+                "success": False,
+                "requires_confirmation": True,
+                "target_number": target_number,
+                "message": f"Test call to '{target_number}' requires explicit confirmation. Set confirm_destination=true."
+            }
+
+        if not is_valid_phone(target_number):
+            return {
+                "success": False,
+                "error": f"Invalid destination phone number '{target_number}'. Must be E.164 format and not a dummy number."
+            }
+
+        val = self.validate_twilio_credentials()
+        if not val["valid"]:
+            return {
+                "success": False,
+                "status": "NOT_CONFIGURED",
+                "error": f"Twilio credentials invalid: {', '.join(val['errors'])}"
+            }
+
+        return await self.initiate_outbound_call(
+            trigger_reason="EXPLICIT_REQUEST",
+            initial_message="Greetings! This is a verified test call from your MATRIX AI operating system.",
+            phone_override=target_number
+        )
+
 
 # Global singleton
 telephony_engine = TelephonyEngine()

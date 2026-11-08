@@ -512,3 +512,46 @@ async def get_notification_history(limit: int = 50):
     """Retrieve recent notifications history."""
     from core.notifications.push_service import push_service
     return push_service.get_history(limit=limit)
+
+
+class DevicePreferencesRequest(BaseModel):
+    quiet_hours_enabled: Optional[bool] = False
+    priority_filter: Optional[str] = "all"
+    sound: Optional[bool] = True
+
+
+@router.post("/{device_id}/preferences", status_code=status.HTTP_200_OK)
+async def set_device_preferences_endpoint(
+    device_id: str,
+    payload: DevicePreferencesRequest,
+    device: DeviceModel = Depends(get_authenticated_device)
+):
+    """Update notification preferences for authenticated mobile device."""
+    if device.device_id != device_id:
+        raise HTTPException(status_code=403, detail="Device ID mismatch with authenticated device.")
+    from core.notifications.push_service import push_service
+    return push_service.set_device_preferences(device_id, payload.model_dump())
+
+
+@router.get("/{device_id}/preferences", status_code=status.HTTP_200_OK)
+async def get_device_preferences_endpoint(
+    device_id: str,
+    device: DeviceModel = Depends(get_authenticated_device)
+):
+    """Retrieve notification preferences for authenticated mobile device."""
+    if device.device_id != device_id:
+        raise HTTPException(status_code=403, detail="Device ID mismatch with authenticated device.")
+    from core.notifications.push_service import push_service
+    return push_service.get_device_preferences(device_id)
+
+
+@router.get("/tailscale/peers", status_code=status.HTTP_200_OK)
+async def get_tailscale_peers():
+    """List online mesh peers detected on the Tailscale private network."""
+    return {"peers": tailscale_manager.list_peers()}
+
+
+@router.post("/tailscale/disconnect", status_code=status.HTTP_200_OK)
+async def disconnect_tailscale_network():
+    """Emergency disconnect of Tailscale companion tunnel."""
+    return tailscale_manager.disconnect_network()

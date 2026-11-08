@@ -26,6 +26,11 @@ class PlanStep(BaseModel):
     result: Optional[Any] = None
     error: Optional[str] = None
 
+    @property
+    def agent_id(self) -> str:
+        """Alias for agent_name."""
+        return self.agent_name
+
 
 class ExecutionPlan(BaseModel):
     plan_id: str = Field(default_factory=lambda: f"plan_{uuid.uuid4().hex[:10]}")

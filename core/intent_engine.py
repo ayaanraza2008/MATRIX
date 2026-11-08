@@ -187,4 +187,5 @@ class IntentEngine:
 
 
 # Global Intent Engine singleton
+IntentEngine.parse = IntentEngine.classify
 intent_engine = IntentEngine()

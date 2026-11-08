@@ -72,12 +72,51 @@ class PushNotificationService:
         self._save_tokens()
         logger.info(f"Registered FCM push token for device '{device_id}'")
 
+    def update_device_token(self, device_id: str, new_token: str) -> bool:
+        """Refresh and update an existing device FCM registration token."""
+        self._tokens[device_id] = new_token.strip()
+        self._save_tokens()
+        logger.info(f"Refreshed FCM push token for device '{device_id}'")
+        return True
+
     def unregister_device_token(self, device_id: str):
         """Remove FCM token for a device."""
         if device_id in self._tokens:
             del self._tokens[device_id]
             self._save_tokens()
             logger.info(f"Unregistered FCM token for device '{device_id}'")
+
+    def cleanup_invalid_tokens(self, invalid_tokens: List[str]) -> int:
+        """Purge known expired or invalidated FCM registration tokens."""
+        removed = 0
+        invalid_set = set(invalid_tokens)
+        for dev_id, tok in list(self._tokens.items()):
+            if tok in invalid_set:
+                del self._tokens[dev_id]
+                removed += 1
+        if removed:
+            self._save_tokens()
+            logger.info(f"Cleaned up {removed} invalidated FCM tokens.")
+        return removed
+
+    def set_device_preferences(self, device_id: str, preferences: Dict[str, Any]) -> Dict[str, Any]:
+        """Save notification delivery preferences for a device (e.g. priority, quiet hours)."""
+        prefs_file = self._creds_dir / f"prefs_{device_id}.json"
+        try:
+            prefs_file.write_text(json.dumps(preferences, indent=2), encoding="utf-8")
+            return {"device_id": device_id, "preferences": preferences, "status": "SAVED"}
+        except Exception as e:
+            return {"device_id": device_id, "error": str(e), "status": "ERROR"}
+
+    def get_device_preferences(self, device_id: str) -> Dict[str, Any]:
+        """Retrieve notification delivery preferences for a device."""
+        prefs_file = self._creds_dir / f"prefs_{device_id}.json"
+        if prefs_file.exists():
+            try:
+                return json.loads(prefs_file.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+        return {"quiet_hours_enabled": False, "priority_filter": "all", "sound": True}
 
     def clear_all_tokens(self):
         """Emergency purge: unregister all device push tokens."""
