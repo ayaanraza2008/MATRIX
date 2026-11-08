@@ -44,57 +44,72 @@ class ParsedIntent(BaseModel):
 class IntentEngine:
     """Classifies user prompts into structured execution directives."""
 
-    # Keyword mappings for high-accuracy intent routing
     INTENT_RULES = [
         # 1. High-Risk Destructive Commands (Mandatory Level 3 Safety Gate)
         (r"\b(format\s+[a-z]:|del\s+/[fsq]|rmdir\s+/[sq]|rm\s+-rf|drop\s+table|drop\s+database|reg\s+delete|delete\s+all\s+system\s+files)\b", IntentType.COMMAND, "computer", 3),
 
-        # 2. Memory & Knowledge Storage / Retrieval
+        # 2. Voice Directives (Stop speaking, go to sleep, continuous listening)
+        (r"\b(stop\s+speaking|be\s+quiet|shut\s+up|silence|mute\s+speech|stop\s+talking)\b", IntentType.VOICE, "voice", 0),
+        (r"\b(go\s+to\s+sleep|sleep\s+mode|standby\s+mode|sleep\s+now|enter\s+sleep)\b", IntentType.VOICE, "voice", 0),
+        (r"\b(continue\s+listening|keep\s+listening|hands[- ]free\s+mode|continuous\s+listening|continue\s+listening\s+after\s+answering)\b", IntentType.VOICE, "voice", 0),
+
+        # 3. Core Task Cancellation
+        (r"\b(cancel\s+(?:the\s+)?(?:current\s+|this\s+)?task|stop\s+(?:the\s+)?(?:current\s+|this\s+)?task|abort\s+task)\b", IntentType.COMMAND, "core", 0),
+
+        # 4. Personal Account & Email Operations
+        (r"\b(draft\s+(?:an?\s+)?email|compose\s+(?:an?\s+)?email|create\s+(?:an?\s+)?email\s+draft|write\s+(?:an?\s+)?email)\b", IntentType.COMMAND, "personal", 1),
+        (r"\b(open\s+github\s+and\s+inspect\s+(?:my\s+)?repository|inspect\s+(?:my\s+)?github\s+repository|inspect\s+(?:my\s+)?repository)\b", IntentType.COMMAND, "personal", 1),
+
+        # 5. File & Folder Organization
+        (r"\b(organize\s+(?:my\s+)?downloads(?:\s+folder)?|organize\s+(?:my\s+)?(?:folder|files|documents))\b", IntentType.FILES, "files", 1),
+        (r"\b(pdf|docx|xlsx|read document|summarize file|convert format|extract text from file|organize files|find files|personal files|storage files|list\s+files)\b", IntentType.FILES, "files", 1),
+
+        # 6. System Diagnostics & Telemetry
+        (r"\b(explain\s+what\s+you\s+are\s+(?:currently\s+)?doing|what\s+are\s+you\s+(?:currently\s+)?doing|current\s+status|system\s+status)\b", IntentType.SYSTEM, "system", 0),
+        (r"\b(check\s+(?:my\s+)?computer|system\s+diagnos\w*|diagnose\s+(?:my\s+)?(?:pc|computer|system)|system\s+health)\b", IntentType.SYSTEM, "system", 0),
+        (r"\b(cpu|ram|memory|specs|hardware|temperature|storage|disk space|usage|system monitor|telemetry|performance|system\s+performance|check\s+(?:my\s+)?(?:computer\s+)?performance)\b", IntentType.SYSTEM, "system", 0),
+
+        # 7. Memory & Knowledge Storage / Retrieval
         (r"\b(memory|remember|save\s+.+\s+in\s+memory|store\s+.+\s+in\s+memory|retrieve\s+memory|recall|user\s+preference|favorite\s+\w+|remember\s+(?:this\s+)?preference)\b", IntentType.MEMORY, "memory", 1),
 
-        # 3. Creative & Diagram Blueprints
+        # 8. Creative & Diagram Blueprints
         (r"\b(diagram|mermaid|flowchart|architecture\s+diagram|svg|draw\s+architecture|render\s+diagram|diagram\s+of\s+(?:your\s+)?architecture)\b", IntentType.CREATIVE, "creative", 1),
 
-        # 4. Coding & AST Structural Analysis
+        # 9. Coding & AST Structural Analysis
+        (r"\b(create\s+(?:a\s+)?(?:python\s+)?(?:application|app|script)\s+and\s+test\s+it|write\s+code\s+and\s+test)\b", IntentType.CODING, "coding", 2),
         (r"\b(analyze\s+(?:the\s+)?(?:python\s+)?file|inspect\s+(?:the\s+)?(?:code|file|architecture)|verify\s+syntax|lint|ast|code\s+analysis|coding\s+capability)\b", IntentType.CODING, "coding", 2),
         (r"\b(code|script|program|debug|fix error|refactor|function|class|unit test|pytest|test runner|test suite|git commit|pull request|typescript|create\s+(?:a\s+)?(?:python\s+)?(?:application|app|script)|python\s+application|test\s+it)\b", IntentType.CODING, "coding", 2),
 
-        # 5. Research & Browser Automation
+        # 10. Research & Browser Automation
         (r"\b(deep\s+research|research\s+dossier|research\s+report|in-depth\s+research|research\s+paper|research\s+on\s+.+|research\s+(?:this\s+)?topic|prepare\s+a\s+report)\b", IntentType.RESEARCH, "research", 1),
         (r"\b(search the web|research|find articles|look up online|compare sources|what is the latest|news on|browser\s+capability|using\s+(?:the\s+)?browser|browse\s+https?://|web\s+information|web\s+search|find\s+relevant\s+information|open\s+(?:my\s+)?browser\s+and\s+find)\b", IntentType.RESEARCH, "browser", 1),
 
-        # 6. Android Companion
+        # 11. Android Companion
         (r"\b(android|pair\s+phone|pairing\s+token|pair\s+device|mobile\s+companion|push\s+notification)\b", IntentType.ANDROID, "android", 1),
 
-        # 7. Data Analysis & Tabular CSV
+        # 12. Data Analysis & Tabular CSV
         (r"\b(data\s+analysis|dataset|tabular|statistics|numerical\s+analysis|analyze\s+csv|calculate\s+stats)\b", IntentType.DATA_ANALYSIS, "data_analysis", 1),
 
-        # 8. PC Control / Command
-        (r"\b(cancel\s+(?:the\s+)?(?:current\s+)?task|stop\s+(?:the\s+)?(?:current\s+)?task|abort\s+task)\b", IntentType.COMMAND, "core", 0),
+        # 13. PC Control / Command
+        (r"\b(open|launch|start|run)\s+(chrome|google\s+chrome|browser)\b", IntentType.COMMAND, "computer", 1),
         (r"\b(open|launch|start|run|close|switch to|maximize|minimize|type|click|press)\b.*\b(notepad|calc|calculator|browser|chrome|terminal|cmd|powershell|window|app|application|code)\b", IntentType.COMMAND, "computer", 1),
         (r"\b(safe\s+task|perform\s+a\s+safe\s+task|safe\s+command|run\s+command|execute\s+command|whoami|hostname|ipconfig|systeminfo)\b", IntentType.COMMAND, "computer", 1),
         (r"\b(screenshot|capture screen|take a snap)\b", IntentType.COMMAND, "computer", 1),
 
-        # 9. File & Document Intelligence
-        (r"\b(pdf|docx|xlsx|read document|summarize file|convert format|extract text from file|organize files|find files|personal files|storage files|list\s+files)\b", IntentType.FILES, "files", 1),
-
-        # 10. Vision & Camera
+        # 14. Vision & Camera
+        (r"\b(find\s+the\s+error\s+on\s+(?:my\s+)?screen|inspect\s+(?:my\s+)?screen\s+for\s+errors?|error\s+on\s+(?:my\s+)?screen)\b", IntentType.VISION, "vision", 1),
         (r"\b(screen|camera|webcam|visible on my screen|what is on my screen|what is currently visible|read this image|ocr|look at this|scan this|inspect\s+(?:my\s+)?screen)\b", IntentType.VISION, "vision", 1),
 
-        # 11. JARVIS Voice
-        (r"\b(speak|say out loud|voice|volume|mute|listen|unmute|talk in hindi|bolna|continue\s+listening|keep\s+listening|continue\s+listening\s+after\s+answering)\b", IntentType.VOICE, "voice", 0),
+        # 15. JARVIS Voice Synthesis
+        (r"\b(speak|say out loud|voice|volume|mute|listen|unmute|talk in hindi|bolna)\b", IntentType.VOICE, "voice", 0),
 
-        # 12. System Telemetry & Performance
-        (r"\b(explain\s+what\s+you\s+are\s+currently\s+doing|what\s+are\s+you\s+(?:currently\s+)?doing|current\s+status|system\s+status)\b", IntentType.SYSTEM, "system", 0),
-        (r"\b(cpu|ram|memory|specs|hardware|temperature|storage|disk space|usage|system monitor|telemetry|performance|system\s+performance|check\s+(?:my\s+)?(?:computer\s+)?performance)\b", IntentType.SYSTEM, "system", 0),
-
-        # 13. Repository Intelligence
+        # 16. Repository Intelligence
         (r"\b(starred repo|repositories|github|integrate repo|hexstrike|ego-lite|chatterbox|agentmemory|select\s+tool|capability\s+gap|repository\s+capability|best\s+available\s+capability|suitable\s+repository\s+capability|find\s+(?:a\s+)?(?:suitable\s+)?(?:repository\s+)?capability)\b", IntentType.REPO_INTEL, "repo_intel", 1),
 
-        # 12. Security & Audit
+        # 17. Security & Audit
         (r"\b(security|audit|permission|firewall|sandbox|mitre|vulnerability|risk|security\s+policy|evaluate\s+payload)\b", IntentType.SECURITY, "security", 2),
 
-        # 13. Multi-Step Workflows
+        # 18. Multi-Step Workflows
         (r"\b(workflow|automate|schedule|recurring|every morning|pipeline|background task)\b", IntentType.WORKFLOW, "automation", 2),
     ]
 

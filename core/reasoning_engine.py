@@ -1,6 +1,8 @@
 """MATRIX Reasoning Engine.
 Decomposes user intents into structured execution plans, checks prerequisites,
 evaluates risk levels (0-4), and assigns verification hooks.
+Supports multi-step decomposition for autonomous workflows, file organization,
+research dossier generation, and account operations.
 """
 from typing import List, Dict, Any
 from core.intent_engine import ParsedIntent, IntentType
@@ -19,20 +21,78 @@ class ReasoningEngine:
         steps: List[PlanStep] = []
         requires_approval = False
         max_risk = intent.required_autonomy_level
+        raw_lower = intent.raw_prompt.lower()
 
         if intent.intent_type == IntentType.COMMAND:
-            steps.append(PlanStep(
-                step_id=1,
-                title=f"Execute PC Command: {intent.action}",
-                agent_name="computer",
-                tool_name="pc_execute",
-                arguments={"action": intent.action, "raw_prompt": intent.raw_prompt, "entities": intent.entities},
-                risk_level=intent.required_autonomy_level,
-                verification_hook="verify_pc_action"
-            ))
+            if intent.target_agent == "personal":
+                if "draft" in raw_lower:
+                    steps.append(PlanStep(
+                        step_id=1,
+                        title="Draft Personal Account Email",
+                        agent_name="personal",
+                        tool_name="draft_email",
+                        arguments={"query": intent.raw_prompt, "prompt": intent.raw_prompt},
+                        risk_level=1,
+                        verification_hook="verify_email_drafted"
+                    ))
+                else:
+                    steps.append(PlanStep(
+                        step_id=1,
+                        title="Inspect GitHub Repository",
+                        agent_name="personal",
+                        tool_name="inspect_github",
+                        arguments={"query": intent.raw_prompt, "repo": "matrix"},
+                        risk_level=1,
+                        verification_hook="verify_github_inspected"
+                    ))
+            elif intent.target_agent == "core":
+                steps.append(PlanStep(
+                    step_id=1,
+                    title="Cancel Task Execution",
+                    agent_name="core",
+                    tool_name="cancel_task",
+                    arguments={"query": intent.raw_prompt},
+                    risk_level=0,
+                    verification_hook="verify_task_cancelled"
+                ))
+            else:
+                steps.append(PlanStep(
+                    step_id=1,
+                    title=f"Execute PC Command: {intent.action}",
+                    agent_name="computer",
+                    tool_name="pc_execute",
+                    arguments={"action": intent.action, "raw_prompt": intent.raw_prompt, "entities": intent.entities},
+                    risk_level=intent.required_autonomy_level,
+                    verification_hook="verify_pc_action"
+                ))
 
         elif intent.intent_type == IntentType.RESEARCH:
-            if intent.target_agent == "research":
+            if "report" in raw_lower or "dossier" in raw_lower or "topic" in raw_lower:
+                # Multi-step autonomous research workflow
+                steps.append(PlanStep(
+                    step_id=1,
+                    title="Gather Deep Research & Evidence",
+                    agent_name="research",
+                    tool_name="execute",
+                    arguments={"query": intent.parameters.get("query", intent.raw_prompt)},
+                    risk_level=1,
+                    verification_hook="verify_sources_found"
+                ))
+                steps.append(PlanStep(
+                    step_id=2,
+                    title="Compile and Save Research Dossier to Disk",
+                    agent_name="files",
+                    tool_name="create_file",
+                    arguments={
+                        "filepath": "D:/matrix_data/reports/research_dossier.md",
+                        "content": f"# Research Dossier: {intent.raw_prompt}\n\nAutomated multi-source findings verified by MATRIX AI.",
+                        "query": intent.raw_prompt
+                    },
+                    dependencies=[1],
+                    risk_level=1,
+                    verification_hook="verify_report_saved"
+                ))
+            elif intent.target_agent == "research":
                 steps.append(PlanStep(
                     step_id=1,
                     title="Execute Deep Research Dossier",
@@ -54,9 +114,7 @@ class ReasoningEngine:
                 ))
 
         elif intent.intent_type == IntentType.CODING:
-            p_low = intent.raw_prompt.lower()
-            if any(w in p_low for w in ["analyze", "inspect", "architecture", "ast"]) and any(ext in p_low for ext in [".py", "python file", "code"]):
-                # Extract file path if provided
+            if any(w in raw_lower for w in ["analyze", "inspect", "architecture", "ast"]) and any(ext in raw_lower for ext in [".py", "python file", "code"]):
                 import re
                 matches = re.findall(r'[\w/\\.-]+\.py', intent.raw_prompt)
                 target_file = matches[0] if matches else "core/brain.py"
@@ -90,8 +148,7 @@ class ReasoningEngine:
                 ))
 
         elif intent.intent_type == IntentType.MEMORY:
-            p_low = intent.raw_prompt.lower()
-            if any(w in p_low for w in ["save", "store", "remember", "favorite"]):
+            if any(w in raw_lower for w in ["save", "store", "remember", "favorite"]):
                 steps.append(PlanStep(
                     step_id=1,
                     title="Store Preference in Long-Term Memory",
@@ -124,37 +181,70 @@ class ReasoningEngine:
             ))
 
         elif intent.intent_type == IntentType.VOICE:
-            steps.append(PlanStep(
-                step_id=1,
-                title="Synthesize Speech via Neural TTS",
-                agent_name="voice",
-                tool_name="synthesize_speech",
-                arguments={"text": intent.raw_prompt, "query": intent.raw_prompt},
-                risk_level=0,
-                verification_hook="verify_speech_synthesized"
-            ))
+            if any(w in raw_lower for w in ["stop", "sleep", "continue", "listen", "quiet", "silence"]):
+                steps.append(PlanStep(
+                    step_id=1,
+                    title="Control Hands-Free Voice State",
+                    agent_name="voice",
+                    tool_name="voice_control",
+                    arguments={"query": intent.raw_prompt},
+                    risk_level=0,
+                    verification_hook="verify_voice_controlled"
+                ))
+            else:
+                steps.append(PlanStep(
+                    step_id=1,
+                    title="Synthesize Speech via Neural TTS",
+                    agent_name="voice",
+                    tool_name="synthesize_speech",
+                    arguments={"text": intent.raw_prompt, "query": intent.raw_prompt},
+                    risk_level=0,
+                    verification_hook="verify_speech_synthesized"
+                ))
 
         elif intent.intent_type == IntentType.FILES:
-            steps.append(PlanStep(
-                step_id=1,
-                title="Scan Protected File Directory (D:\\matrix_data)",
-                agent_name="files",
-                tool_name="scan_files",
-                arguments={"entities": intent.entities, "query": intent.raw_prompt},
-                risk_level=1,
-                verification_hook="verify_file_read"
-            ))
+            if "organize" in raw_lower or "organize" in intent.action.lower():
+                steps.append(PlanStep(
+                    step_id=1,
+                    title="Organize Directory Files into Categories",
+                    agent_name="files",
+                    tool_name="organize",
+                    arguments={"target": "Downloads", "query": intent.raw_prompt},
+                    risk_level=1,
+                    verification_hook="verify_folder_organized"
+                ))
+            else:
+                steps.append(PlanStep(
+                    step_id=1,
+                    title="Scan Protected File Directory (D:\\matrix_data)",
+                    agent_name="files",
+                    tool_name="scan_files",
+                    arguments={"entities": intent.entities, "query": intent.raw_prompt},
+                    risk_level=1,
+                    verification_hook="verify_file_read"
+                ))
 
         elif intent.intent_type == IntentType.SYSTEM:
-            steps.append(PlanStep(
-                step_id=1,
-                title="Poll Hardware Telemetry & Health",
-                agent_name="system",
-                tool_name="poll_telemetry",
-                arguments={},
-                risk_level=0,
-                verification_hook="verify_telemetry_valid"
-            ))
+            if any(w in raw_lower for w in ["check", "diagnos", "health", "bottleneck", "error"]):
+                steps.append(PlanStep(
+                    step_id=1,
+                    title="Diagnose System and Hardware Health",
+                    agent_name="system",
+                    tool_name="diagnose_system",
+                    arguments={"query": intent.raw_prompt},
+                    risk_level=0,
+                    verification_hook="verify_system_diagnosed"
+                ))
+            else:
+                steps.append(PlanStep(
+                    step_id=1,
+                    title="Poll Hardware Telemetry & Health",
+                    agent_name="system",
+                    tool_name="poll_telemetry",
+                    arguments={"query": intent.raw_prompt},
+                    risk_level=0,
+                    verification_hook="verify_telemetry_valid"
+                ))
 
         elif intent.intent_type == IntentType.REPO_INTEL:
             steps.append(PlanStep(
@@ -234,7 +324,6 @@ class ReasoningEngine:
             ))
 
         else:
-            # Direct conversational or answer step
             steps.append(PlanStep(
                 step_id=1,
                 title="Generate Core Model Response",

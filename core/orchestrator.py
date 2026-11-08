@@ -39,6 +39,10 @@ class OrchestrationResult:
         self.total_time_ms = total_time_ms
         self.recovered_errors = recovered_errors
 
+    @property
+    def success(self) -> bool:
+        return self.plan is not None and self.plan.state == TaskState.COMPLETED
+
 
 class Orchestrator:
     """Autonomous engine for planning, policy gating, delegating, verifying, and recovering multi-agent tasks."""
