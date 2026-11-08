@@ -281,7 +281,6 @@ class UniversalIntegrationManager:
         # 1. Live Weather Test (Open-Meteo)
         if integration_id == "weather_openmeteo":
             try:
-                # Test query for current weather (default coordinates: New Delhi / user local)
                 async with httpx.AsyncClient(timeout=4.0) as client:
                     res = await client.get(
                         "https://api.open-meteo.com/v1/forecast",
@@ -375,6 +374,227 @@ class UniversalIntegrationManager:
                 "data": {"engine": "duckduckgo", "status": "online"},
                 "latency_ms": round((time.perf_counter() - t0) * 1000, 2)
             }
+
+        # 6. GitHub API Connector Test
+        if integration_id == "github_api":
+            try:
+                from core.integrations.github_connector import github_connector
+                res = await github_connector.verify_connection()
+                lat = (time.perf_counter() - t0) * 1000
+                if res.get("connected"):
+                    integ.status = "CONNECTED"
+                    integ.last_sync_time = time.time()
+                    integ.last_error = None
+                else:
+                    integ.status = "AVAILABLE" if res.get("status") == "NOT_CONFIGURED" else "ERROR"
+                    integ.last_error = res.get("message") or res.get("error")
+                self._save_states()
+                return {
+                    "success": res.get("connected", False),
+                    "integration_id": integration_id,
+                    "status": integ.status,
+                    "data": res,
+                    "latency_ms": round(lat, 2)
+                }
+            except Exception as e:
+                integ.last_error = str(e)
+                integ.status = "ERROR"
+                return {"success": False, "integration_id": integration_id, "status": "ERROR", "error": str(e)}
+
+        # 7. Google Workspace Connector Test
+        if integration_id == "google_workspace":
+            try:
+                from core.integrations.google_workspace import google_workspace
+                res = await google_workspace.verify_connection()
+                lat = (time.perf_counter() - t0) * 1000
+                if res.get("connected"):
+                    integ.status = "CONNECTED"
+                    integ.last_sync_time = time.time()
+                    integ.last_error = None
+                else:
+                    integ.status = "AVAILABLE" if res.get("status") == "NOT_CONFIGURED" else "NEEDS_AUTH"
+                    integ.last_error = res.get("message")
+                self._save_states()
+                return {
+                    "success": res.get("connected", False),
+                    "integration_id": integration_id,
+                    "status": integ.status,
+                    "data": res,
+                    "latency_ms": round(lat, 2)
+                }
+            except Exception as e:
+                integ.last_error = str(e)
+                integ.status = "ERROR"
+                return {"success": False, "integration_id": integration_id, "status": "ERROR", "error": str(e)}
+
+        # 8. Telegram Bot Connector Test
+        if integration_id == "telegram_bot":
+            try:
+                from core.integrations.telegram_connector import telegram_connector
+                res = await telegram_connector.verify_connection()
+                lat = (time.perf_counter() - t0) * 1000
+                if res.get("connected"):
+                    integ.status = "CONNECTED"
+                    integ.last_sync_time = time.time()
+                    integ.last_error = None
+                else:
+                    integ.status = "AVAILABLE" if res.get("status") == "NOT_CONFIGURED" else "ERROR"
+                    integ.last_error = res.get("message") or res.get("error")
+                self._save_states()
+                return {
+                    "success": res.get("connected", False),
+                    "integration_id": integration_id,
+                    "status": integ.status,
+                    "data": res,
+                    "latency_ms": round(lat, 2)
+                }
+            except Exception as e:
+                integ.last_error = str(e)
+                integ.status = "ERROR"
+                return {"success": False, "integration_id": integration_id, "status": "ERROR", "error": str(e)}
+
+        # 9. Notion API Connector Test
+        if integration_id == "notion_api":
+            try:
+                from core.integrations.notion_connector import notion_connector
+                res = await notion_connector.verify_connection()
+                lat = (time.perf_counter() - t0) * 1000
+                if res.get("connected"):
+                    integ.status = "CONNECTED"
+                    integ.last_sync_time = time.time()
+                    integ.last_error = None
+                else:
+                    integ.status = "AVAILABLE" if res.get("status") == "NOT_CONFIGURED" else "ERROR"
+                    integ.last_error = res.get("message") or res.get("error")
+                self._save_states()
+                return {
+                    "success": res.get("connected", False),
+                    "integration_id": integration_id,
+                    "status": integ.status,
+                    "data": res,
+                    "latency_ms": round(lat, 2)
+                }
+            except Exception as e:
+                integ.last_error = str(e)
+                integ.status = "ERROR"
+                return {"success": False, "integration_id": integration_id, "status": "ERROR", "error": str(e)}
+
+        # 10. Home Assistant Connector Test
+        if integration_id == "home_assistant":
+            try:
+                from core.integrations.home_assistant_connector import home_assistant_connector
+                res = await home_assistant_connector.verify_connection()
+                lat = (time.perf_counter() - t0) * 1000
+                if res.get("connected"):
+                    integ.status = "CONNECTED"
+                    integ.last_sync_time = time.time()
+                    integ.last_error = None
+                else:
+                    integ.status = "AVAILABLE" if res.get("status") == "NOT_CONFIGURED" else "ERROR"
+                    integ.last_error = res.get("message") or res.get("error")
+                self._save_states()
+                return {
+                    "success": res.get("connected", False),
+                    "integration_id": integration_id,
+                    "status": integ.status,
+                    "data": res,
+                    "latency_ms": round(lat, 2)
+                }
+            except Exception as e:
+                integ.last_error = str(e)
+                integ.status = "ERROR"
+                return {"success": False, "integration_id": integration_id, "status": "ERROR", "error": str(e)}
+
+        # 11. Twilio Telephony Test
+        if integration_id == "twilio_telephony":
+            sid = os.getenv("TWILIO_ACCOUNT_SID", "")
+            auth = os.getenv("TWILIO_AUTH_TOKEN", "")
+            if not sid or not auth:
+                integ.status = "AVAILABLE"
+                return {
+                    "success": False,
+                    "integration_id": integration_id,
+                    "status": "NOT_CONFIGURED",
+                    "message": "Twilio Account SID or Auth Token is not configured."
+                }
+            try:
+                async with httpx.AsyncClient(timeout=8.0) as client:
+                    res = await client.get(
+                        f"https://api.twilio.com/2010-04-01/Accounts/{sid}.json",
+                        auth=(sid, auth)
+                    )
+                    lat = (time.perf_counter() - t0) * 1000
+                    if res.status_code == 200:
+                        integ.status = "CONNECTED"
+                        integ.last_sync_time = time.time()
+                        self._save_states()
+                        return {
+                            "success": True,
+                            "integration_id": integration_id,
+                            "status": "CONNECTED",
+                            "data": {"account_status": res.json().get("status")},
+                            "latency_ms": round(lat, 2)
+                        }
+                    else:
+                        integ.status = "ERROR"
+                        return {"success": False, "status": "ERROR", "error": res.text}
+            except Exception as e:
+                integ.status = "ERROR"
+                return {"success": False, "status": "ERROR", "error": str(e)}
+
+        # 12. Windows Vision / Camera Test
+        if integration_id == "windows_vision":
+            try:
+                import cv2
+                cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+                opened = cap.isOpened()
+                if opened:
+                    ret, _ = cap.read()
+                    cap.release()
+                    integ.status = "CONNECTED"
+                    integ.last_sync_time = time.time()
+                    self._save_states()
+                    return {
+                        "success": True,
+                        "integration_id": integration_id,
+                        "status": "CONNECTED",
+                        "data": {"webcam_detected": True, "frame_read": ret},
+                        "latency_ms": round((time.perf_counter() - t0) * 1000, 2)
+                    }
+                else:
+                    integ.status = "AVAILABLE"
+                    return {
+                        "success": False,
+                        "integration_id": integration_id,
+                        "status": "AVAILABLE",
+                        "message": "DirectShow camera not opened (may be in use or no hardware attached)."
+                    }
+            except Exception as e:
+                return {"success": False, "error": str(e)}
+
+        # 13. VS Code CLI Test
+        if integration_id == "vscode_cli":
+            import shutil
+            code_path = shutil.which("code") or shutil.which("code.cmd")
+            if code_path:
+                integ.status = "CONNECTED"
+                integ.last_sync_time = time.time()
+                self._save_states()
+                return {
+                    "success": True,
+                    "integration_id": integration_id,
+                    "status": "CONNECTED",
+                    "data": {"cli_path": code_path},
+                    "latency_ms": round((time.perf_counter() - t0) * 1000, 2)
+                }
+            else:
+                integ.status = "AVAILABLE"
+                return {
+                    "success": False,
+                    "integration_id": integration_id,
+                    "status": "AVAILABLE",
+                    "message": "VS Code CLI ('code') not found on system PATH."
+                }
 
         # Default fallback
         return {

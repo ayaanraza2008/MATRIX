@@ -3,7 +3,7 @@ Handles secure token pairing, token rotation, token expiration, authenticated re
 live CPU/RAM telemetry, connection-health heartbeats, and device revocation between Windows 11 PC
 and the Android companion app or remote clients.
 """
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from pydantic import BaseModel
@@ -18,7 +18,8 @@ from database.models import Device as DeviceModel
 from config.settings import settings
 from config.logging_config import get_logger
 from core.pairing_manager import pairing_manager, get_lan_ip, get_tailscale_ip
-from core.device_auth import get_authenticated_device, generate_auth_token, hash_token
+from core.device_auth import get_authenticated_device, generate_auth_token, hash_token, security_rate_limiter
+from core.tailscale_manager import tailscale_manager
 from core.brain import brain
 from voice.text_to_speech.engine import tts_engine
 from voice.speech_to_text.engine import stt_engine
@@ -62,8 +63,11 @@ class DeviceResponse(BaseModel):
 
 
 @router.post("/token", status_code=status.HTTP_200_OK)
-async def create_token(payload: Optional[CreateTokenRequest] = None):
+async def create_token(request: Request, payload: Optional[CreateTokenRequest] = None):
     """Generate a fresh pairing token and QR code protocol URI with detected LAN and Tailscale IPs."""
+    client_ip = request.client.host if request.client else "unknown"
+    if not security_rate_limiter.check_rate_limit(f"token_{client_ip}", max_requests=15, window_seconds=60):
+        raise HTTPException(status_code=429, detail="Rate limit exceeded for pairing token requests. Please wait a moment.")
     ttl = payload.ttl_seconds if payload else 300
     port = payload.port if payload else 8000
     return pairing_manager.create_token(ttl_seconds=ttl, port=port)
@@ -76,7 +80,10 @@ async def list_tokens():
 
 
 @router.post("/pair", status_code=status.HTTP_200_OK)
-async def pair_device(payload: PairRequest, db: AsyncSession = Depends(get_db)):
+async def pair_device(request: Request, payload: PairRequest, db: AsyncSession = Depends(get_db)):
+    client_ip = request.client.host if request.client else "unknown"
+    if not security_rate_limiter.check_rate_limit(f"pair_{client_ip}", max_requests=10, window_seconds=60):
+        raise HTTPException(status_code=429, detail="Rate limit exceeded for pairing attempts. Please wait a moment.")
     """Authorize and pair a new client device (such as the Android app).
     Returns a cryptographically secure 30-day bearer authentication token.
     """
@@ -408,3 +415,51 @@ async def get_remote_status(db: AsyncSession = Depends(get_db)):
             for d in devices
         ]
     }
+
+@router.get("/tailscale", status_code=status.HTTP_200_OK)
+async def get_tailscale_status():
+    """Retrieve Tailscale installation readiness, authentication status, and assigned CGNAT IP."""
+    return tailscale_manager.get_readiness_status()
+
+
+class FCMTokenRegistrationRequest(BaseModel):
+    fcm_token: str
+
+
+class SendNotificationRequest(BaseModel):
+    title: str
+    body: str
+    device_id: Optional[str] = None
+    data: Optional[Dict[str, Any]] = None
+    priority: str = "high"
+
+
+@router.post("/{device_id}/fcm-token", status_code=status.HTTP_200_OK)
+async def register_fcm_token(device_id: str, req: FCMTokenRegistrationRequest, device: DeviceModel = Depends(get_authenticated_device)):
+    """Register Firebase Cloud Messaging device token for push notifications."""
+    if device.device_id != device_id:
+        raise HTTPException(status_code=403, detail="Device ID mismatch with authenticated device.")
+    from core.notifications.push_service import push_service
+    push_service.register_device_token(device_id, req.fcm_token)
+    return {"device_id": device_id, "status": "REGISTERED"}
+
+
+@router.post("/notify", status_code=status.HTTP_200_OK)
+async def send_device_notification(req: SendNotificationRequest):
+    """Send real push notification to mobile companion via FCM and/or WebSocket."""
+    from core.notifications.push_service import push_service
+    res = await push_service.send_notification(
+        title=req.title,
+        body=req.body,
+        device_id=req.device_id,
+        data=req.data,
+        priority=req.priority
+    )
+    return res
+
+
+@router.get("/notifications", status_code=status.HTTP_200_OK)
+async def get_notification_history(limit: int = 50):
+    """Retrieve recent notifications history."""
+    from core.notifications.push_service import push_service
+    return push_service.get_history(limit=limit)

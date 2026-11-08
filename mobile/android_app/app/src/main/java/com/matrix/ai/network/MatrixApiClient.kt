@@ -365,6 +365,89 @@ class MatrixApiClient(context: Context? = null) {
         }
     }
 
+    suspend fun fetchTasks(): List<JsonObject> = withContext(Dispatchers.IO) {
+        val token = authToken ?: return@withContext emptyList()
+        val request = Request.Builder()
+            .url("http://$serverHost/api/v1/automation/tasks")
+            .addHeader("Authorization", "Bearer $token")
+            .get()
+            .build()
+        try {
+            client.newCall(request).execute().use { resp ->
+                if (resp.isSuccessful) {
+                    val json = gson.fromJson(resp.body?.string(), JsonObject::class.java)
+                    val items = json.getAsJsonArray("tasks")
+                    val list = mutableListOf<JsonObject>()
+                    items?.forEach { list.add(it.asJsonObject) }
+                    list
+                } else emptyList()
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun fetchAuditHistory(): List<JsonObject> = withContext(Dispatchers.IO) {
+        val token = authToken ?: return@withContext emptyList()
+        val request = Request.Builder()
+            .url("http://$serverHost/api/v1/audit/logs?limit=30")
+            .addHeader("Authorization", "Bearer $token")
+            .get()
+            .build()
+        try {
+            client.newCall(request).execute().use { resp ->
+                if (resp.isSuccessful) {
+                    val json = gson.fromJson(resp.body?.string(), JsonObject::class.java)
+                    val items = json.getAsJsonArray("logs")
+                    val list = mutableListOf<JsonObject>()
+                    items?.forEach { list.add(it.asJsonObject) }
+                    list
+                } else emptyList()
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun fetchNotifications(): List<JsonObject> = withContext(Dispatchers.IO) {
+        val token = authToken ?: return@withContext emptyList()
+        val request = Request.Builder()
+            .url("http://$serverHost/api/v1/devices/notifications?limit=20")
+            .addHeader("Authorization", "Bearer $token")
+            .get()
+            .build()
+        try {
+            client.newCall(request).execute().use { resp ->
+                if (resp.isSuccessful) {
+                    val arr = gson.fromJson(resp.body?.string(), com.google.gson.JsonArray::class.java)
+                    val list = mutableListOf<JsonObject>()
+                    arr?.forEach { list.add(it.asJsonObject) }
+                    list
+                } else emptyList()
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun registerFcmToken(fcmToken: String): Boolean = withContext(Dispatchers.IO) {
+        val token = authToken ?: return@withContext false
+        val payload = JsonObject().apply {
+            addProperty("fcm_token", fcmToken.trim())
+        }
+        val body = payload.toString().toRequestBody("application/json".toMediaType())
+        val request = Request.Builder()
+            .url("http://$serverHost/api/v1/devices/$deviceId/fcm-token")
+            .addHeader("Authorization", "Bearer $token")
+            .post(body)
+            .build()
+        try {
+            client.newCall(request).execute().use { resp -> resp.isSuccessful }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     fun connectWebSocket(onMessage: ((String) -> Unit)? = null) {
         if (_connectionState.value == ConnectionState.REVOKED) return
         val token = authToken ?: return

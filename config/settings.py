@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     debug: bool = Field(default=True, alias="MATRIX_DEBUG")
 
     # Storage & Persistence (Stored on D:\matrix_data to conserve C: drive space)
+    base_dir: Path = Field(default=Path(__file__).resolve().parent.parent, alias="MATRIX_BASE_DIR")
     data_dir: Path = Field(default=Path("D:/matrix_data"), alias="MATRIX_DATA_DIR")
     database_url: str = Field(
         default="sqlite+aiosqlite:///D:/matrix_data/matrix.db",

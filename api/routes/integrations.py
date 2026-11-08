@@ -6,6 +6,7 @@ Provides a real-time management dashboard covering all 65 GitHub repositories:
 - Dynamic resource telemetry (RAM, CPU) via AutonomousResourceManager
 - Quick actions: Initialize, Test, Shutdown, View Docs
 - Enable/disable toggles
+- Universal Connectors (Google Workspace, GitHub, Telegram, Notion, Home Assistant, etc.)
 """
 import time
 from typing import Dict, Any, List, Optional
@@ -36,6 +37,145 @@ class TestIntegrationRequest(BaseModel):
     operation: Optional[str] = None
     parameters: Dict[str, Any] = Field(default_factory=dict)
 
+
+class ConfigureIntegrationRequest(BaseModel):
+    token: Optional[str] = None
+    chat_id: Optional[str] = None
+    base_url: Optional[str] = None
+    account_sid: Optional[str] = None
+    auth_token: Optional[str] = None
+
+
+class GoogleExchangeRequest(BaseModel):
+    code: str
+    code_verifier: Optional[str] = None
+
+
+# =========================================================================
+# UNIVERSAL MARKETPLACE CONNECTORS & GOOGLE WORKSPACE (STATIC ROUTES FIRST)
+# =========================================================================
+
+@router.get("/marketplace/all")
+async def get_universal_marketplace(category: Optional[str] = None):
+    """Retrieve full catalog of Universal Connectors (OS, Productivity, Communication, Information, IoT)."""
+    from core.integrations.manager import integration_manager
+    items = integration_manager.list_integrations(category=category)
+    return {
+        "status": "OK",
+        "total_integrations": len(items),
+        "connected_count": sum(1 for i in items if i["status"] == "CONNECTED"),
+        "integrations": items
+    }
+
+
+@router.post("/marketplace/{integration_id}/test")
+async def test_universal_integration(integration_id: str):
+    """Trigger a live operational health test against a Universal Connector."""
+    from core.integrations.manager import integration_manager
+    res = await integration_manager.test_integration(integration_id)
+    return res
+
+
+@router.post("/marketplace/{integration_id}/configure")
+async def configure_universal_integration(integration_id: str, req: ConfigureIntegrationRequest):
+    """Configure credentials for a third-party integration connector."""
+    from core.integrations.manager import integration_manager
+    integ = integration_manager.get_integration(integration_id)
+    if not integ:
+        raise HTTPException(status_code=404, detail=f"Integration '{integration_id}' not found.")
+
+    if integration_id == "github_api":
+        if not req.token:
+            raise HTTPException(status_code=400, detail="GitHub Personal Access Token is required.")
+        from core.integrations.github_connector import github_connector
+        github_connector.save_token(req.token)
+        ver = await github_connector.verify_connection()
+        return {"integration_id": integration_id, "configured": True, "verification": ver}
+
+    elif integration_id == "telegram_bot":
+        if not req.token:
+            raise HTTPException(status_code=400, detail="Telegram Bot Token is required.")
+        from core.integrations.telegram_connector import telegram_connector
+        telegram_connector.save_credentials(req.token, default_chat_id=req.chat_id)
+        ver = await telegram_connector.verify_connection()
+        return {"integration_id": integration_id, "configured": True, "verification": ver}
+
+    elif integration_id == "notion_api":
+        if not req.token:
+            raise HTTPException(status_code=400, detail="Notion API Token is required.")
+        from core.integrations.notion_connector import notion_connector
+        notion_connector.save_token(req.token)
+        ver = await notion_connector.verify_connection()
+        return {"integration_id": integration_id, "configured": True, "verification": ver}
+
+    elif integration_id == "home_assistant":
+        if not req.token or not req.base_url:
+            raise HTTPException(status_code=400, detail="Both base_url and token are required for Home Assistant.")
+        from core.integrations.home_assistant_connector import home_assistant_connector
+        home_assistant_connector.save_credentials(req.base_url, req.token)
+        ver = await home_assistant_connector.verify_connection()
+        return {"integration_id": integration_id, "configured": True, "verification": ver}
+
+    raise HTTPException(status_code=400, detail=f"Configuration not supported via this endpoint for '{integration_id}'.")
+
+
+@router.post("/marketplace/{integration_id}/disconnect")
+async def disconnect_universal_integration(integration_id: str):
+    """Disconnect and purge credentials for an integration connector."""
+    from core.integrations.manager import integration_manager
+    integ = integration_manager.get_integration(integration_id)
+    if not integ:
+        raise HTTPException(status_code=404, detail=f"Integration '{integration_id}' not found.")
+
+    if integration_id == "github_api":
+        from core.integrations.github_connector import github_connector
+        github_connector.disconnect()
+    elif integration_id == "telegram_bot":
+        from core.integrations.telegram_connector import telegram_connector
+        telegram_connector.disconnect()
+    elif integration_id == "notion_api":
+        from core.integrations.notion_connector import notion_connector
+        notion_connector.disconnect()
+    elif integration_id == "home_assistant":
+        from core.integrations.home_assistant_connector import home_assistant_connector
+        home_assistant_connector.disconnect()
+    elif integration_id == "google_workspace":
+        from core.integrations.google_workspace import google_workspace
+        await google_workspace.revoke()
+
+    integ.status = "AVAILABLE"
+    integ.last_sync_time = None
+    integration_manager._save_states()
+    return {"integration_id": integration_id, "status": "DISCONNECTED"}
+
+
+# Google Workspace OAuth2 Flow Endpoints
+@router.get("/google/auth-url")
+async def get_google_auth_url():
+    """Generate PKCE pair and return Google OAuth2 authorization URL."""
+    from core.integrations.google_workspace import google_workspace
+    auth_data = google_workspace.generate_auth_url()
+    return auth_data
+
+
+@router.post("/google/exchange")
+async def exchange_google_code(req: GoogleExchangeRequest):
+    """Exchange OAuth authorization code for Google access and refresh tokens."""
+    from core.integrations.google_workspace import google_workspace
+    result = await google_workspace.exchange_code(req.code, code_verifier=req.code_verifier)
+    return result
+
+
+@router.get("/google/status")
+async def get_google_status():
+    """Verify Google Workspace authentication and token validity."""
+    from core.integrations.google_workspace import google_workspace
+    return await google_workspace.verify_connection()
+
+
+# =========================================================================
+# REPOSITORY CATALOG & DYNAMIC REPOSITORY ROUTES
+# =========================================================================
 
 @router.get("")
 async def get_all_integrations():
@@ -187,24 +327,3 @@ async def test_integration(repo_owner: str, repo_name: str, req: TestIntegration
         "execution_time_ms": res.execution_time_ms,
         "error": res.error
     }
-
-
-@router.get("/marketplace/all")
-async def get_universal_marketplace(category: Optional[str] = None):
-    """Retrieve full catalog of Universal Connectors (OS, Productivity, Communication, Information, IoT)."""
-    from core.integrations.manager import integration_manager
-    items = integration_manager.list_integrations(category=category)
-    return {
-        "status": "OK",
-        "total_integrations": len(items),
-        "connected_count": sum(1 for i in items if i["status"] == "CONNECTED"),
-        "integrations": items
-    }
-
-
-@router.post("/marketplace/{integration_id}/test")
-async def test_universal_integration(integration_id: str):
-    """Trigger a live operational health test against a Universal Connector."""
-    from core.integrations.manager import integration_manager
-    res = await integration_manager.test_integration(integration_id)
-    return res
