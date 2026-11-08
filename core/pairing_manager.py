@@ -1,5 +1,5 @@
-"""MATRIX Pairing Manager & LAN Network Utilities.
-Manages cryptographic pairing tokens, TTL expiration, consumption tracking, and LAN IP detection
+"""MATRIX Pairing Manager & LAN/Tailscale Network Utilities.
+Manages cryptographic pairing tokens, TTL expiration, consumption tracking, and LAN/Tailscale IP detection
 for seamless synchronization between the Windows 11 PC host and mobile/remote companion devices.
 """
 import socket
@@ -34,6 +34,36 @@ def get_lan_ip() -> str:
         pass
 
     return "127.0.0.1"
+
+
+def get_tailscale_ip() -> Optional[str]:
+    """Discover host IPv4 address on private Tailscale mesh network (100.64.0.0/10 CGNAT range).
+    Returns None if Tailscale interface is not active on this host.
+    """
+    try:
+        import ipaddress
+        import psutil
+        tailscale_net = ipaddress.IPv4Network("100.64.0.0/10")
+        for iface, addrs in psutil.net_if_addrs().items():
+            for addr in addrs:
+                if addr.family.name == "AF_INET":
+                    ip = ipaddress.IPv4Address(addr.address)
+                    if ip in tailscale_net:
+                        return str(ip)
+    except Exception:
+        pass
+
+    try:
+        import subprocess
+        res = subprocess.run(["tailscale", "ip", "-4"], capture_output=True, text=True, timeout=1.5)
+        if res.returncode == 0:
+            ip = res.stdout.strip()
+            if ip:
+                return ip
+    except Exception:
+        pass
+
+    return None
 
 
 class PairingTokenRecord:
@@ -77,7 +107,7 @@ class PairingManager:
             return cls._instance
 
     def create_token(self, ttl_seconds: int = 300, port: int = 8000) -> Dict[str, Any]:
-        """Generate and register a new pairing token and formatted QR protocol URI with LAN IP."""
+        """Generate and register a new pairing token and formatted QR protocol URI with LAN/Tailscale IP."""
         token_id = f"mtx_pair_{uuid.uuid4().hex[:16]}"
         record = PairingTokenRecord(token=token_id, ttl_seconds=ttl_seconds)
 
@@ -86,17 +116,24 @@ class PairingManager:
             self._cleanup_expired_locked()
 
         lan_ip = get_lan_ip()
+        ts_ip = get_tailscale_ip()
         host_endpoint = f"{lan_ip}:{port}"
         qr_uri = f"matrix://pair?token={token_id}&host={host_endpoint}"
+        ts_endpoint = f"{ts_ip}:{port}" if ts_ip else None
+        ts_qr_uri = f"matrix://pair?token={token_id}&host={ts_endpoint}" if ts_endpoint else None
 
         return {
             "pairing_token": token_id,
             "qr_protocol": qr_uri,
             "host": host_endpoint,
             "lan_ip": lan_ip,
+            "tailscale_ip": ts_ip,
+            "tailscale_host": ts_endpoint,
+            "tailscale_qr_protocol": ts_qr_uri,
             "port": port,
             "expires_in_seconds": ttl_seconds,
-            "created_at": record.created_at
+            "created_at": record.created_at,
+            "remote_compatible": bool(ts_ip)
         }
 
     def validate_and_consume(self, token: str, device_id: Optional[str] = None) -> Tuple[bool, str]:

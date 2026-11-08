@@ -24,6 +24,7 @@ class Device(Base):
     platform = Column(String(30), nullable=False)  # 'windows', 'linux', 'android', 'web'
     is_paired = Column(Boolean, default=False, nullable=False)
     auth_token_hash = Column(String(128), nullable=True)
+    token_expires_at = Column(DateTime, nullable=True)
     public_key = Column(Text, nullable=True)
     last_ip = Column(String(45), nullable=True)
     last_seen_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

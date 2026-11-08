@@ -188,7 +188,17 @@ else:
 
 @app.websocket("/ws/events")
 async def websocket_events(websocket: WebSocket):
-    """Bidirectional real-time event socket for UI command center."""
+    """Bidirectional real-time event socket for UI command center and mobile companions."""
+    token = websocket.query_params.get("token")
+    if token:
+        from core.device_auth import validate_token_raw
+        from database.session import AsyncSessionLocal
+        async with AsyncSessionLocal() as session:
+            device = await validate_token_raw(token, session)
+            if not device:
+                await websocket.close(code=4001, reason="Unauthorized or revoked device token")
+                return
+
     await ws_manager.connect(websocket)
     from voice.conversation.manager import hands_free_manager, ConversationMode
     import json
