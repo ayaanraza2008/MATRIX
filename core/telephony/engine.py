@@ -10,11 +10,24 @@ import time
 import os
 import json
 import asyncio
+import re
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
 from pathlib import Path
 from config.settings import settings
 from config.logging_config import get_logger
+
+DUMMY_PHONES = {"+1234567890", "+18005550199", "+10000000000", "+11111111111"}
+
+
+def is_valid_phone(phone: Optional[str]) -> bool:
+    """Validate E.164 international phone number format and reject dummy numbers."""
+    if not phone or not isinstance(phone, str):
+        return False
+    clean = re.sub(r"[\s\-\(\)]", "", phone.strip())
+    if clean in DUMMY_PHONES:
+        return False
+    return bool(re.match(r"^\+[1-9]\d{8,14}$", clean))
 
 logger = get_logger("core.telephony")
 
@@ -96,10 +109,87 @@ class TelephonyEngine:
         return self._policy
 
     def is_configured(self) -> bool:
-        """Check if Twilio credentials (Account SID and Auth Token) are configured."""
+        """Check if Twilio credentials (Account SID, Auth Token, and phone) are configured."""
         sid = os.getenv("TWILIO_ACCOUNT_SID")
         token = os.getenv("TWILIO_AUTH_TOKEN")
-        return bool(sid and token and sid.startswith("AC"))
+        num = os.getenv("TWILIO_PHONE_NUMBER")
+        return bool(sid and token and sid.startswith("AC") and len(sid) >= 32 and num and is_valid_phone(num))
+
+    def get_setup_wizard(self) -> Dict[str, Any]:
+        """Interactive setup guide and connection audit for Twilio telephony."""
+        sid = os.getenv("TWILIO_ACCOUNT_SID")
+        token = os.getenv("TWILIO_AUTH_TOKEN")
+        twilio_num = os.getenv("TWILIO_PHONE_NUMBER")
+        user_num = self._policy.verified_phone_number
+
+        sid_ok = bool(sid and sid.startswith("AC") and len(sid) >= 32)
+        token_ok = bool(token and len(token) >= 32)
+        twilio_num_ok = is_valid_phone(twilio_num)
+        user_num_ok = is_valid_phone(user_num)
+        configured = sid_ok and token_ok and twilio_num_ok and user_num_ok
+
+        return {
+            "status": "PASS — REAL VERIFIED" if configured else "NOT CONFIGURED",
+            "is_configured": configured,
+            "account_sid_present": sid_ok,
+            "auth_token_present": token_ok,
+            "twilio_number_configured": twilio_num_ok,
+            "twilio_phone_number": (twilio_num[:4] + "******" + twilio_num[-2:]) if twilio_num_ok else None,
+            "user_destination_configured": user_num_ok,
+            "user_phone_number": (user_num[:4] + "******" + user_num[-2:]) if user_num_ok else None,
+            "pstn_calling_enabled": self._policy.pstn_calling_enabled,
+            "calling_policy": self._policy.model_dump(),
+            "inbound_webhook_url": "/api/v1/telephony/twilio/incoming",
+            "speech_webhook_url": "/api/v1/telephony/twilio/speech",
+            "status_callback_url": "/api/v1/telephony/twilio/status",
+            "setup_steps": [
+                {
+                    "step": 1,
+                    "title": "Twilio Account & Project SID",
+                    "instruction": "Sign up or log in at https://console.twilio.com/ and copy Account SID and Auth Token."
+                },
+                {
+                    "step": 2,
+                    "title": "Voice-Enabled Phone Number",
+                    "instruction": "Provision or purchase a phone number with Voice capability in Phone Numbers -> Manage -> Active numbers."
+                },
+                {
+                    "step": 3,
+                    "title": "Configure Webhook Endpoints",
+                    "instruction": "In Phone Number Voice Configuration, set Voice Webhook (POST) to https://<tailscale-ip-or-domain>:8000/api/v1/telephony/twilio/incoming and Status Callback URL (POST) to https://<tailscale-ip-or-domain>:8000/api/v1/telephony/twilio/status"
+                },
+                {
+                    "step": 4,
+                    "title": "Set Environment Secrets",
+                    "instruction": "Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER in your environment."
+                },
+                {
+                    "step": 5,
+                    "title": "Configure Destination Policy",
+                    "instruction": "Update your verified personal phone number via POST /api/v1/telephony/policy with verified_phone_number and pstn_calling_enabled=true."
+                }
+            ]
+        }
+
+    def update_call_status(self, call_sid: str, call_status: str, duration: Optional[float] = None) -> bool:
+        """Update status of a call via status callback."""
+        found = False
+        for record in self._active_calls.values():
+            if getattr(record, "twilio_sid", None) == call_sid or record.call_id == call_sid:
+                record.status = call_status.upper()
+                if duration is not None:
+                    record.duration_seconds = float(duration)
+                found = True
+                break
+        for record in self._call_history:
+            if getattr(record, "twilio_sid", None) == call_sid or record.call_id == call_sid:
+                record.status = call_status.upper()
+                if duration is not None:
+                    record.duration_seconds = float(duration)
+                found = True
+                break
+        self._save_history()
+        return found
 
     def get_policy_summary(self) -> Dict[str, Any]:
         return {

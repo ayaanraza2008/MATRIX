@@ -59,7 +59,7 @@ class MatrixApiClient(context: Context? = null) {
     var serverHost: String = prefs?.getString("server_host", "192.168.31.194:8000") ?: "192.168.31.194:8000"
         private set
 
-    var authToken: String? = prefs?.getString("auth_token", null)
+    var authToken: String? = prefs?.getString("auth_token", null)?.let { MatrixKeyStoreStorage.decrypt(it) }
         private set
 
     val deviceId: String = prefs?.getString("device_id", null) ?: run {
@@ -93,7 +93,8 @@ class MatrixApiClient(context: Context? = null) {
         prefs?.edit()?.putString("server_host", serverHost)?.apply()
         if (token != null) {
             authToken = token.trim()
-            prefs?.edit()?.putString("auth_token", authToken)?.apply()
+            val enc = MatrixKeyStoreStorage.encrypt(authToken)
+            prefs?.edit()?.putString("auth_token", enc)?.apply()
         }
     }
 
@@ -128,7 +129,8 @@ class MatrixApiClient(context: Context? = null) {
                     val token = json.get("auth_token")?.asString
                     if (!token.isNullOrEmpty()) {
                         authToken = token
-                        prefs?.edit()?.putString("auth_token", token)?.apply()
+                        val enc = MatrixKeyStoreStorage.encrypt(token)
+                        prefs?.edit()?.putString("auth_token", enc)?.apply()
                         _connectionState.value = ConnectionState.CONNECTED
                         connectWebSocket()
                         Pair(true, "Paired successfully. Matrix Link Active.")

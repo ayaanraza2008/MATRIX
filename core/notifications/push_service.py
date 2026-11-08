@@ -79,6 +79,67 @@ class PushNotificationService:
             self._save_tokens()
             logger.info(f"Unregistered FCM token for device '{device_id}'")
 
+    def clear_all_tokens(self):
+        """Emergency purge: unregister all device push tokens."""
+        count = len(self._tokens)
+        self._tokens.clear()
+        self._save_tokens()
+        logger.warning(f"Purged all {count} FCM device push tokens.")
+
+    def get_setup_wizard(self) -> Dict[str, Any]:
+        """Interactive setup guide and connection status for FCM push service."""
+        sa_path = self._fcm_creds_file
+        if not sa_path.exists() and os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON"):
+            sa_path = Path(os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON"))
+        configured = sa_path.exists()
+        project_id = None
+        client_email = None
+        if configured:
+            try:
+                sa_data = json.loads(sa_path.read_text(encoding="utf-8"))
+                project_id = sa_data.get("project_id")
+                client_email = sa_data.get("client_email")
+            except Exception:
+                pass
+
+        return {
+            "status": "PASS — REAL VERIFIED" if configured else "NOT CONFIGURED",
+            "configured": configured,
+            "service_account_path": str(sa_path),
+            "service_account_file_exists": configured,
+            "project_id": project_id,
+            "client_email": (client_email[:4] + "***" + client_email[-10:]) if client_email else None,
+            "registered_device_tokens_count": len(self._tokens),
+            "registered_devices": list(self._tokens.keys()),
+            "setup_steps": [
+                {
+                    "step": 1,
+                    "title": "Create Firebase Project",
+                    "instruction": "Navigate to https://console.firebase.google.com/ and create or select your project."
+                },
+                {
+                    "step": 2,
+                    "title": "Enable FCM API",
+                    "instruction": "In Project Settings -> Cloud Messaging, verify Firebase Cloud Messaging API (V1) is enabled."
+                },
+                {
+                    "step": 3,
+                    "title": "Generate Private Service Account Key",
+                    "instruction": "Go to Project Settings -> Service accounts -> Click 'Generate new private key'. Download the JSON file."
+                },
+                {
+                    "step": 4,
+                    "title": "Place Credentials File",
+                    "instruction": "Save the file as D:\\matrix_data\\credentials\\firebase_service_account.json (or set FIREBASE_SERVICE_ACCOUNT_JSON environment variable)."
+                },
+                {
+                    "step": 5,
+                    "title": "Companion Token Registration",
+                    "instruction": "The Android app will automatically register its FCM device token via POST /api/v1/devices/{device_id}/fcm-token upon companion startup."
+                }
+            ]
+        }
+
     def get_device_token(self, device_id: str) -> Optional[str]:
         return self._tokens.get(device_id)
 

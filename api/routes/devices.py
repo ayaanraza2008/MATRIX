@@ -309,6 +309,9 @@ async def revoke_device(device_id: str, db: AsyncSession = Depends(get_db)):
     device.token_expires_at = None
     await db.commit()
 
+    from core.notifications.push_service import push_service
+    push_service.unregister_device_token(device_id)
+
     await ws_manager.broadcast({
         "type": "device_revoked",
         "payload": {
@@ -330,6 +333,9 @@ async def revoke_device(device_id: str, db: AsyncSession = Depends(get_db)):
 @router.delete("/{device_id}", status_code=status.HTTP_200_OK)
 async def delete_device(device_id: str, db: AsyncSession = Depends(get_db)):
     """Permanently delete and uncouple a device record from the registry."""
+    from core.notifications.push_service import push_service
+    push_service.unregister_device_token(device_id)
+
     await ws_manager.broadcast({
         "type": "device_revoked",
         "payload": {
@@ -356,6 +362,9 @@ async def delete_device(device_id: str, db: AsyncSession = Depends(get_db)):
 async def stop_remote_access(db: AsyncSession = Depends(get_db)):
     """Emergency cut-off: Revoke all paired remote devices and invalidate all pairing tokens."""
     pairing_manager.clear()
+    from core.notifications.push_service import push_service
+    push_service.clear_all_tokens()
+
     stmt = select(DeviceModel)
     res = await db.execute(stmt)
     devices = res.scalars().all()
@@ -420,6 +429,46 @@ async def get_remote_status(db: AsyncSession = Depends(get_db)):
 async def get_tailscale_status():
     """Retrieve Tailscale installation readiness, authentication status, and assigned CGNAT IP."""
     return tailscale_manager.get_readiness_status()
+
+
+@router.get("/tailscale/setup-wizard", status_code=status.HTTP_200_OK)
+async def get_tailscale_setup_wizard():
+    """Interactive setup guide for Tailscale mesh networking between Windows and Android."""
+    status_data = tailscale_manager.get_readiness_status()
+    return {
+        "status": "PASS — REAL VERIFIED" if status_data.get("ready_for_remote_companion") else "NOT CONFIGURED",
+        "ready": status_data.get("ready_for_remote_companion", False),
+        "details": status_data,
+        "setup_steps": [
+            {
+                "step": 1,
+                "title": "Install Tailscale on Windows 11 PC",
+                "instruction": "Download and install Tailscale for Windows from https://tailscale.com/download/windows"
+            },
+            {
+                "step": 2,
+                "title": "Log in to Tailscale on Windows",
+                "instruction": "Open Tailscale from the Windows System Tray and authenticate with your identity provider."
+            },
+            {
+                "step": 3,
+                "title": "Install Tailscale on Android Phone",
+                "instruction": "Install Tailscale from the Google Play Store on your Android companion phone and log in to the same tailnet."
+            },
+            {
+                "step": 4,
+                "title": "Connect MATRIX Companion",
+                "instruction": f"In the MATRIX Android app, set Server Host to {status_data.get('tailscale_ip') or '<tailscale_cgnat_ip>'}:8000. All traffic will be encrypted end-to-end via WireGuard."
+            }
+        ]
+    }
+
+
+@router.get("/notifications/setup-wizard", status_code=status.HTTP_200_OK)
+async def get_notifications_setup_wizard():
+    """Interactive setup guide and connection audit for Firebase Cloud Messaging."""
+    from core.notifications.push_service import push_service
+    return push_service.get_setup_wizard()
 
 
 class FCMTokenRegistrationRequest(BaseModel):

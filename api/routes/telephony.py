@@ -10,7 +10,9 @@ from fastapi import APIRouter, HTTPException, Request, Form, Response, status
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 import time
-from core.telephony.engine import telephony_engine, OutboundCallingPolicy
+import os
+from core.telephony.engine import telephony_engine, OutboundCallingPolicy, is_valid_phone
+from core.telephony.twilio_security import verify_twilio_request
 from core.brain import brain
 from voice.text_to_speech.engine import tts_engine
 from config.logging_config import get_logger
@@ -74,9 +76,22 @@ async def get_calling_policy():
     }
 
 
+@router.get("/setup-wizard")
+async def telephony_setup_wizard():
+    """Twilio setup wizard, verification status, and configuration checklist."""
+    return telephony_engine.get_setup_wizard()
+
+
 @router.post("/policy")
 async def update_calling_policy(payload: PolicyUpdateRequest):
     """Update verified phone number, quiet hours, and calling limits."""
+    if payload.verified_phone_number is not None:
+        if not is_valid_phone(payload.verified_phone_number):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid phone number '{payload.verified_phone_number}'. Must be valid international E.164 format (e.g. +14155552671) and cannot be a dummy number."
+            )
+
     current = telephony_engine.get_policy()
     data = current.model_dump()
 
@@ -99,8 +114,17 @@ async def get_call_history(limit: int = 20):
 # --- Twilio PSTN Webhook Endpoints ---
 
 @router.post("/twilio/incoming")
-async def twilio_incoming_call():
+async def twilio_incoming_call(request: Request):
     """Twilio Voice Webhook: Answer incoming PSTN calls to the dedicated MATRIX number."""
+    twilio_token = os.getenv("TWILIO_AUTH_TOKEN")
+    if twilio_token:
+        sig = request.headers.get("X-Twilio-Signature")
+        url = str(request.url)
+        form_data = await request.form()
+        if not verify_twilio_request(url, dict(form_data), sig, twilio_token):
+            logger.warning(f"Twilio webhook signature verification failed for incoming call from {request.client.host if request.client else 'unknown'}")
+            raise HTTPException(status_code=403, detail="Invalid Twilio signature")
+
     twiml = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<Response>\n'
@@ -115,8 +139,17 @@ async def twilio_incoming_call():
 
 
 @router.post("/twilio/speech")
-async def twilio_speech_result(SpeechResult: Optional[str] = Form(None)):
+async def twilio_speech_result(request: Request, SpeechResult: Optional[str] = Form(None)):
     """Twilio Speech Gather Callback: Transcribes speech, processes via MATRIX Brain, speaks response."""
+    twilio_token = os.getenv("TWILIO_AUTH_TOKEN")
+    if twilio_token:
+        sig = request.headers.get("X-Twilio-Signature")
+        url = str(request.url)
+        form_data = await request.form()
+        if not verify_twilio_request(url, dict(form_data), sig, twilio_token):
+            logger.warning("Twilio webhook signature verification failed for speech result")
+            raise HTTPException(status_code=403, detail="Invalid Twilio signature")
+
     user_speech = SpeechResult or ""
     logger.info(f"Twilio call speech recognized: '{user_speech}'")
 
@@ -149,3 +182,28 @@ async def twilio_speech_result(SpeechResult: Optional[str] = Form(None)):
         f'</Response>'
     )
     return Response(content=twiml, media_type="application/xml")
+
+
+@router.post("/twilio/status")
+async def twilio_call_status(
+    request: Request,
+    CallSid: Optional[str] = Form(None),
+    CallStatus: Optional[str] = Form(None),
+    CallDuration: Optional[str] = Form(None)
+):
+    """Twilio Call Status Callback: Updates call lifecycle status and duration."""
+    twilio_token = os.getenv("TWILIO_AUTH_TOKEN")
+    if twilio_token:
+        sig = request.headers.get("X-Twilio-Signature")
+        url = str(request.url)
+        form_data = await request.form()
+        if not verify_twilio_request(url, dict(form_data), sig, twilio_token):
+            raise HTTPException(status_code=403, detail="Invalid Twilio signature")
+
+    if CallSid and CallStatus:
+        duration = float(CallDuration) if CallDuration and CallDuration.isdigit() else None
+        telephony_engine.update_call_status(CallSid, CallStatus, duration)
+        logger.info(f"Twilio call status callback: SID {CallSid} -> {CallStatus} ({duration}s)")
+
+    return Response(content="<Response/>", media_type="application/xml")
+

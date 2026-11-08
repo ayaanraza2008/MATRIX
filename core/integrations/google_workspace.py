@@ -129,8 +129,47 @@ class GoogleWorkspaceConnector:
             "redirect_uri": redirect_uri
         }
 
-    async def exchange_code(self, code: str, code_verifier: str, redirect_uri: str) -> Dict[str, Any]:
-        """Exchange authorization code for access and refresh tokens."""
+    def generate_auth_url(self, redirect_uri: str = "http://localhost:8000/api/v1/integrations/google/callback") -> Dict[str, Any]:
+        """Alias for get_authorization_url."""
+        return self.get_authorization_url(redirect_uri=redirect_uri)
+
+    async def exchange_code(
+        self,
+        code: str,
+        code_verifier: Optional[str] = None,
+        redirect_uri: Optional[str] = None,
+        state: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Exchange authorization code for access and refresh tokens with automatic PKCE verifier resolution."""
+        # Auto-resolve code_verifier and redirect_uri from PKCE state file if not provided
+        if not code_verifier and state:
+            state_file = self._creds_dir / f"pkce_{state}.json"
+            if state_file.exists():
+                try:
+                    sdata = json.loads(state_file.read_text(encoding="utf-8"))
+                    code_verifier = sdata.get("verifier")
+                    if not redirect_uri:
+                        redirect_uri = sdata.get("redirect_uri")
+                    state_file.unlink(missing_ok=True)
+                except Exception:
+                    pass
+
+        # If still no code_verifier, look for the latest pkce_*.json
+        if not code_verifier:
+            pkce_files = sorted(self._creds_dir.glob("pkce_*.json"), key=os.path.getmtime, reverse=True)
+            if pkce_files:
+                try:
+                    sdata = json.loads(pkce_files[0].read_text(encoding="utf-8"))
+                    code_verifier = sdata.get("verifier")
+                    if not redirect_uri:
+                        redirect_uri = sdata.get("redirect_uri")
+                    pkce_files[0].unlink(missing_ok=True)
+                except Exception:
+                    pass
+
+        redirect_uri = redirect_uri or "http://localhost:8000/api/v1/integrations/google/callback"
+        code_verifier = code_verifier or ""
+
         async with httpx.AsyncClient(timeout=10.0) as client:
             payload = {
                 "client_id": self._client_id,
@@ -400,6 +439,106 @@ class GoogleWorkspaceConnector:
                 item = res.json()
                 return {"success": True, "event_id": item.get("id"), "summary": summary, "html_link": item.get("htmlLink")}
             return {"success": False, "error": res.text}
+
+    async def update_calendar_event(
+        self,
+        event_id: str,
+        summary: Optional[str] = None,
+        start_time: Optional[str] = None,
+        end_time: Optional[str] = None,
+        description: Optional[str] = None,
+        location: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Update/modify an existing Google Calendar event."""
+        token = await self.get_valid_access_token()
+        if not token:
+            return {"authenticated": False, "message": "Google Workspace is not authenticated."}
+
+        patch_payload: Dict[str, Any] = {}
+        if summary is not None:
+            patch_payload["summary"] = summary
+        if description is not None:
+            patch_payload["description"] = description
+        if location is not None:
+            patch_payload["location"] = location
+        if start_time is not None:
+            patch_payload["start"] = {"dateTime": start_time if "T" in start_time else f"{start_time}T09:00:00Z"}
+        if end_time is not None:
+            patch_payload["end"] = {"dateTime": end_time if "T" in end_time else f"{end_time}T10:00:00Z"}
+
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            res = await client.patch(
+                f"{CALENDAR_API_BASE}/calendars/primary/events/{event_id}",
+                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                json=patch_payload
+            )
+            if res.status_code == 200:
+                item = res.json()
+                return {"success": True, "event_id": item.get("id"), "summary": item.get("summary"), "updated": True}
+            return {"success": False, "error": res.text, "status_code": res.status_code}
+
+    async def delete_calendar_event(self, event_id: str) -> Dict[str, Any]:
+        """Delete an event from Google Calendar."""
+        token = await self.get_valid_access_token()
+        if not token:
+            return {"authenticated": False, "message": "Google Workspace is not authenticated."}
+
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            res = await client.delete(
+                f"{CALENDAR_API_BASE}/calendars/primary/events/{event_id}",
+                headers={"Authorization": f"Bearer {token}"}
+            )
+            if res.status_code in (200, 204):
+                return {"success": True, "event_id": event_id, "deleted": True}
+            return {"success": False, "error": res.text, "status_code": res.status_code}
+
+    async def check_upcoming_notifications(self, alert_window_minutes: int = 30) -> List[Dict[str, Any]]:
+        """Inspect upcoming calendar events within next alert_window_minutes."""
+        res = await self.list_calendar_events(max_results=10, days_ahead=1)
+        if not res.get("success"):
+            return []
+
+        now = datetime.now(timezone.utc)
+        cutoff = now + timedelta(minutes=alert_window_minutes)
+        alerts_triggered = []
+
+        for ev in res.get("events", []):
+            start_str = ev.get("start")
+            if not start_str:
+                continue
+            try:
+                start_dt = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
+                if now <= start_dt <= cutoff:
+                    alerts_triggered.append({
+                        "event_id": ev.get("id"),
+                        "summary": ev.get("summary"),
+                        "start": start_str,
+                        "location": ev.get("location"),
+                        "minutes_until": round((start_dt - now).total_seconds() / 60)
+                    })
+            except Exception:
+                pass
+
+        return alerts_triggered
+
+    def get_setup_wizard(self) -> Dict[str, Any]:
+        """Return clear, actionable setup wizard instructions for Google Cloud Console OAuth setup."""
+        return {
+            "integration": "google_workspace",
+            "name": "Google Workspace (Gmail & Calendar)",
+            "status": "CONFIGURED" if self.is_configured() else "NOT_CONFIGURED",
+            "authenticated": self.is_authenticated(),
+            "credentials_file": str(self._client_file),
+            "token_file": str(self._token_file),
+            "step_1": "Go to Google Cloud Console: https://console.cloud.google.com/",
+            "step_2": "Create or select project 'Matrix-AI-Workstation'",
+            "step_3": "Enable 'Gmail API' and 'Google Calendar API' in APIs & Services > Library",
+            "step_4": "Configure OAuth Consent Screen (External), add scopes: gmail.readonly, gmail.compose, gmail.send, calendar.events",
+            "step_5": "Create Credentials > OAuth Client ID (Web Application)",
+            "step_6": "Add Authorized Redirect URI: http://localhost:8000/api/v1/integrations/google/callback",
+            "step_7": f"Save client credentials JSON to {self._client_file} or set GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET env vars",
+            "step_8": "Initiate authorization via GET /api/v1/integrations/google/auth-url and approve in browser"
+        }
 
 
     async def verify_connection(self) -> dict:
