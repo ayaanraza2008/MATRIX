@@ -91,7 +91,8 @@ class IntentEngine:
         # 11. Android Companion
         (r"\b(android|pair\s+phone|pairing\s+token|pair\s+device|mobile\s+companion|push\s+notification)\b", IntentType.ANDROID, "android", 1),
 
-        # 12. Data Analysis & Tabular CSV
+        # 12. Data Analysis & Mathematical Calculation
+        (r"\b(calculate|compute|solve|math\s+expression|\d+\s*[+\-*/%]\s*\d+)\b", IntentType.DATA_ANALYSIS, "data_analysis", 0),
         (r"\b(data\s+analysis|dataset|tabular|statistics|numerical\s+analysis|analyze\s+csv|calculate\s+stats)\b", IntentType.DATA_ANALYSIS, "data_analysis", 1),
 
         # 13. PC Control / Command

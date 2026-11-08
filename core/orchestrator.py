@@ -78,8 +78,11 @@ class Orchestrator:
                 logger.debug(f"Progress subscriber error: {e}")
 
     def _verify_step_outcome(self, step: PlanStep, res: AgentResult) -> Tuple[bool, Optional[str]]:
-        """Verify that step execution achieved its goal on disk, in memory, or in OS state."""
+        """Verify that step execution achieved its goal on disk, in memory, or in OS state with independent evidence."""
+        import os
         from pathlib import Path
+        import psutil
+
         if not res.success:
             return False, res.error or "Step reported execution failure."
 
@@ -87,27 +90,111 @@ class Orchestrator:
         data = res.data or {}
 
         try:
-            if hook in ("verify_file_read", "verify_folder_organized"):
+            # 1. Verification of Application Launch (e.g. Notepad, Calc, Browser)
+            if hook in ("verify_app_opened", "verify_process_running") or "launch" in step.tool_name.lower():
+                app_target = str(data.get("application") or data.get("executable") or step.arguments.get("app") or step.arguments.get("action") or "").lower()
+                stem = Path(app_target).stem.replace("start ", "").strip()
+                if stem:
+                    is_running = any(stem in p.info['name'].lower() for p in psutil.process_iter(['name', 'pid']) if p.info and p.info.get('name'))
+                    if not is_running:
+                        return False, f"Process '{stem}' confirmed NOT running in Windows process table."
                 return True, None
-            elif hook in ("verify_report_saved", "verify_file_created"):
-                fpath = data.get("filepath") or data.get("folder_path")
+
+            # 2. Verification of Folder Creation
+            elif hook in ("verify_folder_created", "verify_directory_exists") or "create_folder" in step.tool_name.lower():
+                fpath = data.get("folder_path") or data.get("directory") or step.arguments.get("target_dir")
+                if fpath:
+                    p = Path(fpath)
+                    if not (p.exists() and p.is_dir()):
+                        return False, f"Directory '{fpath}' does not exist on disk after creation."
+                return True, None
+
+            # 3. Verification of File Creation & Report Saving
+            elif hook in ("verify_report_saved", "verify_file_created") or "create_file" in step.tool_name.lower():
+                fpath = data.get("filepath") or step.arguments.get("filepath")
+                if fpath:
+                    p = Path(fpath)
+                    if not (p.exists() and p.is_file()):
+                        return False, f"File '{fpath}' does not exist on disk after creation."
+                    if p.stat().st_size == 0 and "content" in step.arguments and len(step.arguments["content"]) > 0:
+                        return False, f"File '{fpath}' was created empty (0 bytes) despite non-empty content."
+                return True, None
+
+            # 4. Verification of File Read
+            elif hook in ("verify_file_read", "verify_read_file") or "read" in step.tool_name.lower():
+                fpath = data.get("filepath") or step.arguments.get("filepath")
                 if fpath:
                     p = Path(fpath)
                     if not p.exists():
-                        return False, f"File or directory '{fpath}' does not exist on disk after creation."
+                        return False, f"File '{fpath}' does not exist on disk to read."
+                text = data.get("text")
+                if text is None:
+                    return False, "File read produced no content or text representation."
                 return True, None
-            elif hook == "verify_telemetry_valid":
-                if not data or ("cpu" not in data and "hardware" not in data and "telemetry" not in data):
+
+            # 5. Independent Mathematical Calculation Verification
+            elif hook in ("verify_calculation", "verify_math") or "calc" in step.tool_name.lower():
+                import ast
+                import operator
+                import re
+                expr = str(data.get("expression") or step.arguments.get("expression") or step.arguments.get("query") or "")
+                clean_expr = re.sub(r'^(?:calculate|compute|solve|what is|eval)\s+', '', expr, flags=re.IGNORECASE).strip().rstrip('?=. ')
+                operators = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul, ast.Div: operator.truediv, ast.FloorDiv: operator.floordiv, ast.Mod: operator.mod, ast.Pow: operator.pow, ast.USub: operator.neg, ast.UAdd: operator.pos}
+                def eval_n(node):
+                    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)): return node.value
+                    elif isinstance(node, ast.BinOp): return operators[type(node.op)](eval_n(node.left), eval_n(node.right))
+                    elif isinstance(node, ast.UnaryOp): return operators[type(node.op)](eval_n(node.operand))
+                    raise ValueError("invalid math node")
+                if clean_expr:
+                    tree = ast.parse(clean_expr, mode='eval')
+                    expected = eval_n(tree.body)
+                    actual = data.get("result")
+                    if actual is None or abs(float(actual) - float(expected)) > 1e-6:
+                        return False, f"Math calculation mismatch: Tool reported {actual}, independent evaluation yielded {expected}."
+                return True, None
+
+            # 6. Verification of Real OS Hardware Telemetry
+            elif hook in ("verify_telemetry_valid", "verify_system_diagnosed") or "telemetry" in step.tool_name.lower():
+                if not data or ("cpu" not in data and "hardware" not in data and "telemetry" not in data and "cpu_percent" not in data):
                     return False, "Telemetry data empty or malformed."
+                cpu = data.get("cpu_percent") or (data.get("cpu", {}).get("percent") if isinstance(data.get("cpu"), dict) else None)
+                if cpu is not None and (cpu < 0.0 or cpu > 100.0):
+                    return False, f"Telemetry CPU value {cpu}% is outside physical bounds [0, 100]."
                 return True, None
-            elif hook == "verify_system_diagnosed":
-                if not data or ("status" not in data and "overall_status" not in data and "health" not in data):
-                    return False, "Diagnostics output empty."
+
+            # 7. Verification of Browser / Web Action
+            elif hook in ("verify_sources_found", "verify_web_navigated") or "browser" in step.agent_name.lower():
+                if "error" in data:
+                    return False, str(data["error"])
                 return True, None
+
+            # 8. Simulated / Mock Output Detection
+            if isinstance(data, dict):
+                if data.get("simulated") is True or data.get("mocked") is True:
+                    return False, "Simulated or mocked tool execution detected where real execution was required."
+
         except Exception as e:
             return False, f"Verification hook exception: {e}"
 
         return True, None
+
+    async def recover_interrupted_tasks(self) -> List[Dict[str, Any]]:
+        """Inspect and recover or safely finalize interrupted workflows from SQLite."""
+        recovered = []
+        try:
+            async with AsyncSessionLocal() as session:
+                stmt = select(TaskRecord).where(
+                    TaskRecord.status.in_([TaskState.EXECUTING.value, TaskState.RECOVERING.value])
+                )
+                tasks = (await session.execute(stmt)).scalars().all()
+                for t in tasks:
+                    t.status = TaskState.INTERRUPTED.value
+                    t.error_message = "Task execution was interrupted by process restart; state preserved safely."
+                    recovered.append({"task_id": t.task_id, "title": t.title, "status": "INTERRUPTED_RECOVERED"})
+                await session.commit()
+        except Exception as e:
+            logger.warning(f"Error during interrupted task recovery: {e}")
+        return recovered
 
     def cancel_active(self):
         """Emergency stop: Immediately cancel running orchestration."""
@@ -181,11 +268,14 @@ class Orchestrator:
         self,
         prompt: Optional[str] = None,
         session_id: Optional[str] = None,
-        user_prompt: Optional[str] = None
+        user_prompt: Optional[str] = None,
+        request_id: Optional[str] = None
     ) -> OrchestrationResult:
+        import uuid
         start_time = time.perf_counter()
         self._cancel_requested = False
         target_prompt = prompt or user_prompt or ""
+        req_id = (request_id or "").strip() or f"req_{uuid.uuid4().hex[:12]}"
 
         # 1. OBSERVE & UNDERSTAND: Intent Extraction
         intent = intent_engine.classify(target_prompt)
@@ -329,10 +419,20 @@ class Orchestrator:
 
             results.append(res)
 
-            # VERIFY step output
+            # Populate Phase 3 Contract Fields on AgentResult
+            res.request_id = req_id
+            res.task_id = plan.plan_id
+            res.step_id = step.step_id
+            res.tool_name = active_tool
+            res.actual_result = res.data
+
+            # VERIFY step output independently
             plan.mark_step_verifying(step.step_id)
             is_valid, verify_err = self._verify_step_outcome(step, res)
             if is_valid:
+                res.execution_status = "SUCCESS"
+                res.verification_status = "VERIFIED"
+                res.verification["verified"] = True
                 plan.mark_step_completed(step.step_id, result=res.data)
                 completed_step_ids.add(step.step_id)
                 await self._log_audit_checkpoint(
@@ -342,7 +442,10 @@ class Orchestrator:
                 )
             else:
                 res.success = False
+                res.execution_status = "FAILED"
+                res.verification_status = "FAILED"
                 res.error = verify_err or res.error or "Action verification failed"
+                res.error_details = res.error
                 plan.mark_step_failed(step.step_id, error=res.error)
                 await self._log_audit_checkpoint(
                     f"{active_agent}.{active_tool}",

@@ -194,85 +194,179 @@ class FileAgent(BaseAgent):
 
     async def execute(self, action: str, parameters: Dict[str, Any]) -> AgentResult:
         start_time = time.perf_counter()
-        action_lower = action.lower()
-        raw_prompt = parameters.get("query", parameters.get("raw_prompt", "")).lower()
+        action_lower = (action or "").lower()
+        parameters = parameters or {}
+        raw_prompt = str(parameters.get("query") or parameters.get("raw_prompt") or "").lower()
 
-        # 0. Create Folder / Directory
-        if "folder" in raw_prompt and any(w in raw_prompt for w in ["create", "make", "new", "mkdir"]):
-            import re
-            dest_input = parameters.get("directory") or parameters.get("target_dir") or parameters.get("path") or raw_prompt
-            dest_dir = self.resolve_target_dir(str(dest_input))
-            match = re.search(r'(?:create|make|new|mkdir)\s+(?:a\s+)?(?:folder|directory)\s+(?:named\s+|called\s+)?([a-zA-Z0-9_.-]+)', raw_prompt, re.I)
-            folder_name = parameters.get("folder_name") or (match.group(1) if match else "NewFolder")
-            return await self._create_folder(dest_dir, folder_name, start_time)
+        try:
+            # 0. Create Folder / Directory
+            if (("folder" in action_lower or "directory" in action_lower or "mkdir" in action_lower) and any(w in action_lower for w in ["create", "make", "new", "mkdir"])) or ("folder" in raw_prompt and any(w in raw_prompt for w in ["create", "make", "new", "mkdir"])):
+                import re
+                dest_input = parameters.get("directory") or parameters.get("target_dir") or parameters.get("path") or raw_prompt
+                dest_dir = self.resolve_target_dir(str(dest_input))
+                match = re.search(r'(?:create|make|new|mkdir)\s+(?:a\s+)?(?:folder|directory)\s+(?:named\s+|called\s+)?([a-zA-Z0-9_.-]+)', raw_prompt, re.I)
+                folder_name = parameters.get("folder_name") or (match.group(1) if match else "NewFolder")
+                return await self._create_folder(dest_dir, folder_name, start_time)
 
-        # 0.5. List Files / Directory
-        if "list" in action_lower or any(w in raw_prompt for w in ["list files", "show files", "list directory", "view files", "what files are in"]):
-            explicit_dir = parameters.get("directory") or parameters.get("path") or parameters.get("target")
-            target_input = explicit_dir if explicit_dir is not None else raw_prompt
-            dest_dir = self.resolve_target_dir(str(target_input))
-            return await self._list_directory(dest_dir, start_time)
+            # 0.5. List Files / Directory
+            if "list" in action_lower or any(w in raw_prompt for w in ["list files", "show files", "list directory", "view files", "what files are in"]):
+                explicit_dir = parameters.get("directory") or parameters.get("path") or parameters.get("target")
+                target_input = explicit_dir if explicit_dir is not None else raw_prompt
+                dest_dir = self.resolve_target_dir(str(target_input))
+                return await self._list_directory(dest_dir, start_time)
 
-        # 1. Organize Folder (e.g. "Matrix, organize my Downloads folder")
-        if "organize" in action_lower or "organize" in raw_prompt:
-            target_str = parameters.get("directory", parameters.get("target", raw_prompt))
-            target_dir = self.resolve_target_dir(target_str)
-            return await self._organize_folder(target_dir, start_time)
+            # 1. Organize Folder (e.g. "Matrix, organize my Downloads folder")
+            if "organize" in action_lower or "organize" in raw_prompt:
+                target_str = parameters.get("directory") or parameters.get("target") or raw_prompt
+                target_dir = self.resolve_target_dir(str(target_str))
+                return await self._organize_folder(target_dir, start_time)
 
-        # 2. Search Files
-        if "search" in action_lower or "find" in action_lower or any(w in raw_prompt for w in ["search for", "find file", "look for file"]):
-            query = parameters.get("query", parameters.get("pattern", ""))
-            directory_str = parameters.get("directory", "")
-            target_dir = self.resolve_target_dir(directory_str) if directory_str else Path.cwd()
-            return await self._search_files(query, target_dir, start_time)
+            # 2. Search Files
+            if "search" in action_lower or "find" in action_lower or any(w in raw_prompt for w in ["search for", "find file", "look for file"]):
+                query = parameters.get("query") or parameters.get("pattern") or ""
+                directory_str = parameters.get("directory") or ""
+                target_dir = self.resolve_target_dir(str(directory_str)) if directory_str else Path.cwd()
+                return await self._search_files(str(query), target_dir, start_time)
 
-        # 3. Create or Edit File
-        if "create" in action_lower or "write" in action_lower or any(w in raw_prompt for w in ["create file", "write file"]):
-            filepath = parameters.get("filepath", parameters.get("path", ""))
-            content = parameters.get("content", "")
-            return await self._create_file(Path(filepath), content, start_time)
+            # 3. Create or Edit File
+            if ("create" in action_lower or "write" in action_lower or any(w in raw_prompt for w in ["create file", "write file"])) and "folder" not in action_lower and "zip" not in action_lower:
+                filepath = parameters.get("filepath") or parameters.get("path")
+                if not filepath:
+                    return AgentResult(
+                        success=False,
+                        agent_name=self.name,
+                        action_taken="create_file",
+                        error="Missing required 'filepath' parameter.",
+                        execution_status="FAILED",
+                        verification={"verified": False},
+                        execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+                    )
+                content = parameters.get("content") or ""
+                return await self._create_file(Path(filepath), str(content), start_time)
 
-        # 4. Copy or Move File
-        if "copy" in action_lower or "move" in action_lower:
-            src = parameters.get("source", parameters.get("src", ""))
-            dst = parameters.get("destination", parameters.get("dst", ""))
-            is_move = "move" in action_lower or "move" in raw_prompt
-            return await self._copy_or_move(Path(src), Path(dst), is_move, start_time)
+            # 4. Copy or Move File
+            if "copy" in action_lower or "move" in action_lower:
+                src = parameters.get("source") or parameters.get("src")
+                dst = parameters.get("destination") or parameters.get("dst")
+                if not src or not dst:
+                    return AgentResult(
+                        success=False,
+                        agent_name=self.name,
+                        action_taken="copy_or_move",
+                        error="Missing required 'source' or 'destination' parameter.",
+                        execution_status="FAILED",
+                        verification={"verified": False},
+                        execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+                    )
+                is_move = "move" in action_lower or "move" in raw_prompt
+                return await self._copy_or_move(Path(src), Path(dst), is_move, start_time)
 
-        # 5. Rename File
-        if "rename" in action_lower:
-            src = parameters.get("filepath", parameters.get("src", ""))
-            new_name = parameters.get("new_name", "")
-            return await self._rename_file(Path(src), new_name, start_time)
+            # 5. Rename File
+            if "rename" in action_lower:
+                src = parameters.get("filepath") or parameters.get("src")
+                new_name = parameters.get("new_name")
+                if not src or not new_name:
+                    return AgentResult(
+                        success=False,
+                        agent_name=self.name,
+                        action_taken="rename_file",
+                        error="Missing required 'filepath' or 'new_name' parameter.",
+                        execution_status="FAILED",
+                        verification={"verified": False},
+                        execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+                    )
+                return await self._rename_file(Path(src), str(new_name), start_time)
 
-        # 6. Archive Management: ZIP / Extract
-        if "zip" in action_lower or "compress" in action_lower:
-            src = parameters.get("source", parameters.get("files", ""))
-            zip_name = parameters.get("zip_name", "archive.zip")
-            return await self._create_zip(src, zip_name, start_time)
+            # 6. Archive Management: Extract
+            if "extract" in action_lower or "unzip" in action_lower:
+                zip_path = parameters.get("zip_path") or parameters.get("filepath")
+                dest_dir = parameters.get("destination")
+                if not zip_path:
+                    return AgentResult(
+                        success=False,
+                        agent_name=self.name,
+                        action_taken="extract_zip",
+                        error="Missing required 'zip_path' parameter.",
+                        execution_status="FAILED",
+                        verification={"verified": False},
+                        execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+                    )
+                return await self._extract_zip(Path(zip_path), Path(dest_dir) if dest_dir else None, start_time)
 
-        if "extract" in action_lower or "unzip" in action_lower:
-            zip_path = parameters.get("zip_path", parameters.get("filepath", ""))
-            dest_dir = parameters.get("destination", "")
-            return await self._extract_zip(Path(zip_path), Path(dest_dir) if dest_dir else None, start_time)
+            # 6.5 Archive Management: ZIP / Compress
+            if "zip" in action_lower or "compress" in action_lower:
+                src = parameters.get("source") or parameters.get("files")
+                zip_name = parameters.get("zip_name") or "archive.zip"
+                if not src:
+                    return AgentResult(
+                        success=False,
+                        agent_name=self.name,
+                        action_taken="create_zip",
+                        error="Missing required 'source' parameter.",
+                        execution_status="FAILED",
+                        verification={"verified": False},
+                        execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+                    )
+                return await self._create_zip(src, str(zip_name), start_time)
 
-        # 7. File Metadata / Inspect
-        if "metadata" in action_lower or "inspect" in action_lower or "info" in action_lower:
-            filepath = parameters.get("filepath", parameters.get("path", ""))
-            return await self._get_metadata(Path(filepath), start_time)
+            # 7. File Metadata / Inspect
+            if "metadata" in action_lower or "inspect" in action_lower or "info" in action_lower:
+                filepath = parameters.get("filepath") or parameters.get("path")
+                if not filepath:
+                    return AgentResult(
+                        success=False,
+                        agent_name=self.name,
+                        action_taken="get_metadata",
+                        error="Missing required 'filepath' parameter.",
+                        execution_status="FAILED",
+                        verification={"verified": False},
+                        execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+                    )
+                return await self._get_metadata(Path(filepath), start_time)
 
-        # 8. Summarize File
-        if "summarize" in action_lower or "summarize" in raw_prompt:
-            filepath = parameters.get("filepath", parameters.get("path", ""))
-            return await self._summarize_file(Path(filepath), start_time)
+            # 8. Summarize File
+            if "summarize" in action_lower or "summarize" in raw_prompt:
+                filepath = parameters.get("filepath") or parameters.get("path")
+                if not filepath:
+                    return AgentResult(
+                        success=False,
+                        agent_name=self.name,
+                        action_taken="summarize_file",
+                        error="Missing required 'filepath' parameter.",
+                        execution_status="FAILED",
+                        verification={"verified": False},
+                        execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+                    )
+                return await self._summarize_file(Path(filepath), start_time)
 
-        # 9. Read / Parse Document
-        if "read" in action_lower or "parse" in action_lower or "open" in action_lower:
-            filepath = parameters.get("filepath", parameters.get("path", ""))
-            return await self._read_file(Path(filepath), start_time)
+            # 9. Read / Parse Document
+            if "read" in action_lower or "parse" in action_lower or "open" in action_lower:
+                filepath = parameters.get("filepath") or parameters.get("path")
+                if not filepath:
+                    return AgentResult(
+                        success=False,
+                        agent_name=self.name,
+                        action_taken="read_file",
+                        error="Missing required 'filepath' parameter.",
+                        execution_status="FAILED",
+                        verification={"verified": False},
+                        execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+                    )
+                return await self._read_file(Path(filepath), start_time)
 
-        # Default fallback: List storage files
-        return await self._list_storage_files(start_time)
+            # Default fallback: List storage files
+            return await self._list_storage_files(start_time)
+        except Exception as e:
+            logger.error(f"Error in FileAgent.execute({action}): {e}", exc_info=True)
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken=action or "execute",
+                error=f"Error executing file action: {str(e)}",
+                execution_status="FAILED",
+                verification={"verified": False},
+                execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+            )
 
     async def _organize_folder(self, target_dir: Path, start_time: float) -> AgentResult:
         """Autonomously categorize files into organized subfolders without overwriting data."""

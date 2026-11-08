@@ -1,6 +1,7 @@
 """MATRIX Voice Agent.
 Coordinates voice recognition, speech synthesis, volume controls, and Hindi/English dialog.
 Supports hands-free continuous listening, immediate barge-in silence, and sleep transitions.
+Enforces single-source audio playback coordination to eliminate duplicate sound playback.
 """
 from typing import Dict, Any
 import time
@@ -9,6 +10,7 @@ from agents.base_agent import BaseAgent, AgentResult
 from voice.text_to_speech.engine import tts_engine
 from voice.speech_to_text.engine import stt_engine
 from voice.wake_word.engine import wake_word_detector
+from voice.playback_coordinator import playback_coordinator
 
 
 class VoiceAgent(BaseAgent):
@@ -80,9 +82,28 @@ class VoiceAgent(BaseAgent):
             cleaned_text = re.sub(r'^(?:speak|say)(?:\s+out\s+loud)?(?:\s+using\s+voice)?(?:\s*:\s*|\s+that\s+|\s+)', '', str(text), flags=re.IGNORECASE).strip()
             if not cleaned_text:
                 cleaned_text = str(text)
-            audio_path = await tts_engine.speak(cleaned_text)
+
+            # Enforce single-source playback rule: tool steps synthesize to file without
+            # playing audio on host soundcard unless explicitly requested and acquired.
+            should_play = parameters.get("play_audio", False)
+            resp_id = parameters.get("response_id")
+
+            if should_play:
+                audio_path = await tts_engine.speak(
+                    cleaned_text,
+                    play_audio=True,
+                    response_id=resp_id,
+                    owner="voice_agent"
+                )
+            else:
+                audio_path = await tts_engine.synthesize_to_file(
+                    cleaned_text,
+                    response_id=resp_id,
+                    owner="voice_agent"
+                )
+
             latency = (time.perf_counter() - start_time) * 1000
-            verified = audio_path is not None and audio_path.exists()
+            verified = audio_path is not None and audio_path.exists() and audio_path.stat().st_size > 0
             return AgentResult(
                 success=verified,
                 agent_name=self.name,

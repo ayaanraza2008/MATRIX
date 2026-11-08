@@ -122,6 +122,17 @@ class IdempotencyManager:
         for k in expired:
             self._cache.pop(k, None)
 
+    def get_cached(self, key: str) -> Optional[Dict[str, Any]]:
+        """Retrieve a valid cached response if not expired."""
+        self._cleanup_expired(time.time())
+        if key in self._cache:
+            return self._cache[key][1]
+        return None
+
+    def put_cache(self, key: str, value: Dict[str, Any]):
+        """Explicitly store an item in response cache."""
+        self._cache[key] = (time.time(), value)
+
     def clear(self):
         """Clear cache and reset."""
         self._cache.clear()

@@ -8,7 +8,7 @@ from agents.base_agent import AgentResult
 class ResponseGenerator:
     """Formats verified agent outcomes into natural JARVIS-style communication."""
 
-    def format_agent_response(self, results: List[AgentResult], original_query: str) -> str:
+    def format_agent_response(self, results: List[AgentResult], original_query: str = "") -> str:
         """Synthesize multiple agent execution results into a unified summary."""
         if not results:
             return "Task completed."

@@ -19,6 +19,7 @@ class TaskState(str, Enum):
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     CANCELLED = "CANCELLED"
+    INTERRUPTED = "INTERRUPTED"
 
 
 # Valid state transitions matrix
@@ -27,12 +28,13 @@ VALID_TRANSITIONS: Dict[TaskState, Set[TaskState]] = {
     TaskState.PLANNING: {TaskState.READY, TaskState.WAITING_FOR_INPUT, TaskState.FAILED, TaskState.CANCELLED},
     TaskState.WAITING_FOR_INPUT: {TaskState.PLANNING, TaskState.READY, TaskState.CANCELLED},
     TaskState.READY: {TaskState.EXECUTING, TaskState.CANCELLED},
-    TaskState.EXECUTING: {TaskState.VERIFYING, TaskState.RECOVERING, TaskState.FAILED, TaskState.CANCELLED},
+    TaskState.EXECUTING: {TaskState.VERIFYING, TaskState.RECOVERING, TaskState.FAILED, TaskState.CANCELLED, TaskState.INTERRUPTED},
     TaskState.VERIFYING: {TaskState.COMPLETED, TaskState.RECOVERING, TaskState.FAILED, TaskState.CANCELLED},
-    TaskState.RECOVERING: {TaskState.EXECUTING, TaskState.WAITING_FOR_INPUT, TaskState.FAILED, TaskState.CANCELLED},
+    TaskState.RECOVERING: {TaskState.EXECUTING, TaskState.WAITING_FOR_INPUT, TaskState.FAILED, TaskState.CANCELLED, TaskState.INTERRUPTED},
     TaskState.COMPLETED: set(),  # Terminal state
     TaskState.FAILED: {TaskState.RECOVERING},  # May attempt recovery if requested
     TaskState.CANCELLED: set(),  # Terminal state
+    TaskState.INTERRUPTED: set(),  # Terminal state
 }
 
 

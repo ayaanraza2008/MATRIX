@@ -58,6 +58,7 @@ class ModelManager:
         self._gemini_failed: bool = False
         self._last_ollama_check: float = 0.0
         self._ollama_online: bool = False
+        self._inference_lock = asyncio.Lock()
         key = settings.gemini_api_key or os.getenv("GEMINI_API_KEY", "")
         if key and not key.startswith("AIza"):
             self._gemini_failed = True
@@ -370,7 +371,8 @@ class ModelManager:
             )
             return output
 
-        output = await asyncio.to_thread(_blocking_call)
+        async with self._inference_lock:
+            output = await asyncio.to_thread(_blocking_call)
         latency = (time.perf_counter() - start_time) * 1000
 
         content = output["choices"][0]["message"]["content"].strip()

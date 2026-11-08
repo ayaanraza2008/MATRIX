@@ -22,6 +22,8 @@ from voice.snap_detector import snap_detector
 from voice.vad.engine import vad_engine
 from voice.speech_to_text.engine import stt_engine
 from voice.text_to_speech.engine import tts_engine
+from voice.playback_coordinator import playback_coordinator
+import uuid
 from core.brain import brain
 from config.settings import settings
 from config.logging_config import get_logger
@@ -117,6 +119,25 @@ class HandsFreeManager:
                 self.state = HandsFreeState.IDLE
         logger.info(f"Hands-Free mode changed to: {mode.value}")
         asyncio.create_task(self.emit_event("MODE_CHANGED", {"mode": mode.value}))
+
+    async def _speak_ack(self, msg: str, directive_name: str = "directive") -> Optional[Path]:
+        """Speak a short acknowledgment using single-source playback coordination."""
+        resp_id = f"resp_dir_{directive_name}_{int(time.time() * 1000)}"
+        acquired, rec, _ = await playback_coordinator.acquire_playback(
+            response_id=resp_id,
+            owner="hands_free",
+            text=msg
+        )
+        if acquired:
+            await self.emit_event("SPEAKING", {"text": msg, "response_id": resp_id, "playback_id": rec.playback_id})
+            return await tts_engine.speak(
+                text=msg,
+                play_audio=True,
+                response_id=resp_id,
+                playback_id=rec.playback_id,
+                owner="hands_free"
+            )
+        return None
 
     async def handle_wake_word_activation(self, trigger_source: str):
         """Trigger activation sequence on spoken wake-word or acoustic finger snap."""
@@ -324,7 +345,7 @@ class HandsFreeManager:
                     orchestrator.cancel_active()
                     self.state = HandsFreeState.SPEAKING
                     await self.emit_event("SPEAKING", {"text": "Task cancelled, sir."})
-                    ack_audio = await tts_engine.speak("Task has been cancelled, sir.")
+                    ack_audio = await self._speak_ack("Task has been cancelled, sir.", "cancel_task")
                     self.state = HandsFreeState.IDLE
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
@@ -334,7 +355,7 @@ class HandsFreeManager:
                     self.set_mode(ConversationMode.WAKE_WORD_ONLY)
                     self.state = HandsFreeState.SLEEPING
                     await self.emit_event("SPEAKING", {"text": "Going to sleep, sir."})
-                    ack_audio = await tts_engine.speak("Going to sleep, sir. Say Matrix or Snap whenever you need me.")
+                    ack_audio = await self._speak_ack("Going to sleep, sir. Say Matrix or Snap whenever you need me.", "sleep")
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
 
@@ -360,7 +381,7 @@ class HandsFreeManager:
                     msg = f"System is fully operational, sir. All 16 agents are standing by, with {recent} tasks recorded in this session."
                     self.state = HandsFreeState.SPEAKING
                     await self.emit_event("SPEAKING", {"text": msg})
-                    ack_audio = await tts_engine.speak(msg)
+                    ack_audio = await self._speak_ack(msg, "airtouch_or_status")
                     self.state = HandsFreeState.IDLE
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
@@ -375,7 +396,7 @@ class HandsFreeManager:
                     msg = "Hand control activated, sir. You can rotate 3D objects with hand gestures."
                     self.state = HandsFreeState.SPEAKING
                     await self.emit_event("SPEAKING", {"text": msg})
-                    ack_audio = await tts_engine.speak(msg)
+                    ack_audio = await self._speak_ack(msg, "airtouch_or_status")
                     self.state = HandsFreeState.IDLE
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
@@ -388,7 +409,7 @@ class HandsFreeManager:
                     msg = "Gesture scroll activated, sir. Use open palm to scroll, closed fist to lock."
                     self.state = HandsFreeState.SPEAKING
                     await self.emit_event("SPEAKING", {"text": msg})
-                    ack_audio = await tts_engine.speak(msg)
+                    ack_audio = await self._speak_ack(msg, "airtouch_or_status")
                     self.state = HandsFreeState.IDLE
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
@@ -400,7 +421,7 @@ class HandsFreeManager:
                     msg = "Gesture control has been stopped, sir."
                     self.state = HandsFreeState.SPEAKING
                     await self.emit_event("SPEAKING", {"text": msg})
-                    ack_audio = await tts_engine.speak(msg)
+                    ack_audio = await self._speak_ack(msg, "airtouch_or_status")
                     self.state = HandsFreeState.IDLE
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
@@ -412,7 +433,7 @@ class HandsFreeManager:
                     msg = "Eye control activated, sir. GesturEye tracking and dwell click are online."
                     self.state = HandsFreeState.SPEAKING
                     await self.emit_event("SPEAKING", {"text": msg})
-                    ack_audio = await tts_engine.speak(msg)
+                    ack_audio = await self._speak_ack(msg, "airtouch_or_status")
                     self.state = HandsFreeState.IDLE
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
@@ -424,7 +445,7 @@ class HandsFreeManager:
                     msg = "3D hologram orientation has been reset to default identity, sir."
                     self.state = HandsFreeState.SPEAKING
                     await self.emit_event("SPEAKING", {"text": msg})
-                    ack_audio = await tts_engine.speak(msg)
+                    ack_audio = await self._speak_ack(msg, "airtouch_or_status")
                     self.state = HandsFreeState.IDLE
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
@@ -436,7 +457,7 @@ class HandsFreeManager:
                     msg = f"Eye calibration initiated, sir. Focus on the {cal_res.get('target', 'screen')} target."
                     self.state = HandsFreeState.SPEAKING
                     await self.emit_event("SPEAKING", {"text": msg})
-                    ack_audio = await tts_engine.speak(msg)
+                    ack_audio = await self._speak_ack(msg, "airtouch_or_status")
                     self.state = HandsFreeState.IDLE
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
@@ -454,7 +475,7 @@ class HandsFreeManager:
                     msg = f"Scrolling {direction.lower()}, sir."
                     self.state = HandsFreeState.SPEAKING
                     await self.emit_event("SPEAKING", {"text": msg})
-                    ack_audio = await tts_engine.speak(msg)
+                    ack_audio = await self._speak_ack(msg, "airtouch_or_status")
                     self.state = HandsFreeState.IDLE
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
@@ -465,7 +486,7 @@ class HandsFreeManager:
                     msg = f"Gesture scroll speed set to {speed.lower()}, sir."
                     self.state = HandsFreeState.SPEAKING
                     await self.emit_event("SPEAKING", {"text": msg})
-                    ack_audio = await tts_engine.speak(msg)
+                    ack_audio = await self._speak_ack(msg, "airtouch_or_status")
                     self.state = HandsFreeState.IDLE
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
@@ -486,7 +507,7 @@ class HandsFreeManager:
                     msg = v_res.get("response", "Visual perception complete, sir.")
                     self.state = HandsFreeState.SPEAKING
                     await self.emit_event("SPEAKING", {"text": msg})
-                    ack_audio = await tts_engine.speak(msg)
+                    ack_audio = await self._speak_ack(msg, "airtouch_or_status")
                     self.state = HandsFreeState.IDLE
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
@@ -494,7 +515,7 @@ class HandsFreeManager:
                 # Directive F: Open browser
                 if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix open my browser", "open my browser", "open browser"]):
                     self.state = HandsFreeState.SPEAKING
-                    ack_audio = await tts_engine.speak("Opening browser now, sir.")
+                    ack_audio = await self._speak_ack("Opening browser now, sir.", "open_browser")
                     await brain.interact("Open browser", session_id=self.active_session_id)
                     self.state = HandsFreeState.IDLE
                     await self.emit_event("LISTENING_RESUMED", {})
@@ -507,20 +528,31 @@ class HandsFreeManager:
                 self.state = HandsFreeState.EXECUTING
                 await self.emit_event("EXECUTING", {"prompt": transcript})
 
-                response_text = await brain.interact(
-                    user_prompt=transcript,
-                    session_id=self.active_session_id
+                brain_res = await brain.process_user_request(
+                    session_id=self.active_session_id,
+                    user_prompt=transcript
                 )
+                response_text = brain_res.get("response", "")
+                response_id = brain_res.get("response_id") or f"resp_hf_{uuid.uuid4().hex[:10]}"
+                request_id = brain_res.get("request_id")
                 self.last_response = response_text
-                await self.emit_event("BRAIN_RESPONSE", {"text": response_text[:300]})
+                await self.emit_event("BRAIN_RESPONSE", {
+                    "text": response_text[:300],
+                    "response_id": response_id,
+                    "request_id": request_id
+                })
 
                 if self._interrupted:
                     logger.info("Turn execution was interrupted before speaking.")
                     return
 
-                # 4. State: SPEAKING (TTS Generation & Playback)
+                # 4. State: SPEAKING (TTS Generation & Playback with PlaybackCoordinator)
                 self.state = HandsFreeState.SPEAKING
-                await self.emit_event("SPEAKING", {"text": response_text[:120]})
+                await self.emit_event("SPEAKING", {
+                    "text": response_text[:120],
+                    "response_id": response_id,
+                    "request_id": request_id
+                })
 
                 # Keep voice output concise: synthesize up to 250 characters for fast speech
                 tts_text = response_text.strip()
@@ -532,10 +564,38 @@ class HandsFreeManager:
                             candidate += " " + sentences[1]
                         tts_text = candidate[:250]
 
-                await self.emit_event("TTS_STARTED", {"text": tts_text})
-                audio_file = await tts_engine.speak(tts_text)
-                self.last_audio_file = audio_file
-                await self.emit_event("TTS_FINISHED", {"audio_file": audio_file.name if audio_file else None})
+                acquired, rec, reason = await playback_coordinator.acquire_playback(
+                    response_id=response_id,
+                    owner="hands_free",
+                    text=tts_text,
+                    request_id=request_id
+                )
+
+                if acquired:
+                    await self.emit_event("TTS_STARTED", {
+                        "text": tts_text,
+                        "response_id": response_id,
+                        "playback_id": rec.playback_id,
+                        "owner": "hands_free",
+                        "audio_url": None  # Host PC plays natively; suppress browser playback!
+                    })
+                    audio_file = await tts_engine.speak(
+                        text=tts_text,
+                        play_audio=True,
+                        response_id=response_id,
+                        playback_id=rec.playback_id,
+                        owner="hands_free",
+                        request_id=request_id
+                    )
+                    self.last_audio_file = audio_file
+                    await self.emit_event("TTS_FINISHED", {
+                        "audio_file": audio_file.name if audio_file else None,
+                        "response_id": response_id,
+                        "playback_id": rec.playback_id
+                    })
+                else:
+                    logger.info(f"HandsFreeManager: playback suppressed ({reason}) for response '{response_id}'.")
+                    audio_file = None
 
                 # 5. State: PLAYBACK_FINISHED (Priority 5 State Machine Requirement)
                 self.state = HandsFreeState.PLAYBACK_FINISHED

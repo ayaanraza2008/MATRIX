@@ -31,6 +31,42 @@ class AgentResult(BaseModel):
     execution_time_ms: float = 0.0
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+    # Phase 3 Execution Truthfulness & Tool Result Contract
+    request_id: Optional[str] = None
+    task_id: Optional[str] = None
+    step_id: Optional[int] = None
+    tool_name: Optional[str] = None
+    execution_status: str = "SUCCESS"  # SUCCESS, FAILED, PARTIAL, BLOCKED, NOT_CONFIGURED, SIMULATED
+    actual_result: Any = None
+    verification_status: str = "UNVERIFIED"  # VERIFIED, UNVERIFIED, FAILED, BLOCKED
+    error_details: Optional[str] = None
+
+    def model_post_init(self, __context: Any) -> None:
+        if not self.tool_name:
+            self.tool_name = self.action_taken
+        if self.actual_result is None and self.data is not None:
+            self.actual_result = self.data
+        if self.error_details is None and self.error is not None:
+            self.error_details = self.error
+
+        if not self.success:
+            if self.execution_status == "SUCCESS":
+                err_lower = (self.error or "").lower()
+                if "block" in err_lower or "policy" in err_lower or "denied" in err_lower:
+                    self.execution_status = "BLOCKED"
+                elif "not configured" in err_lower or "unsupported" in err_lower:
+                    self.execution_status = "NOT_CONFIGURED"
+                elif "simulat" in err_lower:
+                    self.execution_status = "SIMULATED"
+                elif "partial" in err_lower:
+                    self.execution_status = "PARTIAL"
+                else:
+                    self.execution_status = "FAILED"
+            if self.verification_status == "UNVERIFIED":
+                self.verification_status = "FAILED"
+        elif self.verification.get("verified"):
+            self.verification_status = "VERIFIED"
+
 
 class BaseAgent(ABC):
     """Abstract base class for all specialized agents in MATRIX."""

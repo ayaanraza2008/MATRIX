@@ -4,7 +4,7 @@ hands-free autonomous conversation, wake-word sensitivity tuning,
 audio file serving, device discovery, and immediate interruption controls.
 """
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, status
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from pathlib import Path
@@ -13,6 +13,8 @@ import asyncio
 import numpy as np
 
 from voice.text_to_speech.engine import tts_engine
+from voice.playback_coordinator import playback_coordinator
+import uuid
 from voice.speech_to_text.engine import stt_engine
 from voice.wake_word.engine import wake_word_detector
 from voice.snap_detector import snap_detector
@@ -30,6 +32,9 @@ router = APIRouter(prefix="/voice", tags=["Voice System"])
 class SpeakRequest(BaseModel):
     text: str
     voice: Optional[str] = None
+    response_id: Optional[str] = None
+    request_id: Optional[str] = None
+    owner: Optional[str] = "frontend_ui"
 
 
 class ToggleListenRequest(BaseModel):
@@ -81,16 +86,41 @@ async def get_audio_file(filename: str):
 
 @router.post("/speak")
 async def speak_text(payload: SpeakRequest):
-    """Synthesize text to speech and return the generated audio file."""
-    audio_path = await tts_engine.synthesize_to_file(payload.text, voice_override=payload.voice)
+    """Synthesize text to speech and return the generated audio file with playback coordination."""
+    resp_id = payload.response_id or f"resp_{uuid.uuid4().hex[:10]}"
+    owner = payload.owner or "frontend_ui"
+
+    acquired, rec, reason = await playback_coordinator.acquire_playback(
+        response_id=resp_id,
+        owner=owner,
+        text=payload.text,
+        request_id=payload.request_id
+    )
+
+    if not acquired:
+        logger.info(f"Speak request suppressed for response '{resp_id}' ({reason}).")
+        return Response(status_code=204, headers={"X-Playback-Suppressed": reason or "duplicate"})
+
+    audio_path = await tts_engine.synthesize_to_file(
+        payload.text,
+        voice_override=payload.voice,
+        response_id=resp_id,
+        owner=owner
+    )
     if not audio_path or not audio_path.exists():
+        playback_coordinator.mark_failed(rec.playback_id, "Synthesis output missing")
         raise HTTPException(status_code=500, detail="Speech synthesis failed or was stopped.")
 
+    playback_coordinator.mark_completed(rec.playback_id, audio_file=audio_path)
     media_type = "audio/mpeg" if audio_path.suffix == ".mp3" else "audio/wav"
     return FileResponse(
         path=str(audio_path),
         media_type=media_type,
-        filename=audio_path.name
+        filename=audio_path.name,
+        headers={
+            "X-Playback-Id": rec.playback_id,
+            "X-Response-Id": resp_id
+        }
     )
 
 

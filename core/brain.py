@@ -513,7 +513,11 @@ class MatrixBrain:
 
 
 # Stage 4-10: Orchestrator Pipeline (Intent, Reasoning, Policy, Execution, Verification, Recovery)
-        orch_res = await orchestrator.execute_request(resolved_prompt)
+        orch_res = await orchestrator.execute_request(
+            prompt=resolved_prompt,
+            session_id=session_id,
+            request_id=req_id
+        )
 
         reply_content = orch_res.response_text
         prompt_lower = user_prompt.lower()

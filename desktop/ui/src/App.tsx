@@ -69,6 +69,8 @@ export const App: React.FC = () => {
   const reconnectTimeoutRef = useRef<number | null>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const isSubmittingRef = useRef<boolean>(false);
+  const playedResponseIdsRef = useRef<Set<string>>(new Set());
+  const completedPlaybackIdsRef = useRef<Set<string>>(new Set());
 
   // 1. Fetch Health & Telemetry
   const fetchHealthAndMetrics = useCallback(async () => {
@@ -217,7 +219,13 @@ export const App: React.FC = () => {
             setHologramState('speaking');
             setIsSpeaking(true);
             if (data.data?.text) setLastResponse(data.data.text);
-            if (data.data?.audio_url && !audioMuted) {
+            const respId = data.data?.response_id;
+            const pbId = data.data?.playback_id;
+            if (respId) playedResponseIdsRef.current.add(respId);
+            if (pbId) completedPlaybackIdsRef.current.add(pbId);
+
+            if (data.data?.audio_url && !audioMuted && pbId && !completedPlaybackIdsRef.current.has(pbId)) {
+              completedPlaybackIdsRef.current.add(pbId);
               const audio = new Audio(data.data.audio_url);
               setAudioPlayer(audio);
               audio.play().catch(() => {});
@@ -290,9 +298,15 @@ export const App: React.FC = () => {
     };
   }, [fetchHealthAndMetrics, fetchSessions, connectWebSocket]);
 
-  // 4. Speech Synthesis Playback Helper (single active audio element)
-  const playSpeech = async (text: string) => {
+  // 4. Speech Synthesis Playback Helper (single active audio element with deduplication)
+  const playSpeech = async (text: string, responseId?: string) => {
     if (audioMuted) return;
+    if (responseId && playedResponseIdsRef.current.has(responseId)) {
+      // Audio already played or active for this response
+      return;
+    }
+    if (responseId) playedResponseIdsRef.current.add(responseId);
+
     try {
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
@@ -303,9 +317,21 @@ export const App: React.FC = () => {
       const res = await fetch('/api/v1/voice/speak', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({
+          text,
+          response_id: responseId,
+          owner: 'frontend_ui'
+        }),
       });
+      if (res.status === 204) {
+        // Playback suppressed by backend because already completed by host or duplicate
+        setHologramState('idle');
+        setIsSpeaking(false);
+        return;
+      }
       if (res.ok) {
+        const pbId = res.headers.get('X-Playback-Id');
+        if (pbId) completedPlaybackIdsRef.current.add(pbId);
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
@@ -395,7 +421,7 @@ export const App: React.FC = () => {
 
         // Synthesize audio response if unmuted
         if (!audioMuted && data.reply) {
-          playSpeech(data.reply);
+          playSpeech(data.reply, data.response_id);
         } else {
           setHologramState('idle');
         }

@@ -300,15 +300,27 @@ class ReasoningEngine:
             ))
 
         elif intent.intent_type == IntentType.DATA_ANALYSIS:
-            steps.append(PlanStep(
-                step_id=1,
-                title="Analyze Tabular Dataset & Statistics",
-                agent_name="data_analysis",
-                tool_name="analyze_csv",
-                arguments=intent.parameters,
-                risk_level=1,
-                verification_hook="verify_data_analyzed"
-            ))
+            raw_prompt_lower = intent.raw_prompt.lower()
+            if any(w in raw_prompt_lower for w in ["calculate", "compute", "solve", "+", "-", "*", "/", "%", "math"]):
+                steps.append(PlanStep(
+                    step_id=1,
+                    title="Compute Mathematical Calculation",
+                    agent_name="data_analysis",
+                    tool_name="calculate",
+                    arguments={"expression": intent.raw_prompt, "query": intent.raw_prompt},
+                    risk_level=0,
+                    verification_hook="verify_calculation"
+                ))
+            else:
+                steps.append(PlanStep(
+                    step_id=1,
+                    title="Analyze Tabular Dataset & Statistics",
+                    agent_name="data_analysis",
+                    tool_name="analyze_csv",
+                    arguments=intent.parameters,
+                    risk_level=1,
+                    verification_hook="verify_data_analyzed"
+                ))
 
         elif intent.intent_type == IntentType.WORKFLOW:
             steps.append(PlanStep(
