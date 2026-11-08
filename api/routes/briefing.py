@@ -42,7 +42,7 @@ async def speak_briefing():
     """Synthesize audio speech of today's executive briefing."""
     data = await briefing_engine.generate_daily_briefing()
     text = data.get("briefing_text", "Daily briefing ready, sir.")
-    audio_path = await tts_engine.speak(text)
+    audio_path = await tts_engine.synthesize_to_file(text)
     if not audio_path or not audio_path.exists():
         raise HTTPException(status_code=500, detail="TTS synthesis failed.")
 

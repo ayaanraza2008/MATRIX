@@ -4,7 +4,7 @@ OBSERVE -> UNDERSTAND -> PLAN -> AUTHORIZE -> EXECUTE -> VERIFY -> RECOVER -> RE
 Features persistent checkpoints in SQLite, 10-state Task State Machine,
 concurrency for independent subtasks, recoverable retries, and real-time telemetry events.
 """
-from typing import Dict, Any, List, Optional, Callable
+from typing import Dict, Any, List, Optional, Callable, Tuple
 import time
 import asyncio
 from datetime import datetime, timezone
@@ -47,6 +47,12 @@ class OrchestrationResult:
 class Orchestrator:
     """Autonomous engine for planning, policy gating, delegating, verifying, and recovering multi-agent tasks."""
 
+    NON_IDEMPOTENT_TOOLS = {
+        "delete_file", "delete_folder", "remove_directory", "send_email",
+        "send_message", "schedule_call", "make_call", "synthesize_speech",
+        "create_workflow", "pair", "draft_email"
+    }
+
     def __init__(self):
         self._progress_subscribers: List[Callable[[Dict[str, Any]], Any]] = []
         self._cancel_requested: bool = False
@@ -70,6 +76,38 @@ class Orchestrator:
                     await res
             except Exception as e:
                 logger.debug(f"Progress subscriber error: {e}")
+
+    def _verify_step_outcome(self, step: PlanStep, res: AgentResult) -> Tuple[bool, Optional[str]]:
+        """Verify that step execution achieved its goal on disk, in memory, or in OS state."""
+        from pathlib import Path
+        if not res.success:
+            return False, res.error or "Step reported execution failure."
+
+        hook = step.verification_hook or ""
+        data = res.data or {}
+
+        try:
+            if hook in ("verify_file_read", "verify_folder_organized"):
+                return True, None
+            elif hook in ("verify_report_saved", "verify_file_created"):
+                fpath = data.get("filepath") or data.get("folder_path")
+                if fpath:
+                    p = Path(fpath)
+                    if not p.exists():
+                        return False, f"File or directory '{fpath}' does not exist on disk after creation."
+                return True, None
+            elif hook == "verify_telemetry_valid":
+                if not data or ("cpu" not in data and "hardware" not in data and "telemetry" not in data):
+                    return False, "Telemetry data empty or malformed."
+                return True, None
+            elif hook == "verify_system_diagnosed":
+                if not data or ("status" not in data and "overall_status" not in data and "health" not in data):
+                    return False, "Diagnostics output empty."
+                return True, None
+        except Exception as e:
+            return False, f"Verification hook exception: {e}"
+
+        return True, None
 
     def cancel_active(self):
         """Emergency stop: Immediately cancel running orchestration."""
@@ -228,6 +266,15 @@ class Orchestrator:
                     plan.mark_step_failed(step.step_id, err_msg)
                     break
 
+            # If step has dependencies, propagate results from previous steps
+            if step.dependencies:
+                for dep_id in step.dependencies:
+                    for prev_r in results:
+                        if prev_r.success and isinstance(prev_r.data, dict):
+                            step.arguments.setdefault("dependency_data", prev_r.data)
+                            if "report_markdown" in prev_r.data and "content" in step.arguments:
+                                step.arguments["content"] = prev_r.data["report_markdown"]
+
             plan.mark_step_running(step.step_id)
             await self._emit_progress("TASK_PROGRESS", {
                 "task_id": plan.plan_id,
@@ -240,8 +287,12 @@ class Orchestrator:
                 "action": step.tool_name
             })
 
-            # Execute with automatic retry and tool fallback
-            max_retries = max(2, step.max_retries)
+            # Non-idempotent actions must NOT be retried multiple times
+            if step.tool_name in self.NON_IDEMPOTENT_TOOLS:
+                max_retries = 1
+            else:
+                max_retries = max(1, step.max_retries)
+
             res: Optional[AgentResult] = None
             active_tool = step.tool_name
             active_agent = step.agent_name
@@ -280,7 +331,8 @@ class Orchestrator:
 
             # VERIFY step output
             plan.mark_step_verifying(step.step_id)
-            if res.success:
+            is_valid, verify_err = self._verify_step_outcome(step, res)
+            if is_valid:
                 plan.mark_step_completed(step.step_id, result=res.data)
                 completed_step_ids.add(step.step_id)
                 await self._log_audit_checkpoint(
@@ -289,13 +341,15 @@ class Orchestrator:
                     "SUCCESS"
                 )
             else:
-                plan.mark_step_failed(step.step_id, error=res.error or "Action verification failed")
+                res.success = False
+                res.error = verify_err or res.error or "Action verification failed"
+                plan.mark_step_failed(step.step_id, error=res.error)
                 await self._log_audit_checkpoint(
                     f"{active_agent}.{active_tool}",
                     f"Step {idx}/{total_steps} failed: {res.error}",
                     "FAILED"
                 )
-                logger.error(f"Step {step.step_id} ({step.title}) failed permanently: {res.error}")
+                logger.error(f"Step {step.step_id} ({step.title}) failed verification: {res.error}")
                 break
 
         if plan.state not in (TaskState.FAILED, TaskState.CANCELLED):

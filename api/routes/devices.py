@@ -149,7 +149,7 @@ async def execute_remote_command(
     audio_url = None
     if payload.synthesize_voice and reply_text:
         try:
-            audio_path = await tts_engine.speak(reply_text[:250])
+            audio_path = await tts_engine.synthesize_to_file(reply_text[:250])
             if audio_path and audio_path.exists():
                 audio_url = f"/api/v1/voice/audio/{audio_path.name}"
         except Exception as e:
@@ -271,7 +271,7 @@ async def remote_voice_interaction(
     reply_text = brain_res.get("response", "")
 
     # 3. Synthesize speech
-    audio_path = await tts_engine.speak(reply_text[:250])
+    audio_path = await tts_engine.synthesize_to_file(reply_text[:250])
     audio_url = f"/api/v1/voice/audio/{audio_path.name}" if (audio_path and audio_path.exists()) else None
     latency = (time.perf_counter() - start_time) * 1000
 

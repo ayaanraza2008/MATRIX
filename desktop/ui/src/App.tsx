@@ -67,6 +67,8 @@ export const App: React.FC = () => {
   // WebSocket & Timeout Refs
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  const isSubmittingRef = useRef<boolean>(false);
 
   // 1. Fetch Health & Telemetry
   const fetchHealthAndMetrics = useCallback(async () => {
@@ -104,23 +106,39 @@ export const App: React.FC = () => {
     }
   }, []);
 
-  // 2. Fetch Sessions & Active Messages
+  // Message deduplication helper
+  const appendDeduplicatedMessages = useCallback((newMsgs: MessageItem[]) => {
+    setMessages((prev) => {
+      const seen = new Set(prev.map((m) => `${m.role}:${m.content.trim()}`));
+      const toAdd: MessageItem[] = [];
+      for (const m of newMsgs) {
+        const key = `${m.role}:${m.content.trim()}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          toAdd.push(m);
+        }
+      }
+      return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+    });
+  }, []);
+
+  // 2. Fetch Sessions & Active Messages (stable callback to prevent reconnect loops)
   const fetchSessions = useCallback(async () => {
     try {
       const res = await fetch('/api/v1/sessions');
       if (res.ok) {
         const data: SessionItem[] = await res.json();
         setSessions(data);
-        if (data.length > 0 && !activeSessionId) {
-          setActiveSessionId(data[0].session_id);
-        } else if (data.length === 0) {
+        if (data.length > 0) {
+          setActiveSessionId((curr) => curr || data[0].session_id);
+        } else {
           createSession();
         }
       }
     } catch {
       // Offline fallback
     }
-  }, [activeSessionId]);
+  }, []);
 
   const fetchMessages = useCallback(async (sessionId: string) => {
     try {
@@ -158,8 +176,11 @@ export const App: React.FC = () => {
     }
   }, [activeSessionId, fetchMessages]);
 
-  // 3. Connect Real-time WebSocket
+  // 3. Connect Real-time WebSocket (singleton connection with strict guards)
   const connectWebSocket = useCallback(() => {
+    if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/events`;
 
@@ -239,9 +260,12 @@ export const App: React.FC = () => {
       ws.onclose = () => {
         setConnected(false);
         setHologramState('offline');
-        reconnectTimeoutRef.current = window.setTimeout(() => {
-          connectWebSocket();
-        }, 3000);
+        if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+        if (wsRef.current === ws) {
+          reconnectTimeoutRef.current = window.setTimeout(() => {
+            connectWebSocket();
+          }, 3000);
+        }
       };
 
       ws.onerror = () => {
@@ -266,9 +290,14 @@ export const App: React.FC = () => {
     };
   }, [fetchHealthAndMetrics, fetchSessions, connectWebSocket]);
 
-  // 4. Speech Synthesis Playback Helper
+  // 4. Speech Synthesis Playback Helper (single active audio element)
   const playSpeech = async (text: string) => {
+    if (audioMuted) return;
     try {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current.currentTime = 0;
+      }
       setHologramState('speaking');
       setIsSpeaking(true);
       const res = await fetch('/api/v1/voice/speak', {
@@ -280,14 +309,17 @@ export const App: React.FC = () => {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
+        audioPlayerRef.current = audio;
         setAudioPlayer(audio);
         audio.onended = () => {
           setHologramState('idle');
           setIsSpeaking(false);
+          URL.revokeObjectURL(url);
         };
         audio.onerror = () => {
           setHologramState('idle');
           setIsSpeaking(false);
+          URL.revokeObjectURL(url);
         };
         await audio.play();
       } else {
@@ -314,33 +346,38 @@ export const App: React.FC = () => {
     }
   };
 
-  // 5. Genuine Command & Interaction Dispatch
+  // 5. Genuine Command & Interaction Dispatch (single-flight and deduplicated)
   const handleSendCommand = async (commandText: string, agent: string = 'core') => {
-    if (!activeSessionId) return;
+    const trimmed = commandText.trim();
+    if (!activeSessionId || isSubmittingRef.current || !trimmed) return;
+    isSubmittingRef.current = true;
 
     setChatLoading(true);
     setHologramState('thinking');
 
-    // Optimistically append user message
+    const clientRequestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
+
+    // Optimistically append user message using deduplication
     const tempUserMsg: MessageItem = {
       id: Date.now(),
       session_id: activeSessionId,
       role: 'user',
-      content: commandText,
+      content: trimmed,
       agent_name: agent,
       created_at: new Date().toISOString(),
     };
-    setMessages((prev) => [...prev, tempUserMsg]);
+    appendDeduplicatedMessages([tempUserMsg]);
 
     try {
-      // Call genuine MATRIX Brain interaction endpoint
+      // Call genuine MATRIX Brain interaction endpoint with explicit request_id
       const res = await fetch(`/api/v1/sessions/${activeSessionId}/interact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           role: 'user',
-          content: commandText,
+          content: trimmed,
           agent_name: agent,
+          request_id: clientRequestId,
         }),
       });
 
@@ -354,7 +391,7 @@ export const App: React.FC = () => {
           agent_name: agent,
           created_at: new Date().toISOString(),
         };
-        setMessages((prev) => [...prev, assistantMsg]);
+        appendDeduplicatedMessages([assistantMsg]);
 
         // Synthesize audio response if unmuted
         if (!audioMuted && data.reply) {
@@ -371,6 +408,7 @@ export const App: React.FC = () => {
       setTimeout(() => setHologramState('idle'), 2000);
     } finally {
       setChatLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -430,7 +468,7 @@ export const App: React.FC = () => {
                   agent_name: 'voice',
                   created_at: new Date().toISOString(),
                 };
-                setMessages((prev) => [...prev, uMsg, aMsg]);
+                appendDeduplicatedMessages([uMsg, aMsg]);
 
                 if (data.audio_url && !audioMuted) {
                   setHologramState('speaking');
@@ -460,7 +498,7 @@ export const App: React.FC = () => {
                   agent_name: 'voice',
                   created_at: new Date().toISOString(),
                 };
-                setMessages((prev) => [...prev, feedbackMsg]);
+                appendDeduplicatedMessages([feedbackMsg]);
               }
             } catch {
               setHologramState('error');

@@ -79,6 +79,17 @@ class FileAgent(BaseAgent):
         if not path_str:
             return Path.home() / "Downloads"
 
+        import re
+        drive_match = re.search(r'([a-zA-Z]:[\\/][^\s*?"<>|]+)', path_str)
+        if drive_match:
+            try:
+                candidate = Path(drive_match.group(1).strip())
+                if candidate.is_file():
+                    return candidate.parent
+                return candidate
+            except Exception:
+                pass
+
         try:
             p = Path(path_str)
             if p.exists() and p.is_dir():
@@ -189,9 +200,10 @@ class FileAgent(BaseAgent):
         # 0. Create Folder / Directory
         if "folder" in raw_prompt and any(w in raw_prompt for w in ["create", "make", "new", "mkdir"]):
             import re
-            dest_dir = self.resolve_target_dir(raw_prompt)
+            dest_input = parameters.get("directory") or parameters.get("target_dir") or parameters.get("path") or raw_prompt
+            dest_dir = self.resolve_target_dir(str(dest_input))
             match = re.search(r'(?:create|make|new|mkdir)\s+(?:a\s+)?(?:folder|directory)\s+(?:named\s+|called\s+)?([a-zA-Z0-9_.-]+)', raw_prompt, re.I)
-            folder_name = match.group(1) if match else "NewFolder"
+            folder_name = parameters.get("folder_name") or (match.group(1) if match else "NewFolder")
             return await self._create_folder(dest_dir, folder_name, start_time)
 
         # 0.5. List Files / Directory

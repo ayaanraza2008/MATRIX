@@ -25,6 +25,7 @@ class MessageCreate(BaseModel):
     role: str = "user"
     content: str
     agent_name: Optional[str] = "core"
+    request_id: Optional[str] = None
 
 
 class MessageResponse(BaseModel):
@@ -120,7 +121,14 @@ async def post_message(session_id: str, payload: MessageCreate, db: AsyncSession
     if payload.role == "user":
         from core.brain import brain
         import asyncio
-        asyncio.create_task(brain.process_user_request(session_id, payload.content, payload.agent_name))
+        asyncio.create_task(
+            brain.process_user_request(
+                session_id=session_id,
+                user_prompt=payload.content,
+                active_agent=payload.agent_name,
+                request_id=payload.request_id
+            )
+        )
 
     return new_msg
 
@@ -140,23 +148,51 @@ async def interact_session(session_id: str, payload: MessageCreate, db: AsyncSes
         db.add(sess)
         await db.commit()
 
-    # Save user message
-    user_msg = MessageModel(
-        session_id=session_id,
-        role="user",
-        content=payload.content,
-        agent_name=payload.agent_name
-    )
-    db.add(user_msg)
-    await db.commit()
+    req_id = (payload.request_id or "").strip() or f"req_{uuid.uuid4().hex[:12]}"
 
-    # Process through MATRIX Brain
+    # Prevent saving duplicate user messages within 2s debounce window
+    existing_user_stmt = select(MessageModel).where(
+        MessageModel.session_id == session_id,
+        MessageModel.role == "user",
+        MessageModel.content == payload.content
+    ).order_by(MessageModel.created_at.desc()).limit(1)
+    existing_user = (await db.execute(existing_user_stmt)).scalar_one_or_none()
+
+    should_save = True
+    if existing_user and existing_user.created_at:
+        now_utc = datetime.now(timezone.utc)
+        created_utc = existing_user.created_at if existing_user.created_at.tzinfo else existing_user.created_at.replace(tzinfo=timezone.utc)
+        if (now_utc - created_utc).total_seconds() < 2.0:
+            should_save = False
+
+    if should_save:
+        user_msg = MessageModel(
+            session_id=session_id,
+            role="user",
+            content=payload.content,
+            agent_name=payload.agent_name,
+            extra_metadata={"request_id": req_id}
+        )
+        db.add(user_msg)
+        sess.updated_at = datetime.now(timezone.utc)
+        await db.commit()
+
+    # Process through MATRIX Brain with single-flight idempotency
     from core.brain import brain
-    brain_res = await brain.process_user_request(session_id, payload.content, payload.agent_name)
+    brain_res = await brain.process_user_request(
+        session_id=session_id,
+        user_prompt=payload.content,
+        active_agent=payload.agent_name,
+        request_id=req_id
+    )
 
     return {
+        "success": brain_res.get("success", True),
+        "request_id": req_id,
+        "response_id": brain_res.get("response_id"),
         "session_id": session_id,
-        "reply": brain_res["response"],
-        "plan_status": brain_res["plan_status"],
-        "latency_ms": brain_res["latency_ms"]
+        "reply": brain_res.get("response", ""),
+        "plan_status": brain_res.get("plan_status", "COMPLETED"),
+        "latency_ms": brain_res.get("latency_ms", 0.0),
+        "deduplicated": brain_res.get("deduplicated", False)
     }

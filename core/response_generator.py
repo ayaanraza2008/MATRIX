@@ -123,11 +123,23 @@ class ResponseGenerator:
                 return f"Action '{action}' executed and verified by agent {res.agent_name}."
 
         # Multiple steps summary
-        lines = [f"Workflow completed ({len(results)} steps verified):"]
-        for r in results:
-            status_icon = "✓" if r.success else "✗"
-            lines.append(f"• {status_icon} [{r.agent_name.upper()}]: {r.action_taken}")
-        return "\n".join(lines)
+        all_passed = all(r.success for r in results)
+        if all_passed:
+            lines = [f"Workflow completed successfully ({len(results)} steps verified):"]
+            for r in results:
+                lines.append(f"• ✓ [{r.agent_name.upper()}]: {r.action_taken}")
+            return "\n".join(lines)
+        else:
+            successful = [r for r in results if r.success]
+            failed = [r for r in results if not r.success]
+            first_fail = failed[0] if failed else None
+            fail_reason = first_fail.error if first_fail else "Step execution failed"
+            lines = [f"Workflow halted ({len(successful)}/{len(results)} steps completed). Impediment at step {len(successful) + 1} ({first_fail.action_taken if first_fail else 'action'}): {fail_reason}."]
+            for r in successful:
+                lines.append(f"• ✓ [{r.agent_name.upper()}]: {r.action_taken}")
+            for r in failed:
+                lines.append(f"• ✗ [{r.agent_name.upper()}]: {r.action_taken} - {r.error}")
+            return "\n".join(lines)
 
 
 # Global Response Generator singleton

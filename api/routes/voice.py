@@ -82,7 +82,7 @@ async def get_audio_file(filename: str):
 @router.post("/speak")
 async def speak_text(payload: SpeakRequest):
     """Synthesize text to speech and return the generated audio file."""
-    audio_path = await tts_engine.speak(payload.text, voice_override=payload.voice)
+    audio_path = await tts_engine.synthesize_to_file(payload.text, voice_override=payload.voice)
     if not audio_path or not audio_path.exists():
         raise HTTPException(status_code=500, detail="Speech synthesis failed or was stopped.")
 
@@ -242,7 +242,7 @@ async def chat_voice_loop(
     reply_text = brain_res.get("response", "")
 
     # 3. Text to Speech
-    audio_path = await tts_engine.speak(reply_text)
+    audio_path = await tts_engine.synthesize_to_file(reply_text)
     audio_url = f"/api/v1/voice/audio/{audio_path.name}" if (audio_path and audio_path.exists()) else None
 
     total_latency = (time.perf_counter() - start_time) * 1000

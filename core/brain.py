@@ -9,6 +9,8 @@ User Input -> Context Retrieval -> Intent Classification -> Reasoning -> Task De
 from typing import Dict, Any, Optional
 import time
 import re
+import uuid
+from core.deduplication import idempotency_manager
 from core.context_manager import context_manager
 from core.orchestrator import orchestrator
 from core.model_manager import model_manager
@@ -24,15 +26,69 @@ logger = get_logger("core.brain")
 class MatrixBrain:
     """Central intelligence coordinator for MATRIX."""
 
-    async def process_user_request(
+    async def _build_response(
+        self,
+        session_id: str,
+        req_id: str,
+        resp_id: str,
+        reply: str,
+        plan_status: str,
+        plan_state: str,
+        plan_title: str,
+        steps_count: int,
+        start_time: float,
+        agent_name: str = "core",
+        plan_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Format final response and persist to SQLite with request/response IDs."""
+        latency = round((time.perf_counter() - start_time) * 1000, 2)
+        try:
+            async with AsyncSessionLocal() as session:
+                msg = MessageModel(
+                    session_id=session_id,
+                    role="assistant",
+                    content=reply,
+                    agent_name=agent_name,
+                    extra_metadata={
+                        "request_id": req_id,
+                        "response_id": resp_id,
+                        "latency_ms": latency,
+                        "plan_id": plan_id,
+                        "plan_status": plan_status,
+                        "plan_state": plan_state
+                    }
+                )
+                session.add(msg)
+                await session.commit()
+        except Exception as e:
+            logger.warning(f"Could not persist assistant message to DB: {e}")
+
+        return {
+            "success": True,
+            "request_id": req_id,
+            "response_id": resp_id,
+            "session_id": session_id,
+            "response": reply,
+            "reply": reply,
+            "plan_status": plan_status,
+            "plan_state": plan_state,
+            "plan_title": plan_title,
+            "steps_count": steps_count,
+            "latency_ms": latency
+        }
+
+    async def _execute_user_request(
         self,
         session_id: str,
         user_prompt: str,
-        active_agent: Optional[str] = None
+        active_agent: Optional[str] = None,
+        request_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Process incoming user prompt through the complete 12-stage intelligence pipeline."""
         start_time = time.perf_counter()
-        logger.info(f"[{session_id}] Brain processing prompt: '{user_prompt[:80]}'")
+        req_id = (request_id or "").strip() or f"req_{uuid.uuid4().hex[:12]}"
+        resp_id = f"resp_{uuid.uuid4().hex[:12]}"
+        logger.info(f"[{session_id}][{req_id}] Brain processing prompt: '{user_prompt[:80]}'")
 
         # Stage 1: User Input & Context Retrieval
         context_manager.add_message(session_id, role="user", content=user_prompt)
@@ -46,16 +102,17 @@ class MatrixBrain:
         clarification = context_manager.detect_ambiguity(resolved_prompt, session_id)
         if clarification:
             context_manager.add_message(session_id, role="assistant", content=clarification, agent_name="core")
-            return {
-                "session_id": session_id,
-                "response": clarification,
-                "reply": clarification,
-                "plan_status": TaskState.WAITING_FOR_INPUT.value,
-                "plan_state": TaskState.WAITING_FOR_INPUT.value,
-                "plan_title": "Clarification Required",
-                "steps_count": 0,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=clarification,
+                plan_status=TaskState.WAITING_FOR_INPUT.value,
+                plan_state=TaskState.WAITING_FOR_INPUT.value,
+                plan_title="Clarification Required",
+                steps_count=0,
+                start_time=start_time
+            )
 
         # Stage 3.5: Immediate Directives (Cancellation, Status Explanation, Continuous Voice Mode)
         lower_prompt = user_prompt.lower().strip()
@@ -64,16 +121,17 @@ class MatrixBrain:
         ]):
             orchestrator.cancel_active()
             reply = "The current task has been cancelled, sir."
-            return {
-                "session_id": session_id,
-                "response": reply,
-                "reply": reply,
-                "plan_status": TaskState.CANCELLED.value,
-                "plan_state": TaskState.CANCELLED.value,
-                "plan_title": "Task Cancellation",
-                "steps_count": 0,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=reply,
+                plan_status=TaskState.CANCELLED.value,
+                plan_state=TaskState.CANCELLED.value,
+                plan_title="Task Cancellation",
+                steps_count=0,
+                start_time=start_time
+            )
 
         if any(lower_prompt == cmd or lower_prompt.startswith(cmd) for cmd in [
             "matrix, explain what you are currently doing", "explain what you are currently doing", "what are you doing"
@@ -87,16 +145,17 @@ class MatrixBrain:
                 f"Active tasks: {active_tasks}, completed tasks in this session: {recent_tasks}. "
                 f"Monitoring system telemetry and listening for commands, sir."
             )
-            return {
-                "session_id": session_id,
-                "response": reply,
-                "reply": reply,
-                "plan_status": TaskState.COMPLETED.value,
-                "plan_state": TaskState.COMPLETED.value,
-                "plan_title": "Current Status Explanation",
-                "steps_count": 1,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=reply,
+                plan_status=TaskState.COMPLETED.value,
+                plan_state=TaskState.COMPLETED.value,
+                plan_title="Current Status Explanation",
+                steps_count=1,
+                start_time=start_time
+            )
 
         if any(lower_prompt == cmd or lower_prompt.startswith(cmd) for cmd in [
             "matrix, continue listening after answering", "continue listening after answering", "continue listening"
@@ -104,16 +163,17 @@ class MatrixBrain:
             from voice.conversation.manager import conversation_manager, ConversationMode
             conversation_manager.set_mode(ConversationMode.CONTINUOUS)
             reply = "Continuous hands-free listening is enabled, sir. I will remain actively listening after answering."
-            return {
-                "session_id": session_id,
-                "response": reply,
-                "reply": reply,
-                "plan_status": TaskState.COMPLETED.value,
-                "plan_state": TaskState.COMPLETED.value,
-                "plan_title": "Continuous Listening Enabled",
-                "steps_count": 1,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=reply,
+                plan_status=TaskState.COMPLETED.value,
+                plan_state=TaskState.COMPLETED.value,
+                plan_title="Continuous Listening Enabled",
+                steps_count=1,
+                start_time=start_time
+            )
 
                 # -------------------------------------------------------------
         # Stage 3.6: Fast-Path Handlers for Autonomous Operating Directives
@@ -137,16 +197,17 @@ class MatrixBrain:
                     reply = f"VS Code executable not found on system PATH. Matrix project is located at {target_dir}."
             except Exception as e:
                 reply = f"Launched command to open project in VS Code: {e}"
-            return {
-                "session_id": session_id,
-                "response": reply,
-                "reply": reply,
-                "plan_status": TaskState.COMPLETED.value,
-                "plan_state": TaskState.COMPLETED.value,
-                "plan_title": "Launch VS Code Workspace",
-                "steps_count": 1,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=reply,
+                plan_status=TaskState.COMPLETED.value,
+                plan_state=TaskState.COMPLETED.value,
+                plan_title="Launch VS Code Workspace",
+                steps_count=1,
+                start_time=start_time
+            )
 
         # 2. Find the cause of the latest error and fix it
         if any(cmd in lower_prompt for cmd in [
@@ -181,16 +242,17 @@ class MatrixBrain:
                     f"Overall health: {diag.get('overall_status', 'HEALTHY')}. "
                     f"Zero active unhandled exceptions or blocker errors detected in the Matrix workspace, sir."
                 )
-            return {
-                "session_id": session_id,
-                "response": reply,
-                "reply": reply,
-                "plan_status": TaskState.COMPLETED.value,
-                "plan_state": TaskState.COMPLETED.value,
-                "plan_title": "Error Root Cause Investigation",
-                "steps_count": 1,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=reply,
+                plan_status=TaskState.COMPLETED.value,
+                plan_state=TaskState.COMPLETED.value,
+                plan_title="Error Root Cause Investigation",
+                steps_count=1,
+                start_time=start_time
+            )
 
         # 3. Check upcoming calendar events (Google Workspace)
         if any(cmd in lower_prompt for cmd in [
@@ -215,16 +277,17 @@ class MatrixBrain:
                         reply = "You have no upcoming events scheduled on your Google Calendar for today, sir."
                 else:
                     reply = f"Error querying Google Calendar: {events_res.get('error')}"
-            return {
-                "session_id": session_id,
-                "response": reply,
-                "reply": reply,
-                "plan_status": TaskState.COMPLETED.value,
-                "plan_state": TaskState.COMPLETED.value,
-                "plan_title": "Google Calendar Check",
-                "steps_count": 1,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=reply,
+                plan_status=TaskState.COMPLETED.value,
+                plan_state=TaskState.COMPLETED.value,
+                plan_title="Google Calendar Check",
+                steps_count=1,
+                start_time=start_time
+            )
 
         # 4. Morning Briefing
         if any(cmd in lower_prompt for cmd in [
@@ -234,16 +297,17 @@ class MatrixBrain:
             from core.information.briefing import briefing_engine
             briefing = await briefing_engine.generate_daily_briefing()
             reply = briefing.get("briefing_text", "Morning briefing prepared, sir.")
-            return {
-                "session_id": session_id,
-                "response": reply,
-                "reply": reply,
-                "plan_status": TaskState.COMPLETED.value,
-                "plan_state": TaskState.COMPLETED.value,
-                "plan_title": "Morning Briefing",
-                "steps_count": 1,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=reply,
+                plan_status=TaskState.COMPLETED.value,
+                plan_state=TaskState.COMPLETED.value,
+                plan_title="Morning Briefing",
+                steps_count=1,
+                start_time=start_time
+            )
 
         # 5. Monitor my server and alert me if it goes down
         if any(cmd in lower_prompt for cmd in [
@@ -256,16 +320,17 @@ class MatrixBrain:
                 f"Background task scheduler has {len(tasks)} tasks registered, probing system endpoints every 300 seconds. "
                 f"Push alerts will be dispatched instantly over active WebSockets and FCM if an outage is detected."
             )
-            return {
-                "session_id": session_id,
-                "response": reply,
-                "reply": reply,
-                "plan_status": TaskState.COMPLETED.value,
-                "plan_state": TaskState.COMPLETED.value,
-                "plan_title": "Server Monitoring Activation",
-                "steps_count": 1,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=reply,
+                plan_status=TaskState.COMPLETED.value,
+                plan_state=TaskState.COMPLETED.value,
+                plan_title="Server Monitoring Activation",
+                steps_count=1,
+                start_time=start_time
+            )
 
         # 6. Find a file and organize it into the correct folder
         if any(cmd in lower_prompt for cmd in [
@@ -286,16 +351,17 @@ class MatrixBrain:
                 f"Documents, Media, Code, Archives, and Data. "
                 f"Successfully categorized and moved {organized_count} files into destination folders."
             )
-            return {
-                "session_id": session_id,
-                "response": reply,
-                "reply": reply,
-                "plan_status": TaskState.COMPLETED.value,
-                "plan_state": TaskState.COMPLETED.value,
-                "plan_title": "File Organization",
-                "steps_count": 1,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=reply,
+                plan_status=TaskState.COMPLETED.value,
+                plan_state=TaskState.COMPLETED.value,
+                plan_title="File Organization",
+                steps_count=1,
+                start_time=start_time
+            )
 
         # 7. Summarize recent authorized emails (Google Workspace)
         if any(cmd in lower_prompt for cmd in [
@@ -323,16 +389,17 @@ class MatrixBrain:
                         reply = "Your authorized Gmail inbox contains no recent unread messages, sir."
                 else:
                     reply = f"Error querying Gmail: {emails_res.get('error')}"
-            return {
-                "session_id": session_id,
-                "response": reply,
-                "reply": reply,
-                "plan_status": TaskState.COMPLETED.value,
-                "plan_state": TaskState.COMPLETED.value,
-                "plan_title": "Authorized Email Summary",
-                "steps_count": 1,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=reply,
+                plan_status=TaskState.COMPLETED.value,
+                plan_state=TaskState.COMPLETED.value,
+                plan_title="Authorized Email Summary",
+                steps_count=1,
+                start_time=start_time
+            )
 
         # 8. Check computer health and suggest improvements
         if any(cmd in lower_prompt for cmd in [
@@ -366,16 +433,17 @@ class MatrixBrain:
                 f"• Status: NOMINAL\n\n"
                 f"Optimization Insights:\n" + "\n".join(f"→ {s}" for s in suggestions)
             )
-            return {
-                "session_id": session_id,
-                "response": reply,
-                "reply": reply,
-                "plan_status": TaskState.COMPLETED.value,
-                "plan_state": TaskState.COMPLETED.value,
-                "plan_title": "Computer Health & Optimization",
-                "steps_count": 1,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=reply,
+                plan_status=TaskState.COMPLETED.value,
+                plan_state=TaskState.COMPLETED.value,
+                plan_title="Computer Health & Optimization",
+                steps_count=1,
+                start_time=start_time
+            )
 
         # 9. Outbound Call Request
         if "call me" in lower_prompt:
@@ -387,16 +455,17 @@ class MatrixBrain:
                 minutes = int(match.group(1))
             res = await telephony_engine.schedule_outbound_call(delay_seconds=minutes * 60, reason=f"Callback requested: {user_prompt}")
             reply = f"Understood, sir. I have scheduled an outbound call to your phone in {minutes} minutes. I will ring you with the latest updates."
-            return {
-                "session_id": session_id,
-                "response": reply,
-                "reply": reply,
-                "plan_status": TaskState.COMPLETED.value,
-                "plan_state": TaskState.COMPLETED.value,
-                "plan_title": "Telephony Call Scheduled",
-                "steps_count": 1,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=reply,
+                plan_status=TaskState.COMPLETED.value,
+                plan_state=TaskState.COMPLETED.value,
+                plan_title="Telephony Call Scheduled",
+                steps_count=1,
+                start_time=start_time
+            )
 
         # 10. Computer Activity Explanation
         if any(cmd in lower_prompt for cmd in ["explain what is happening on my computer", "explain what is happening on my pc", "explain pc activity", "what is happening on my computer"]):
@@ -408,16 +477,17 @@ class MatrixBrain:
                 f"Active applications include {', '.join(away_info['active_applications'][:4])}. "
                 f"No unauthorized background processes detected, sir."
             )
-            return {
-                "session_id": session_id,
-                "response": reply,
-                "reply": reply,
-                "plan_status": TaskState.COMPLETED.value,
-                "plan_state": TaskState.COMPLETED.value,
-                "plan_title": "PC Activity Explanation",
-                "steps_count": 1,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=reply,
+                plan_status=TaskState.COMPLETED.value,
+                plan_state=TaskState.COMPLETED.value,
+                plan_title="PC Activity Explanation",
+                steps_count=1,
+                start_time=start_time
+            )
 
         # 11. Check Integrations
         if any(cmd in lower_prompt for cmd in ["check whether all my connected integrations are working", "check connected integrations", "check integrations", "are my integrations working"]):
@@ -429,16 +499,17 @@ class MatrixBrain:
                 f"{', '.join(active_names)}. "
                 f"Open-Meteo Weather API is verified live, WebRTC Telephony is ready, and OS connectors are responsive."
             )
-            return {
-                "session_id": session_id,
-                "response": reply,
-                "reply": reply,
-                "plan_status": TaskState.COMPLETED.value,
-                "plan_state": TaskState.COMPLETED.value,
-                "plan_title": "Integrations Health Check",
-                "steps_count": 1,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
-            }
+            return await self._build_response(
+                session_id=session_id,
+                req_id=req_id,
+                resp_id=resp_id,
+                reply=reply,
+                plan_status=TaskState.COMPLETED.value,
+                plan_state=TaskState.COMPLETED.value,
+                plan_title="Integrations Health Check",
+                steps_count=1,
+                start_time=start_time
+            )
 
 
 # Stage 4-10: Orchestrator Pipeline (Intent, Reasoning, Policy, Execution, Verification, Recovery)
@@ -610,46 +681,69 @@ class MatrixBrain:
             agent_name=agent_tag
         )
 
-        total_latency = (time.perf_counter() - start_time) * 1000
+        return await self._build_response(
+            session_id=session_id,
+            req_id=req_id,
+            resp_id=resp_id,
+            reply=reply_content,
+            plan_status=orch_res.plan.status,
+            plan_state=orch_res.plan.state.value,
+            plan_title=orch_res.plan.title,
+            steps_count=len(orch_res.plan.steps),
+            start_time=start_time,
+            agent_name=agent_tag,
+            plan_id=orch_res.plan.plan_id
+        )
 
-        try:
-            async with AsyncSessionLocal() as session:
-                msg = MessageModel(
-                    session_id=session_id,
-                    role="assistant",
-                    content=reply_content,
-                    agent_name=agent_tag,
-                    extra_metadata={
-                        "latency_ms": round(total_latency, 2),
-                        "plan_id": orch_res.plan.plan_id,
-                        "plan_status": orch_res.plan.status,
-                        "plan_state": orch_res.plan.state.value
-                    }
-                )
-                session.add(msg)
-                await session.commit()
-        except Exception as e:
-            logger.warning(f"Could not persist message to DB: {e}")
+    async def process_user_request(
+        self,
+        session_id: str,
+        user_prompt: str,
+        active_agent: Optional[str] = None,
+        request_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Public entry point with single-flight execution, debouncing, and idempotency cache."""
+        req_id = (request_id or "").strip() or f"req_{uuid.uuid4().hex[:12]}"
+        dedup_key = idempotency_manager.generate_dedup_key(session_id, user_prompt, request_id=request_id)
 
-        return {
-            "success": True,
-            "session_id": session_id,
-            "response": reply_content,
-            "reply": reply_content,
-            "plan_status": orch_res.plan.status,
-            "plan_state": orch_res.plan.state.value,
-            "plan_title": orch_res.plan.title,
-            "steps_count": len(orch_res.plan.steps),
-            "latency_ms": round(total_latency, 2)
-        }
+        result, is_dup = await idempotency_manager.execute_single_flight(
+            dedup_key,
+            lambda: self._execute_user_request(
+                session_id=session_id,
+                user_prompt=user_prompt,
+                active_agent=active_agent,
+                request_id=req_id
+            )
+        )
+        return result
 
-    async def process_input(self, user_prompt: str, session_id: str = "sess_default", active_agent: Optional[str] = None) -> Dict[str, Any]:
+    async def process_input(
+        self,
+        user_prompt: str,
+        session_id: str = "sess_default",
+        active_agent: Optional[str] = None,
+        request_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Process input alias for autonomous core and external callers."""
-        return await self.process_user_request(session_id=session_id, user_prompt=user_prompt, active_agent=active_agent)
+        return await self.process_user_request(
+            session_id=session_id,
+            user_prompt=user_prompt,
+            active_agent=active_agent,
+            request_id=request_id
+        )
 
-    async def interact(self, user_prompt: str, session_id: str = "sess_default") -> str:
+    async def interact(
+        self,
+        user_prompt: str,
+        session_id: str = "sess_default",
+        request_id: Optional[str] = None
+    ) -> str:
         """High-level interaction returning the synthesized text response."""
-        res = await self.process_user_request(session_id=session_id, user_prompt=user_prompt)
+        res = await self.process_user_request(
+            session_id=session_id,
+            user_prompt=user_prompt,
+            request_id=request_id
+        )
         return res.get("response", "")
 
 
