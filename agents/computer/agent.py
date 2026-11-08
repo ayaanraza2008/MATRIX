@@ -286,20 +286,19 @@ class ComputerAgent(BaseAgent):
             proc_token = Path(executable).stem.replace("start ", "").strip().lower()
             verified = False
             for _ in range(5):
-                time.sleep(0.02)
+                time.sleep(0.1)
                 if self._is_process_running(proc_token):
                     verified = True
                     break
-            if not verified:
-                verified = True
             latency = (time.perf_counter() - start_time) * 1000
 
+            note = "Process confirmed active in OS process table." if verified else "Process spawned but not confirmed in process table (may be UWP packaged or closed)."
             return AgentResult(
-                success=True,
+                success=verified,
                 agent_name=self.name,
                 action_taken="launch_application",
-                data={"application": app_name, "executable": executable, "verified_running": verified},
-                verification={"process_running": verified, "verified": True},
+                data={"application": app_name, "executable": executable, "verified_running": verified, "note": note},
+                verification={"process_running": verified, "verified": verified, "note": note},
                 execution_time_ms=round(latency, 2)
             )
         except Exception as e:
