@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 
 from config.settings import settings
 from config.logging_config import get_logger
+from security.vault.dpapi_vault import dpapi_vault
 
 logger = get_logger("telephony.bland")
 
@@ -51,7 +52,13 @@ class BlandTelephonyClient:
     """Manages Bland AI API communication, call dispatching, status checks, and call termination."""
 
     def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None):
-        self._api_key = api_key or getattr(settings, "bland_api_key", "") or os.getenv("BLAND_API_KEY", "")
+        vault_key = dpapi_vault.retrieve_secret("BLAND_API_KEY")
+        self._api_key = api_key or vault_key or getattr(settings, "bland_api_key", "") or os.getenv("BLAND_API_KEY", "")
+        if self._api_key and not vault_key:
+            try:
+                dpapi_vault.store_secret("BLAND_API_KEY", self._api_key)
+            except Exception:
+                pass
         raw_url = base_url or getattr(settings, "bland_api_base_url", "") or os.getenv("BLAND_API_BASE_URL", "https://api.bland.ai")
         # Normalize base URL (strip trailing /v2 or /v1 to ensure standard routing)
         self._base_url = raw_url.rstrip("/").removesuffix("/v2").removesuffix("/v1")

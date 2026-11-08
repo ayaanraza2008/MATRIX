@@ -68,3 +68,113 @@ async def reject_gate(request_id: str, payload: Optional[ApprovalActionPayload] 
     if not success:
         raise HTTPException(status_code=404, detail="Request not found or already resolved.")
     return {"status": "REJECTED", "request_id": request_id}
+
+
+# =============================================================================
+# PART 2: ONE-TIME AUTHORIZATION CENTER & DPAPI ENCRYPTED VAULT ENDPOINTS
+# =============================================================================
+
+from security.permissions.authorization_center import authorization_center
+from security.vault.dpapi_vault import dpapi_vault
+
+
+class SetupWizardPayload(BaseModel):
+    template: str = "JARVIS_AUTONOMOUS"  # JARVIS_AUTONOMOUS, CONSERVATIVE, STRICT
+    overrides: Optional[Dict[str, str]] = None
+
+
+class ScopeUpdatePayload(BaseModel):
+    category: str
+    scope_id: str
+    profile: str  # AUTOMATIC, RESTRICTED, CONFIRMATION_REQUIRED
+
+
+class StoreSecretPayload(BaseModel):
+    key: str
+    value: str
+
+
+@router.get("/authorization-center")
+async def get_authorization_center_status():
+    """Retrieve complete overview of permission profiles, categories, and connected service states."""
+    return authorization_center.get_authorization_overview()
+
+
+@router.post("/setup-wizard")
+async def run_setup_wizard(payload: SetupWizardPayload):
+    """Execute the One-Time Setup Wizard to configure approved baseline permissions."""
+    result = authorization_center.execute_first_run_wizard(
+        grant_template=payload.template,
+        user_overrides=payload.overrides
+    )
+    return {
+        "status": "SETUP_COMPLETED",
+        "overview": result
+    }
+
+
+@router.post("/scopes/update")
+async def update_permission_scope(payload: ScopeUpdatePayload):
+    """Update or customize the authorization profile for a specific permission scope."""
+    success = authorization_center.update_scope_profile(
+        category=payload.category,
+        scope_id=payload.scope_id,
+        new_profile=payload.profile
+    )
+    if not success:
+        raise HTTPException(status_code=400, detail=f"Failed to update scope '{payload.scope_id}'.")
+    return {
+        "status": "UPDATED",
+        "scope_id": payload.scope_id,
+        "new_profile": payload.profile.upper()
+    }
+
+
+@router.post("/scopes/revoke")
+async def revoke_permission_scope(payload: ScopeUpdatePayload):
+    """Revoke a permission scope (transitions to CONFIRMATION_REQUIRED)."""
+    success = authorization_center.revoke_scope(
+        category=payload.category,
+        scope_id=payload.scope_id
+    )
+    if not success:
+        raise HTTPException(status_code=400, detail=f"Failed to revoke scope '{payload.scope_id}'.")
+    return {
+        "status": "REVOKED",
+        "scope_id": payload.scope_id
+    }
+
+
+@router.get("/vault/catalog")
+async def get_vault_catalog():
+    """List secret key identifiers stored in the encrypted DPAPI vault (masked values)."""
+    return {
+        "total_secrets": len(dpapi_vault.list_keys()),
+        "keys": dpapi_vault.list_keys(),
+        "catalog": dpapi_vault.get_masked_catalog()
+    }
+
+
+@router.post("/vault/secret")
+async def store_vault_secret(payload: StoreSecretPayload):
+    """Store an API key or credential securely in the native Windows DPAPI encrypted vault."""
+    if not payload.key or not payload.value:
+        raise HTTPException(status_code=400, detail="Key and value are required.")
+    dpapi_vault.store_secret(payload.key, payload.value)
+    return {
+        "status": "STORED_ENCRYPTED",
+        "key": payload.key.upper()
+    }
+
+
+@router.delete("/vault/secret/{key}")
+async def delete_vault_secret(key: str):
+    """Delete a secret from the encrypted DPAPI vault."""
+    success = dpapi_vault.delete_secret(key)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Secret '{key}' not found in vault.")
+    return {
+        "status": "DELETED",
+        "key": key.upper()
+    }
+
