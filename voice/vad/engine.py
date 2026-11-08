@@ -1,9 +1,9 @@
 """MATRIX Voice Activity Detection (VAD) & Continuous Speech Endpointing Engine.
-Uses Silero VAD ONNX with recurrent LSTM state tracking and RMS energy gating
-for ultra-low-latency, zero-cloud speech segmentation.
+Uses Silero VAD ONNX with recurrent LSTM state tracking, pre-roll buffering, and configurable endpointing.
 """
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 from pathlib import Path
+from collections import deque
 import numpy as np
 import onnxruntime as ort
 from config.settings import settings
@@ -13,22 +13,24 @@ logger = get_logger("voice.vad")
 
 
 class SileroVADEngine:
-    """Offline neural Voice Activity Detector with dynamic endpointing."""
+    """Offline neural Voice Activity Detector with dynamic endpointing and pre-roll preservation."""
 
     def __init__(
         self,
         model_path: Optional[Path] = None,
         sample_rate: int = 16000,
         speech_threshold: float = 0.45,
-        silence_duration_ms: int = 700,
-        min_speech_duration_ms: int = 200,
-        energy_threshold: float = 0.005
+        silence_duration_ms: Optional[int] = None,
+        min_speech_duration_ms: int = 250,
+        energy_threshold: float = 0.005,
+        preroll_frames: int = 3  # ~240ms of pre-speech audio
     ):
         self.sample_rate = sample_rate
         self.speech_threshold = speech_threshold
-        self.silence_duration_ms = silence_duration_ms
+        self.silence_duration_ms = silence_duration_ms if silence_duration_ms is not None else settings.voice_silence_duration_ms
         self.min_speech_duration_ms = min_speech_duration_ms
         self.energy_threshold = energy_threshold
+        self.preroll_frames = preroll_frames
 
         # Locate Silero VAD ONNX model
         if model_path is None:
@@ -43,6 +45,7 @@ class SileroVADEngine:
             self.model_path = model_path
 
         self._session: Optional[ort.InferenceSession] = None
+        self._preroll_buffer: deque = deque(maxlen=self.preroll_frames)
         self._init_session()
         self.reset()
 
@@ -62,6 +65,11 @@ class SileroVADEngine:
         else:
             logger.warning(f"Silero VAD model not found at {self.model_path}; falling back to RMS energy gating.")
 
+    def set_silence_duration_ms(self, ms: int):
+        """Update endpoint silence timeout in milliseconds."""
+        self.silence_duration_ms = max(500, min(3000, ms))
+        logger.info(f"VAD endpoint silence duration set to: {self.silence_duration_ms}ms")
+
     def reset(self):
         """Reset internal recurrent states and tracking buffers."""
         self._h = np.zeros((2, 1, 64), dtype=np.float32)
@@ -70,6 +78,7 @@ class SileroVADEngine:
         self.total_speech_samples = 0
         self.consecutive_silence_samples = 0
         self.collected_audio_buffer = []
+        self._preroll_buffer.clear()
 
     def compute_energy(self, chunk: np.ndarray) -> float:
         """Compute root-mean-square (RMS) energy of audio frame."""
@@ -101,7 +110,6 @@ class SileroVADEngine:
                 windows = []
                 for s_idx in range(0, len(float_chunk) - win_size + 1, win_size):
                     windows.append(float_chunk[s_idx:s_idx + win_size])
-                # Check remaining tail
                 rem = len(float_chunk) % win_size
                 if rem > 0 and len(float_chunk) >= win_size:
                     windows.append(float_chunk[-win_size:])
@@ -144,21 +152,27 @@ class SileroVADEngine:
         if has_voice:
             if not self.speech_started:
                 self.speech_started = True
-                logger.debug("Speech activity detected. Capturing...")
+                logger.debug("Speech activity detected. Capturing with pre-roll buffer...")
+                # Prepend pre-roll buffer frames so the initial consonant is preserved
+                for pre_chunk in self._preroll_buffer:
+                    self.collected_audio_buffer.append(pre_chunk)
+                    self.total_speech_samples += len(pre_chunk)
+                self._preroll_buffer.clear()
+
             self.consecutive_silence_samples = 0
             self.total_speech_samples += chunk_samples
             self.collected_audio_buffer.append(chunk)
             return True, False, None
 
         if self.speech_started:
-            # User previously started speaking, now in pause
+            # User previously started speaking, now in pause / trailing silence
             self.consecutive_silence_samples += chunk_samples
             self.collected_audio_buffer.append(chunk)
 
             silence_ms = (self.consecutive_silence_samples / self.sample_rate) * 1000
             min_speech_ms = (self.total_speech_samples / self.sample_rate) * 1000
 
-            # Check if silence threshold reached and minimum speech duration met
+            # Check if silence timeout reached (configurable, default 1200ms)
             if silence_ms >= self.silence_duration_ms and min_speech_ms >= self.min_speech_duration_ms:
                 logger.info(f"Speech endpoint reached: {min_speech_ms:.0f}ms spoken, {silence_ms:.0f}ms silence.")
                 completed_audio = np.concatenate(self.collected_audio_buffer, axis=0) if self.collected_audio_buffer else np.array([], dtype=np.int16)
@@ -167,6 +181,8 @@ class SileroVADEngine:
 
             return False, False, None
 
+        # Ambient silence: maintain pre-roll ring buffer
+        self._preroll_buffer.append(chunk)
         return False, False, None
 
 

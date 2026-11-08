@@ -66,3 +66,7 @@ mobile/android_app/.gradle/
 mobile/android_app/build/
 mobile/android_app/app/build/
 mobile/android_app/local.properties
+
+# Scratch & Temporary Testing
+scratch/
+

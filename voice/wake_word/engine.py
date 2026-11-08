@@ -1,6 +1,6 @@
 """MATRIX Wake-Word Detection Engine.
-Monitors microphone stream for 'Matrix' and 'Snap' triggers locally using openWakeWord ONNX.
-Zero cloud dependencies, ultra-low CPU consumption (~0.5%), and active echo suppression.
+Monitors microphone stream for 'Matrix', 'Hey Matrix', and 'Hey Jarvis' triggers locally using openWakeWord ONNX.
+Features continuous low-resource background evaluation, zero cloud dependencies, and active echo suppression.
 """
 from typing import Callable, Optional, Dict, Any, List
 import os
@@ -21,11 +21,11 @@ class WakeWordDetector:
 
     def __init__(
         self,
-        sensitivity: float = 0.35,
-        cooldown_seconds: float = 1.5,
+        sensitivity: Optional[float] = None,
+        cooldown_seconds: float = 1.2,
         callback: Optional[Callable[[str], None]] = None
     ):
-        self.sensitivity = sensitivity
+        self.sensitivity = sensitivity if sensitivity is not None else settings.wake_word_sensitivity
         self.cooldown_seconds = cooldown_seconds
         self.callback = callback
         self.is_listening: bool = False
@@ -39,19 +39,19 @@ class WakeWordDetector:
         self._audio_chunk_size = 1280  # 80ms at 16kHz
 
     def _init_model(self):
-        """Initialize openWakeWord Model instance with matrix and snap models."""
+        """Initialize openWakeWord Model instance with matrix, jarvis, and snap models."""
         matrix_model = WAKEWORD_DIR / "matrix.onnx"
         snap_model = WAKEWORD_DIR / "snap.onnx"
 
         candidate_models = []
         if matrix_model.exists():
             candidate_models.append(str(matrix_model))
+        
+        # Include pre-trained robust hey_jarvis model as an official supported alias
+        candidate_models.append("hey_jarvis_v0.1")
+
         if snap_model.exists():
             candidate_models.append(str(snap_model))
-
-        # If custom models are not yet compiled, load pre-trained openwakeword models
-        if not candidate_models:
-            candidate_models = ["hey_jarvis_v0.1"]
 
         try:
             from openwakeword.model import Model
@@ -83,7 +83,7 @@ class WakeWordDetector:
         logger.info("Wake-word monitoring disarmed.")
 
     def set_sensitivity(self, sensitivity: float):
-        """Adjust detection threshold (0.1 to 0.9)."""
+        """Adjust detection threshold (0.1 to 0.95)."""
         self.sensitivity = max(0.1, min(0.95, sensitivity))
         logger.info(f"Wake-word sensitivity set to: {self.sensitivity}")
 
@@ -97,20 +97,20 @@ class WakeWordDetector:
         is_tts_speaking: bool = False,
         trigger_callback: bool = False
     ) -> Optional[str]:
-        """Process incoming 16kHz PCM audio chunk for wake words.
+        """Process incoming 16kHz PCM audio chunk for wake words in real time.
         
         Args:
-            frame: 16-bit PCM numpy array (typically 1280 samples = 80ms)
+            frame: 16-bit PCM numpy array (1280 samples = 80ms)
             is_tts_speaking: Whether MATRIX TTS audio is currently playing
             trigger_callback: Whether to execute self.callback(detected_name)
 
         Returns:
-            Wake word string ('matrix' or 'snap') if triggered, else None
+            Wake word string ('matrix', 'jarvis', or 'snap') if triggered, else None
         """
         if not self.is_listening:
             return None
 
-        # Self-activation suppression: Ignore mic while MATRIX is speaking
+        # Active Echo Suppression: Ignore mic frames while MATRIX is speaking
         if is_tts_speaking:
             return None
 
@@ -129,33 +129,44 @@ class WakeWordDetector:
         if frame.dtype != np.int16:
             frame = (np.clip(frame, -1.0, 1.0) * 32767.0).astype(np.int16)
 
-        # Slice or pad to 1280 samples for openWakeWord
+        # Slice or pad to exact 1280 samples for openWakeWord
         if len(frame) != self._audio_chunk_size:
             if len(frame) > self._audio_chunk_size:
                 frame = frame[:self._audio_chunk_size]
             else:
                 frame = np.pad(frame, (0, self._audio_chunk_size - len(frame)))
 
-        # Dynamic gain normalization for quiet laptop microphones
-        peak = int(np.max(np.abs(frame)))
-        if 300 < peak < 12000:
-            scale = min(3.5, 16000.0 / float(peak))
-            normalized_frame = np.clip(frame.astype(np.float32) * scale, -32768, 32767).astype(np.int16)
-        else:
-            normalized_frame = frame
-
         try:
-            predictions = self._model.predict(normalized_frame)
+            # Predict scores on clean audio frame preserving spectro-temporal continuity
+            predictions = self._model.predict(frame)
             self.last_predictions = {k: float(round(v, 4)) for k, v in predictions.items()}
+            
             best_model = None
             best_score = 0.0
+
             for model_name, score in predictions.items():
-                if score >= self.sensitivity and score > best_score:
+                m_lower = model_name.lower()
+                
+                # 'Matrix' & 'Jarvis' models use configured sensitivity (default 0.35)
+                if "matrix" in m_lower or "jarvis" in m_lower:
+                    thresh = self.sensitivity
+                else:
+                    # 'Snap' spoken keyword requires higher threshold (0.75) to prevent consonant false positives
+                    thresh = max(0.75, self.sensitivity + 0.35)
+
+                if score >= thresh and score > best_score:
                     best_score = score
                     best_model = model_name
 
             if best_model:
-                detected_name = "matrix" if "matrix" in best_model.lower() or "jarvis" in best_model.lower() else "snap"
+                m_lower = best_model.lower()
+                if "matrix" in m_lower:
+                    detected_name = "matrix"
+                elif "jarvis" in m_lower:
+                    detected_name = "matrix"  # Treat 'Jarvis' as an alias for Matrix activation
+                else:
+                    detected_name = "snap"
+
                 now = time.time()
                 self.last_detection_time = now
                 self.last_detected_word = detected_name
@@ -188,8 +199,6 @@ class WakeWordDetector:
             "last_predictions": self.last_predictions,
             "loaded_models": list(self._model.models.keys()) if self._model else []
         }
-
-        return None
 
 
 # Global wake-word instance

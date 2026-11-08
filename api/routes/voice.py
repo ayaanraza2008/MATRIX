@@ -54,6 +54,15 @@ class RecordRequest(BaseModel):
     language: Optional[str] = None
 
 
+class DeviceSelectRequest(BaseModel):
+    device_index: int
+
+
+class PlaybackTimingRequest(BaseModel):
+    speech_rate: Optional[str] = "+0%"
+    post_pause_ms: Optional[int] = 350
+
+
 @router.get("/audio/{filename}")
 async def get_audio_file(filename: str):
     """Serve a synthesized speech audio file to the frontend UI or Android client."""
@@ -378,4 +387,34 @@ async def get_wake_word_diagnostics():
     return {
         "status": "OK",
         "diagnostics": wake_word_detector.get_diagnostics()
+    }
+
+
+@router.post("/device/select")
+async def select_audio_device(payload: DeviceSelectRequest):
+    """Explicitly select and persist physical microphone device index."""
+    try:
+        res = mic_listener.select_device(payload.device_index)
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/device/inventory")
+async def get_device_inventory():
+    """Retrieve full hardware device inventory across all Windows audio APIs."""
+    return mic_listener.inspect_all_devices()
+
+
+@router.post("/playback-timing")
+async def update_playback_timing(payload: PlaybackTimingRequest):
+    """Configure natural speech rate and post-playback settling pause."""
+    if payload.speech_rate:
+        settings.voice_speech_rate = payload.speech_rate
+    if payload.post_pause_ms is not None:
+        settings.voice_playback_post_pause_ms = max(50, min(2000, payload.post_pause_ms))
+    return {
+        "status": "OK",
+        "speech_rate": settings.voice_speech_rate,
+        "post_pause_ms": settings.voice_playback_post_pause_ms
     }

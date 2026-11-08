@@ -37,8 +37,9 @@ class ConversationMode(str, Enum):
 
 
 class HandsFreeState(str, Enum):
+    STANDBY = "standby"                  # Standby waiting for 'Matrix' or physical finger-snap
+    IDLE = "idle"                        # Standby backward compatibility alias
     SLEEPING = "sleeping"                # Low-resource sleep mode
-    IDLE = "idle"                        # Standby waiting for 'Matrix' or physical finger-snap
     WAKE_DETECTED = "wake_detected"      # Wake-word or snap triggered
     LISTENING = "listening"              # Capturing speech via VAD with timeout guard
     TRANSCRIBING = "transcribing"        # Whisper STT running
@@ -46,6 +47,8 @@ class HandsFreeState(str, Enum):
     PLANNING = "planning"                # Orchestrator planning
     EXECUTING = "executing"              # Multi-agent tools executing
     SPEAKING = "speaking"                # TTS audio playing
+    PLAYBACK_FINISHED = "playback_finished"  # Speaker playback finished & buffer drained
+    LISTENING_RESUMED = "listening_resumed"  # Continuous mode resumed
     INTERRUPTED = "interrupted"          # Aborted by user
     ERROR = "error"                      # Audio device or engine error
 
@@ -130,6 +133,7 @@ class HandsFreeManager:
         # JARVIS Spoken Acknowledgment
         ack_phrases = {
             "matrix": "Yes, sir?",
+            "jarvis": "Yes, sir?",
             "snap": "Standing by, sir.",
             "finger_snap": "At your service, sir."
         }
@@ -183,45 +187,53 @@ class HandsFreeManager:
                 return {"status": "barge_in_snap"}
             return {"status": "tts_speaking_suppressed"}
 
-        # 1. In IDLE / SLEEPING mode: Evaluate Acoustic Finger-Snap and Spoken Wake Words
-        if self.state in (HandsFreeState.IDLE, HandsFreeState.SLEEPING):
-            # Check A: Physical Finger-Snap Acoustic Transient
-            if snap_detector.process_audio_frame(chunk, is_tts_speaking=False):
+        # 1. CONTINUOUS WAKE-WORD DETECTION PATH (Priority 2: Zero-VAD Dependency)
+        # openWakeWord monitors continuous 16kHz frames independently of VAD
+        detected_wake_word = wake_word_detector.process_audio_frame(
+            chunk,
+            is_tts_speaking=False,
+            trigger_callback=False
+        )
+        if detected_wake_word:
+            logger.info(f"Continuous Wake-Word '{detected_wake_word}' detected in state {self.state.value}")
+            if self.state in (HandsFreeState.STANDBY, HandsFreeState.IDLE, HandsFreeState.SLEEPING):
+                await self.handle_wake_word_activation(detected_wake_word)
+                return {"status": "wake_word_detected", "word": detected_wake_word}
+            elif self.state == HandsFreeState.LISTENING:
+                # Spoken 'Matrix' while already listening resets the timeout window
+                self._listening_start_time = time.time()
+                vad_engine.reset()
+                await self.emit_event("WAKE_DETECTED", {"trigger": detected_wake_word, "refreshed": True})
+                return {"status": "wake_refreshed", "word": detected_wake_word}
+
+        # 2. Acoustic Finger-Snap Impulse Detection
+        if snap_detector.process_audio_frame(chunk, is_tts_speaking=False):
+            if self.state in (HandsFreeState.STANDBY, HandsFreeState.IDLE, HandsFreeState.SLEEPING):
                 await self.handle_wake_word_activation("finger_snap")
                 return {"status": "snap_activated", "trigger": "finger_snap"}
-
-            # Check B: Spoken 'Matrix' or 'Snap' (openWakeWord)
-            detected = wake_word_detector.process_audio_frame(
-                chunk,
-                is_tts_speaking=False,
-                trigger_callback=False
-            )
-            if detected:
-                await self.handle_wake_word_activation(detected)
-                return {"status": "wake_word_detected", "word": detected}
-
-            return {"status": self.state.value}
-
-        # 2. In LISTENING mode: Guard with timeout, feed VAD, and monitor endpoint
-        if self.state == HandsFreeState.LISTENING:
-            # Physical snap during listening acts as immediate cancel / standby
-            if snap_detector.process_audio_frame(chunk, is_tts_speaking=False):
+            elif self.state == HandsFreeState.LISTENING:
                 logger.info("Snap detected during listening; returning to standby.")
-                self.state = HandsFreeState.IDLE
+                self.state = HandsFreeState.STANDBY
                 vad_engine.reset()
                 await self.emit_event("LISTENING_RESUMED", {"reason": "snap_interrupt"})
                 return {"status": "snap_cancelled"}
 
-            # Silence Timeout Guard: If no speech starts within 7.5 seconds, return to IDLE standby
+        # 3. In STANDBY / SLEEPING mode: Idle waiting for wake-word or snap
+        if self.state in (HandsFreeState.STANDBY, HandsFreeState.IDLE, HandsFreeState.SLEEPING):
+            return {"status": self.state.value}
+
+        # 4. In LISTENING mode: Guard with timeout, feed Silero VAD, and monitor endpoint
+        if self.state == HandsFreeState.LISTENING:
+            # Silence Timeout Guard: If no speech starts within 7.5 seconds, return to STANDBY
             elapsed_listening = time.time() - self._listening_start_time
             if elapsed_listening > self._listening_timeout_seconds and not vad_engine.speech_started:
-                logger.info(f"Listening timed out after {elapsed_listening:.1f}s of silence. Returning to IDLE standby.")
-                self.state = HandsFreeState.IDLE
+                logger.info(f"Listening timed out after {elapsed_listening:.1f}s of silence. Returning to STANDBY.")
+                self.state = HandsFreeState.STANDBY
                 vad_engine.reset()
                 await self.emit_event("LISTENING_RESUMED", {"reason": "silence_timeout"})
                 return {"status": "idle_timeout"}
 
-            # Feed Silero VAD
+            # Feed Silero VAD with pre-roll preservation
             is_speech, is_endpoint, completed_audio = vad_engine.process_frame(chunk)
             if is_endpoint and completed_audio is not None and len(completed_audio) > 0:
                 logger.info(f"Captured complete speech segment ({len(completed_audio)} samples). Submitting...")
@@ -525,7 +537,19 @@ class HandsFreeManager:
                 self.last_audio_file = audio_file
                 await self.emit_event("TTS_FINISHED", {"audio_file": audio_file.name if audio_file else None})
 
-                # 5. Transition back: Auto-resume listening with timeout in CONTINUOUS, or return to IDLE
+                # 5. State: PLAYBACK_FINISHED (Priority 5 State Machine Requirement)
+                self.state = HandsFreeState.PLAYBACK_FINISHED
+                await self.emit_event("PLAYBACK_FINISHED", {
+                    "audio_file": audio_file.name if audio_file else None,
+                    "duration": getattr(tts_engine, "last_playback_duration", 0.0),
+                    "finished_at": getattr(tts_engine, "last_playback_finished", time.time())
+                })
+
+                # Configurable natural pause after speech before unmuting mic (Priority 4 Requirement)
+                post_pause_sec = max(0.1, settings.voice_playback_post_pause_ms / 1000.0)
+                await asyncio.sleep(post_pause_sec)
+
+                # 6. State: LISTENING_RESUMED or STANDBY
                 if not self._interrupted:
                     if self.mode == ConversationMode.CONTINUOUS:
                         self.state = HandsFreeState.LISTENING
@@ -540,9 +564,10 @@ class HandsFreeManager:
                             "audio_file": audio_file.name if audio_file else None
                         })
                     else:
-                        self.state = HandsFreeState.IDLE
+                        self.state = HandsFreeState.STANDBY
                         await self.emit_event("LISTENING_RESUMED", {
-                            "audio_file": audio_file.name if audio_file else None
+                            "audio_file": audio_file.name if audio_file else None,
+                            "reason": "standby"
                         })
 
             except asyncio.CancelledError:
