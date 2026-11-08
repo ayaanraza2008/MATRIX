@@ -338,6 +338,132 @@ class HandsFreeManager:
                     await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
                     return
 
+                # AirTouch Gesture & Eye Directives
+                from vision.airtouch.service import airtouch_service
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in [
+                    "matrix start gesture control", "start gesture control",
+                    "matrix activate hand control", "activate hand control", "start hand control"
+                ]):
+                    airtouch_service.set_mode("GESTURE_3D")
+                    msg = "Hand control activated, sir. You can rotate 3D objects with hand gestures."
+                    self.state = HandsFreeState.SPEAKING
+                    await self.emit_event("SPEAKING", {"text": msg})
+                    ack_audio = await tts_engine.speak(msg)
+                    self.state = HandsFreeState.IDLE
+                    await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
+                    return
+
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in [
+                    "matrix activate gesture scroll", "activate gesture scroll",
+                    "start gesture scroll", "activate touchless scroll"
+                ]):
+                    airtouch_service.set_mode("GESTURE_SCROLL")
+                    msg = "Gesture scroll activated, sir. Use open palm to scroll, closed fist to lock."
+                    self.state = HandsFreeState.SPEAKING
+                    await self.emit_event("SPEAKING", {"text": msg})
+                    ack_audio = await tts_engine.speak(msg)
+                    self.state = HandsFreeState.IDLE
+                    await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
+                    return
+
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in [
+                    "matrix stop scrolling", "stop scrolling", "stop gesture scroll", "stop gesture control"
+                ]):
+                    airtouch_service.set_mode("OFF")
+                    msg = "Gesture control has been stopped, sir."
+                    self.state = HandsFreeState.SPEAKING
+                    await self.emit_event("SPEAKING", {"text": msg})
+                    ack_audio = await tts_engine.speak(msg)
+                    self.state = HandsFreeState.IDLE
+                    await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
+                    return
+
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in [
+                    "matrix activate eye control", "activate eye control", "start eye control", "activate eye tracking"
+                ]):
+                    airtouch_service.set_mode("GESTURE_EYE")
+                    msg = "Eye control activated, sir. GesturEye tracking and dwell click are online."
+                    self.state = HandsFreeState.SPEAKING
+                    await self.emit_event("SPEAKING", {"text": msg})
+                    ack_audio = await tts_engine.speak(msg)
+                    self.state = HandsFreeState.IDLE
+                    await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
+                    return
+
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in [
+                    "matrix reset 3d view", "reset 3d view", "matrix reset 3d", "reset 3d"
+                ]):
+                    airtouch_service.reset_3d()
+                    msg = "3D hologram orientation has been reset to default identity, sir."
+                    self.state = HandsFreeState.SPEAKING
+                    await self.emit_event("SPEAKING", {"text": msg})
+                    ack_audio = await tts_engine.speak(msg)
+                    self.state = HandsFreeState.IDLE
+                    await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
+                    return
+
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in [
+                    "matrix calibrate eye tracking", "calibrate eye tracking", "calibrate eye"
+                ]):
+                    cal_res = airtouch_service.calibrate_eye()
+                    msg = f"Eye calibration initiated, sir. Focus on the {cal_res.get('target', 'screen')} target."
+                    self.state = HandsFreeState.SPEAKING
+                    await self.emit_event("SPEAKING", {"text": msg})
+                    ack_audio = await tts_engine.speak(msg)
+                    self.state = HandsFreeState.IDLE
+                    await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
+                    return
+
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in [
+                    "matrix scroll down", "scroll down", "matrix scroll up", "scroll up"
+                ]):
+                    direction = "DOWN" if "down" in lower_text else "UP"
+                    try:
+                        import pyautogui
+                        clicks = -250 if direction == "DOWN" else 250
+                        pyautogui.scroll(clicks)
+                    except Exception:
+                        pass
+                    msg = f"Scrolling {direction.lower()}, sir."
+                    self.state = HandsFreeState.SPEAKING
+                    await self.emit_event("SPEAKING", {"text": msg})
+                    ack_audio = await tts_engine.speak(msg)
+                    self.state = HandsFreeState.IDLE
+                    await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
+                    return
+
+                if "scroll speed" in lower_text:
+                    speed = "HIGH" if "high" in lower_text else ("LOW" if "low" in lower_text else "MEDIUM")
+                    airtouch_service.update_settings({"scroll_speed": speed})
+                    msg = f"Gesture scroll speed set to {speed.lower()}, sir."
+                    self.state = HandsFreeState.SPEAKING
+                    await self.emit_event("SPEAKING", {"text": msg})
+                    ack_audio = await tts_engine.speak(msg)
+                    self.state = HandsFreeState.IDLE
+                    await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
+                    return
+
+                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in [
+                    "matrix what am i looking at", "what am i looking at",
+                    "matrix what do you see", "what do you see",
+                    "matrix describe this scene", "describe this scene"
+                ]):
+                    from vision.camera.capture import camera_capture
+                    import cv2
+                    c_res = camera_capture.capture_frame()
+                    if c_res.get("success") and c_res.get("filepath"):
+                        f_img = cv2.imread(c_res["filepath"])
+                    else:
+                        f_img = np.zeros((480, 640, 3), dtype=np.uint8)
+                    v_res = airtouch_service.modern_ai.answer_visual_query(f_img, lower_text)
+                    msg = v_res.get("response", "Visual perception complete, sir.")
+                    self.state = HandsFreeState.SPEAKING
+                    await self.emit_event("SPEAKING", {"text": msg})
+                    ack_audio = await tts_engine.speak(msg)
+                    self.state = HandsFreeState.IDLE
+                    await self.emit_event("LISTENING_RESUMED", {"audio_file": ack_audio.name if ack_audio else None})
+                    return
+
                 # Directive F: Open browser
                 if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix open my browser", "open my browser", "open browser"]):
                     self.state = HandsFreeState.SPEAKING

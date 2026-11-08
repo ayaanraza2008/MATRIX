@@ -96,6 +96,9 @@ class IntentEngine:
         (r"\b(safe\s+task|perform\s+a\s+safe\s+task|safe\s+command|run\s+command|execute\s+command|whoami|hostname|ipconfig|systeminfo)\b", IntentType.COMMAND, "computer", 1),
         (r"\b(screenshot|capture screen|take a snap)\b", IntentType.COMMAND, "computer", 1),
 
+        # AirTouch Vision, Gesture3D, Touchless Scroll & GesturEye
+        (r"\b(airtouch|gesture\s+control|hand\s+control|eye\s+control|eye\s+tracking|gesture\s+scroll|scroll\s+down|scroll\s+up|scroll\s+speed|stop\s+scrolling|rotate\s+3d|reset\s+3d|calibrate\s+eye|what\s+am\s+i\s+looking\s+at|describe\s+(?:this\s+)?scene)\b", IntentType.VISION, "vision", 1),
+
         # 14. Vision & Camera
         (r"\b(find\s+the\s+error\s+on\s+(?:my\s+)?screen|inspect\s+(?:my\s+)?screen\s+for\s+errors?|error\s+on\s+(?:my\s+)?screen)\b", IntentType.VISION, "vision", 1),
         (r"\b(screen|camera|webcam|visible on my screen|what is on my screen|what is currently visible|read this image|ocr|look at this|scan this|inspect\s+(?:my\s+)?screen)\b", IntentType.VISION, "vision", 1),

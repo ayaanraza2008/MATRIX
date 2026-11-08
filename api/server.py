@@ -13,7 +13,7 @@ from config.logging_config import get_logger
 from database.init_db import init_database
 from api.routes import (
     health, system, sessions, capabilities, devices, memory, voice, vision, repositories,
-    automation, files, audit, developer, integrations
+    automation, files, audit, developer, integrations, airtouch
 )
 from api.websocket.manager import ws_manager
 
@@ -123,6 +123,7 @@ app.include_router(files.router, prefix="/api/v1")
 app.include_router(audit.router, prefix="/api/v1")
 app.include_router(developer.router, prefix="/api/v1")
 app.include_router(integrations.router, prefix="/api/v1")
+app.include_router(airtouch.router, prefix="/api/v1")
 
 # Direct alias for /api/v1/telemetry
 @app.get("/api/v1/telemetry", tags=["System Telemetry"])
