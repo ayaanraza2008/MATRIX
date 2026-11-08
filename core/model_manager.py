@@ -376,6 +376,13 @@ class ModelManager:
         content = output["choices"][0]["message"]["content"].strip()
         tokens = output.get("usage", {}).get("completion_tokens", len(content.split()))
 
+        # Clean simulated multi-turn transcript leakage
+        for stop_marker in ["\nUSER:", "\nUser:", "\nASSISTANT:", "\nAssistant:", "\nSYSTEM:", "\nSystem:"]:
+            if stop_marker in content:
+                content = content.split(stop_marker)[0].strip()
+        import re
+        content = re.sub(r'^(ASSISTANT|Assistant|MATRIX|Matrix|JARVIS|Jarvis):\s*', '', content).strip()
+
         # Safety refusal interception: Do not return raw refusal for benign system commands
         refusal_markers = [
             "i'm sorry, but i can't assist with that",

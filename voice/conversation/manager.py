@@ -124,6 +124,7 @@ class HandsFreeManager:
         logger.info(f"ACTIVATING HANDS-FREE on trigger: '{trigger_source}'")
         self.state = HandsFreeState.WAKE_DETECTED
         self._consecutive_empty_turns = 0
+        await self.emit_event("WAKE_DETECTED", {"trigger": trigger_source})
         await self.emit_event("WAKE_WORD_DETECTED", {"trigger": trigger_source})
 
         # JARVIS Spoken Acknowledgment
@@ -139,6 +140,7 @@ class HandsFreeManager:
         vad_engine.reset()
         self._listening_start_time = time.time()
         self.state = HandsFreeState.LISTENING
+        await self.emit_event("LISTENING", {"trigger": trigger_source, "ack": ack_phrase})
         await self.emit_event("RECORDING_STARTED", {"trigger": trigger_source, "ack": ack_phrase})
 
     async def interrupt(self):
@@ -172,8 +174,13 @@ class HandsFreeManager:
         if self.mode == ConversationMode.PRIVACY_PAUSE:
             return {"status": "paused"}
 
-        # Active Echo Suppression: Never ingest mic audio while MATRIX TTS is speaking!
+        # Active Echo Suppression with Finger-Snap Barge-In during TTS Playback
         if tts_engine.is_speaking:
+            # Check for acoustic snap barge-in interrupt
+            if snap_detector.process_audio_frame(chunk, is_tts_speaking=False):
+                logger.info("Barge-in: Acoustic snap detected during speech; interrupting playback.")
+                await self.interrupt()
+                return {"status": "barge_in_snap"}
             return {"status": "tts_speaking_suppressed"}
 
         # 1. In IDLE / SLEEPING mode: Evaluate Acoustic Finger-Snap and Spoken Wake Words
@@ -272,6 +279,10 @@ class HandsFreeManager:
                 # Valid speech received: reset empty turn counter
                 self._consecutive_empty_turns = 0
 
+                await self.emit_event("TRANSCRIPT_READY", {
+                    "text": transcript,
+                    "language": stt_result.get("detected_language", "en")
+                })
                 await self.emit_event("TRANSCRIPT_GENERATED", {
                     "text": transcript,
                     "language": stt_result.get("detected_language", "en")
@@ -283,9 +294,13 @@ class HandsFreeManager:
 
                 # 2. Check for Immediate Voice Directives
                 lower_text = transcript.lower().strip()
+                import re
+                clean_text = re.sub(r'[^\w\s]', ' ', lower_text)
+                clean_text = re.sub(r'\s+', ' ', clean_text).strip()
 
-                # Directive A: Stop
-                if any(lower_text == cmd or lower_text.startswith(cmd) for cmd in ["matrix stop", "stop", "cancel", "chup", "ruko"]):
+                # Directive A: Stop / Interruption
+                stop_cmds = ["matrix stop", "stop", "cancel", "chup", "ruko", "quiet", "silence", "abort"]
+                if clean_text in stop_cmds or any(clean_text.startswith(cmd + " ") or clean_text.endswith(" " + cmd) or (" " + cmd + " ") in clean_text for cmd in stop_cmds):
                     await self.interrupt()
                     return
 
@@ -485,6 +500,7 @@ class HandsFreeManager:
                     session_id=self.active_session_id
                 )
                 self.last_response = response_text
+                await self.emit_event("BRAIN_RESPONSE", {"text": response_text[:300]})
 
                 if self._interrupted:
                     logger.info("Turn execution was interrupted before speaking.")
@@ -494,8 +510,20 @@ class HandsFreeManager:
                 self.state = HandsFreeState.SPEAKING
                 await self.emit_event("SPEAKING", {"text": response_text[:120]})
 
-                audio_file = await tts_engine.speak(response_text)
+                # Keep voice output concise: synthesize up to 250 characters for fast speech
+                tts_text = response_text.strip()
+                if len(tts_text) > 250:
+                    sentences = re.split(r'(?<=[.!?])\s+', tts_text)
+                    if sentences:
+                        candidate = sentences[0]
+                        if len(candidate) < 150 and len(sentences) > 1:
+                            candidate += " " + sentences[1]
+                        tts_text = candidate[:250]
+
+                await self.emit_event("TTS_STARTED", {"text": tts_text})
+                audio_file = await tts_engine.speak(tts_text)
                 self.last_audio_file = audio_file
+                await self.emit_event("TTS_FINISHED", {"audio_file": audio_file.name if audio_file else None})
 
                 # 5. Transition back: Auto-resume listening with timeout in CONTINUOUS, or return to IDLE
                 if not self._interrupted:
@@ -503,6 +531,10 @@ class HandsFreeManager:
                         self.state = HandsFreeState.LISTENING
                         self._listening_start_time = time.time()
                         vad_engine.reset()
+                        await self.emit_event("LISTENING_RESUMED", {
+                            "reason": "continuous_resume",
+                            "mode": "continuous"
+                        })
                         await self.emit_event("RECORDING_STARTED", {
                             "reason": "continuous_resume",
                             "audio_file": audio_file.name if audio_file else None

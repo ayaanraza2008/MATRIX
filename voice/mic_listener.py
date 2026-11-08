@@ -85,6 +85,16 @@ class NativeMicListener:
                 hands_free_manager.process_audio_chunk(chunk, source="native_mic"),
                 self._loop
             )
+            if self.frames_captured % 50 == 1:
+                asyncio.run_coroutine_threadsafe(
+                    hands_free_manager.emit_event("AUDIO_FRAME_RECEIVED", {
+                        "frame_index": self.frames_captured,
+                        "rms": self.last_rms,
+                        "peak": self.last_peak,
+                        "active": self.last_rms >= 30.0
+                    }),
+                    self._loop
+                )
 
     def _run_stream_loop(self):
         """Worker thread running PortAudio input stream with automatic error recovery."""
@@ -110,6 +120,17 @@ class NativeMicListener:
 
                 with sd.InputStream(**stream_kwargs):
                     retry_delay = 1.0  # Reset backoff on successful open
+                    if self._loop and self._loop.is_running():
+                        asyncio.run_coroutine_threadsafe(
+                            hands_free_manager.emit_event("DEVICE_READY", {
+                                "device_index": dev_idx,
+                                "device_name": dev_name,
+                                "sample_rate": self.sample_rate,
+                                "channels": 1,
+                                "block_size": self.block_size
+                            }),
+                            self._loop
+                        )
                     while self._running:
                         time.sleep(0.1)
             except Exception as e:

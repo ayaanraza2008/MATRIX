@@ -21,7 +21,7 @@ class ConversationContext(BaseModel):
     messages: List[ContextMessage] = Field(default_factory=list)
     pinned_entities: Dict[str, Any] = Field(default_factory=dict)
     active_agent: str = "core"
-    max_tokens: int = 8192
+    max_tokens: int = 1500
     estimated_tokens: int = 0
     language: str = "en"  # "en", "hi", "hinglish"
 
@@ -153,15 +153,27 @@ class ContextManager:
 
         return entities
 
-    def format_history_for_llm(self, session_id: str) -> str:
+    def format_history_for_llm(self, session_id: str, max_messages: int = 6) -> str:
         ctx = self.get_context(session_id)
+        # Exclude system prompt (passed separately) and keep only last N messages
+        non_system = [m for m in ctx.messages if m.role != "system"]
+        recent = non_system[-max_messages:] if len(non_system) > max_messages else non_system
+
         formatted = []
-        for m in ctx.messages:
+        for m in recent:
             prefix = f"{m.role.upper()}"
-            if m.agent_name:
+            if m.agent_name and m.agent_name != "core":
                 prefix += f" ({m.agent_name})"
-            formatted.append(f"{prefix}: {m.content}")
+            # Cap older historical turns to 250 characters to prevent prompt bloat
+            content_clean = m.content[:250].strip()
+            formatted.append(f"{prefix}: {content_clean}")
         return "\n\n".join(formatted)
+
+    def get_recent_messages(self, session_id: str, max_messages: int = 6) -> List[Dict[str, str]]:
+        ctx = self.get_context(session_id)
+        non_system = [m for m in ctx.messages if m.role != "system"]
+        recent = non_system[-max_messages:] if len(non_system) > max_messages else non_system
+        return [{"role": m.role if m.role in ["user", "assistant"] else "assistant", "content": m.content[:250]} for m in recent]
 
 
 # Global Context Manager singleton

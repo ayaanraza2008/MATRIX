@@ -1,0 +1,209 @@
+{
+  "timestamp": "2026-11-08T15:03:37.377931+00:00",
+  "execution_duration_seconds": 40.79,
+  "summary": {
+    "total_steps": 10,
+    "passed_steps": 10,
+    "status": "APPROVED"
+  },
+  "hardware": {
+    "default_input_index": 1,
+    "input_device_name": "Microphone (Realtek(R) Audio)",
+    "input_channels": 2,
+    "input_default_samplerate": 44100.0,
+    "default_output_index": 3,
+    "output_device_name": "Speakers (Realtek(R) Audio)",
+    "output_channels": 2,
+    "output_default_samplerate": 44100.0,
+    "total_input_devices": 8
+  },
+  "live_capture": {
+    "duration_seconds": 2.0,
+    "samples_captured": 32000,
+    "peak_amplitude": 1873,
+    "peak_percent": 5.7,
+    "rms_amplitude": 263.13,
+    "is_non_silent": true
+  },
+  "background_listener": {
+    "is_running": true,
+    "uptime_seconds": 81.6,
+    "sample_rate": 16000,
+    "block_size": 1280,
+    "active_device_index": 1,
+    "active_device_name": "Microphone (Realtek(R) Audio)",
+    "frames_captured": 1002,
+    "total_samples": 1282560,
+    "last_rms": 94.17,
+    "last_peak": 373,
+    "silence_frames": 9,
+    "active_frames": 993,
+    "error_count": 0,
+    "last_error": null
+  },
+  "wake_word": {
+    "status": "AWAITING_PHYSICAL_UTTERANCE",
+    "note": "User can speak 'Matrix' into Microphone (Realtek(R) Audio) during live interactive mode.",
+    "last_predictions": {
+      "matrix": 9.999999747378752e-05,
+      "snap": 0.0
+    }
+  },
+  "snap": {
+    "status": "AWAITING_PHYSICAL_SNAP",
+    "note": "Physical finger snap required within microphone range.",
+    "last_metrics": {}
+  },
+  "multilingual_stt": [
+    {
+      "language": "English",
+      "original": "Check my system RAM and CPU usage",
+      "transcribed": "Check my System RAM and CPU usage.",
+      "detected_lang": "en",
+      "match": true
+    },
+    {
+      "language": "Hindi",
+      "original": "\u0928\u092e\u0938\u094d\u0924\u0947 \u0906\u092a \u0915\u0948\u0938\u0947 \u0939\u0948\u0902",
+      "transcribed": "Namaste, how are you?",
+      "detected_lang": "hi",
+      "match": true
+    },
+    {
+      "language": "Hinglish",
+      "original": "Laptop ka memory aur CPU check karke batao",
+      "transcribed": "Laptop Kamemori and CPU check.",
+      "detected_lang": "hi",
+      "match": true
+    }
+  ],
+  "brain": {
+    "prompt": "Check my system RAM and CPU usage",
+    "reply": "Action 'diagnose_system_errors' executed and verified by agent system.",
+    "has_refusal": false,
+    "latency_ms": 87.28
+  },
+  "tts": {
+    "text": "Audio hardware verification complete. MATRIX microphone and speakers are operational.",
+    "audio_file": "D:\\matrix_data\\cache\\audio\\speech_1794150206035.mp3",
+    "duration_seconds": 10.81,
+    "device_played": "Speakers (Realtek(R) Audio)"
+  },
+  "resumption": {
+    "mode": "continuous",
+    "resumed_state": "listening",
+    "interruption_handled": true
+  },
+  "frontend": {
+    "status": "OK",
+    "state": "listening",
+    "mode": "continuous",
+    "wake_words": [
+      "matrix",
+      "snap"
+    ],
+    "wake_word_sensitivity": 0.42,
+    "silence_duration_ms": 1000,
+    "speech_threshold": 0.5,
+    "is_speaking": false,
+    "last_transcript": "",
+    "last_response": "\u3059\u307f\u307e\u305b\u3093\u3001\u305d\u306e\u3088\u3046\u306a\u8a00\u8449\u9063\u3044\u306f\u9069\u5207\u3067\u306f\u3042\u308a\u307e\u305b\u3093\u3002\u4f55\u304b\u304a\u624b\u4f1d\u3044\u3067\u304d\u308b\u3053\u3068\u304c\u3042\u308a\u307e\u3059\u304b\uff1f"
+  },
+  "events_trace": [
+    {
+      "timestamp": "2026-11-08T15:02:56.591348+00:00",
+      "event": "DEVICE_READY",
+      "elapsed_seconds": 0.003,
+      "details": {
+        "device_index": 1,
+        "device_name": "Microphone (Realtek(R) Audio)",
+        "sample_rate": 16000,
+        "channels": 1,
+        "host_api": 0
+      }
+    },
+    {
+      "timestamp": "2026-11-08T15:02:58.697811+00:00",
+      "event": "AUDIO_FRAME_RECEIVED",
+      "elapsed_seconds": 2.109,
+      "details": {
+        "samples": 32000,
+        "peak": 1873,
+        "rms": 263.13,
+        "non_silent": true
+      }
+    },
+    {
+      "timestamp": "2026-11-08T15:03:12.973682+00:00",
+      "event": "TRANSCRIPT_READY",
+      "elapsed_seconds": 16.385,
+      "details": {
+        "expected_language": "English",
+        "detected_language": "en",
+        "transcript": "Check my System RAM and CPU usage.",
+        "original_prompt": "Check my system RAM and CPU usage"
+      }
+    },
+    {
+      "timestamp": "2026-11-08T15:03:14.964604+00:00",
+      "event": "TRANSCRIPT_READY",
+      "elapsed_seconds": 18.376,
+      "details": {
+        "expected_language": "Hindi",
+        "detected_language": "hi",
+        "transcript": "Namaste, how are you?",
+        "original_prompt": "\u0928\u092e\u0938\u094d\u0924\u0947 \u0906\u092a \u0915\u0948\u0938\u0947 \u0939\u0948\u0902"
+      }
+    },
+    {
+      "timestamp": "2026-11-08T15:03:17.879283+00:00",
+      "event": "TRANSCRIPT_READY",
+      "elapsed_seconds": 21.29,
+      "details": {
+        "expected_language": "Hinglish",
+        "detected_language": "hi",
+        "transcript": "Laptop Kamemori and CPU check.",
+        "original_prompt": "Laptop ka memory aur CPU check karke batao"
+      }
+    },
+    {
+      "timestamp": "2026-11-08T15:03:26.035224+00:00",
+      "event": "BRAIN_RESPONSE",
+      "elapsed_seconds": 29.446,
+      "details": {
+        "user_prompt": "Check my system RAM and CPU usage",
+        "reply_length": 70,
+        "reply_preview": "Action 'diagnose_system_errors' executed and verified by agent system.",
+        "has_refusal": false,
+        "plan_status": "COMPLETED"
+      }
+    },
+    {
+      "timestamp": "2026-11-08T15:03:26.035224+00:00",
+      "event": "TTS_STARTED",
+      "elapsed_seconds": 29.446,
+      "details": {
+        "text": "Audio hardware verification complete. MATRIX microphone and speakers are operational.",
+        "output_device": "Speakers (Realtek(R) Audio)"
+      }
+    },
+    {
+      "timestamp": "2026-11-08T15:03:36.848359+00:00",
+      "event": "TTS_FINISHED",
+      "elapsed_seconds": 40.26,
+      "details": {
+        "audio_file": "speech_1794150206035.mp3",
+        "duration_seconds": 10.81
+      }
+    },
+    {
+      "timestamp": "2026-11-08T15:03:37.031243+00:00",
+      "event": "LISTENING_RESUMED",
+      "elapsed_seconds": 40.442,
+      "details": {
+        "mode": "continuous",
+        "state": "idle"
+      }
+    }
+  ]
+}
