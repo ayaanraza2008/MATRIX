@@ -50,8 +50,13 @@ async def lifespan(app: FastAPI):
         from voice.mic_listener import mic_listener
         mic_listener.start(asyncio.get_running_loop())
         logger.info("Persistent background native microphone listener service started.")
+
+        # Warm up local LLM model asynchronously on startup to eliminate cold-start latency
+        from core.model_manager import model_manager
+        asyncio.create_task(asyncio.to_thread(model_manager.load_local_model))
+        logger.info("Local LLM model background warm-up task dispatched.")
     except Exception as e:
-        logger.warning(f"Could not hook hands-free event broker or mic listener: {e}")
+        logger.warning(f"Could not hook hands-free event broker, mic listener, or model preloader: {e}")
 
     logger.info(f"MATRIX Server online at http://{settings.host}:{settings.port}")
     yield

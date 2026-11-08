@@ -92,10 +92,95 @@ class FileAgent(BaseAgent):
             return p if p.is_absolute() else (Path.cwd() / p)
         return user_home / "Downloads"
 
+    async def _create_folder(self, target_dir: Path, folder_name: str, start_time: float) -> AgentResult:
+        """Create a new folder safely on disk with verification."""
+        if not self.is_safe_path(target_dir):
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken="create_folder",
+                error=f"Access denied: Target '{target_dir}' is a protected system directory.",
+                verification={"verified": False},
+                execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+            )
+
+        full_path = target_dir / folder_name
+        try:
+            full_path.mkdir(parents=True, exist_ok=True)
+            verified = full_path.exists() and full_path.is_dir()
+            return AgentResult(
+                success=verified,
+                agent_name=self.name,
+                action_taken="create_folder",
+                data={"folder_path": str(full_path), "folder_name": folder_name, "created": True},
+                verification={"verified": verified, "exists": verified},
+                execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+            )
+        except Exception as e:
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken="create_folder",
+                error=str(e),
+                verification={"verified": False},
+                execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+            )
+
+    async def _list_directory(self, target_dir: Path, start_time: float) -> AgentResult:
+        """List files and folders in a user directory with sizes and counts."""
+        if not self.is_safe_path(target_dir) or not target_dir.exists():
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken="list_directory",
+                error=f"Cannot access directory '{target_dir}'.",
+                verification={"verified": False},
+                execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+            )
+
+        items = []
+        try:
+            for item in target_dir.iterdir():
+                items.append({
+                    "name": item.name,
+                    "is_dir": item.is_dir(),
+                    "size_bytes": item.stat().st_size if item.is_file() else 0
+                })
+            return AgentResult(
+                success=True,
+                agent_name=self.name,
+                action_taken="list_directory",
+                data={"directory": str(target_dir), "items": items[:30], "total_items": len(items)},
+                verification={"verified": True, "count": len(items)},
+                execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+            )
+        except Exception as e:
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken="list_directory",
+                error=str(e),
+                verification={"verified": False},
+                execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+            )
+
     async def execute(self, action: str, parameters: Dict[str, Any]) -> AgentResult:
         start_time = time.perf_counter()
         action_lower = action.lower()
         raw_prompt = parameters.get("query", parameters.get("raw_prompt", "")).lower()
+
+        # 0. Create Folder / Directory
+        if "folder" in raw_prompt and any(w in raw_prompt for w in ["create", "make", "new", "mkdir"]):
+            import re
+            dest_dir = self.resolve_target_dir(raw_prompt)
+            match = re.search(r'(?:create|make|new|mkdir)\s+(?:a\s+)?(?:folder|directory)\s+(?:named\s+|called\s+)?([a-zA-Z0-9_.-]+)', raw_prompt, re.I)
+            folder_name = match.group(1) if match else "NewFolder"
+            return await self._create_folder(dest_dir, folder_name, start_time)
+
+        # 0.5. List Files / Directory
+        if any(w in raw_prompt for w in ["list files", "show files", "list directory", "view files", "what files are in"]):
+            dest_dir = self.resolve_target_dir(raw_prompt)
+            return await self._list_directory(dest_dir, start_time)
 
         # 1. Organize Folder (e.g. "Matrix, organize my Downloads folder")
         if "organize" in action_lower or "organize" in raw_prompt:

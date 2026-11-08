@@ -47,6 +47,13 @@ async def get_frame_image(filename: str):
     raise HTTPException(status_code=404, detail="Image frame not found.")
 
 
+@router.get("/devices")
+async def list_camera_devices():
+    """List physical camera devices detected on the system."""
+    devices = camera_capture.list_devices()
+    return {"status": "OK", "devices": devices, "count": len(devices)}
+
+
 @router.post("/camera")
 async def capture_camera():
     """Capture a single frame from the physical Integrated Camera."""

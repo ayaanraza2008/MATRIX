@@ -96,17 +96,18 @@ class ContextManager:
         # Reference to last mentioned file
         last_file = ctx.pinned_entities.get("last_file")
         if last_file:
-            resolved = re.sub(r'\b(that file|this file|the file|it)\b', f"'{last_file}'", resolved, flags=re.IGNORECASE)
+            safe_file = str(last_file).replace('\\', '/')
+            resolved = re.sub(r'\b(that file|this file|the file|it)\b', lambda _: f"'{safe_file}'", resolved, flags=re.IGNORECASE)
 
         # Reference to last mentioned app
         last_app = ctx.pinned_entities.get("last_app")
         if last_app:
-            resolved = re.sub(r'\b(that app|this app|the app|the application)\b', f"{last_app}", resolved, flags=re.IGNORECASE)
+            resolved = re.sub(r'\b(that app|this app|the app|the application)\b', lambda _: f"{last_app}", resolved, flags=re.IGNORECASE)
 
         # Reference to last search query / URL
         last_query = ctx.pinned_entities.get("last_search_query")
         if last_query:
-            resolved = re.sub(r'\b(that topic|the same topic|that research)\b', f"'{last_query}'", resolved, flags=re.IGNORECASE)
+            resolved = re.sub(r'\b(that topic|the same topic|that research)\b', lambda _: f"'{last_query}'", resolved, flags=re.IGNORECASE)
 
         return resolved
 

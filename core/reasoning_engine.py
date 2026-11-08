@@ -203,7 +203,27 @@ class ReasoningEngine:
                 ))
 
         elif intent.intent_type == IntentType.FILES:
-            if "organize" in raw_lower or "organize" in intent.action.lower():
+            if any(w in raw_lower for w in ["create", "make", "new", "mkdir"]) and "folder" in raw_lower:
+                steps.append(PlanStep(
+                    step_id=1,
+                    title="Create Safe Directory on Disk",
+                    agent_name="files",
+                    tool_name="create_folder",
+                    arguments={"raw_prompt": intent.raw_prompt, "query": intent.raw_prompt},
+                    risk_level=1,
+                    verification_hook="verify_file_read"
+                ))
+            elif any(w in raw_lower for w in ["list", "show", "view"]) and any(w in raw_lower for w in ["file", "desktop", "download"]):
+                steps.append(PlanStep(
+                    step_id=1,
+                    title="List Files in Directory",
+                    agent_name="files",
+                    tool_name="list_directory",
+                    arguments={"raw_prompt": intent.raw_prompt, "query": intent.raw_prompt},
+                    risk_level=1,
+                    verification_hook="verify_file_read"
+                ))
+            elif "organize" in raw_lower or "organize" in intent.action.lower():
                 steps.append(PlanStep(
                     step_id=1,
                     title="Organize Directory Files into Categories",

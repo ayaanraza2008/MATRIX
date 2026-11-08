@@ -45,6 +45,8 @@ class IntentEngine:
     """Classifies user prompts into structured execution directives."""
 
     INTENT_RULES = [
+        # Master Windows Volume Control & Sound Level
+        (r"\b(volume\s+(?:up|down|increase|decrease|raise|lower|reduce|to|\d+)|turn\s+(?:the\s+)?volume(?:\s+(?:up|down))?|mute(?:\s+sound|\s+volume)?|unmute|sound\s+level|set\s+volume)\b", IntentType.COMMAND, "computer", 0),
         # 1. High-Risk Destructive Commands (Mandatory Level 3 Safety Gate)
         (r"\b(format\s+[a-z]:|del\s+/[fsq]|rmdir\s+/[sq]|rm\s+-rf|drop\s+table|drop\s+database|reg\s+delete|delete\s+all\s+system\s+files)\b", IntentType.COMMAND, "computer", 3),
 
@@ -61,6 +63,8 @@ class IntentEngine:
         (r"\b(open\s+github\s+and\s+inspect\s+(?:my\s+)?repository|inspect\s+(?:my\s+)?github\s+repository|inspect\s+(?:my\s+)?repository)\b", IntentType.COMMAND, "personal", 1),
 
         # 5. File & Folder Organization
+        (r"\b(create|make|new|mkdir)\s+(?:a\s+)?(?:folder|directory)\b", IntentType.FILES, "files", 1),
+        (r"\b(list\s+(?:my\s+)?(?:files|desktop|downloads|documents)|show\s+(?:my\s+)?files|view\s+(?:my\s+)?files)\b", IntentType.FILES, "files", 1),
         (r"\b(organize\s+(?:my\s+)?downloads(?:\s+folder)?|organize\s+(?:my\s+)?(?:folder|files|documents))\b", IntentType.FILES, "files", 1),
         (r"\b(pdf|docx|xlsx|read document|summarize file|convert format|extract text from file|organize files|find files|personal files|storage files|list\s+files)\b", IntentType.FILES, "files", 1),
 
@@ -91,7 +95,10 @@ class IntentEngine:
         (r"\b(data\s+analysis|dataset|tabular|statistics|numerical\s+analysis|analyze\s+csv|calculate\s+stats)\b", IntentType.DATA_ANALYSIS, "data_analysis", 1),
 
         # 13. PC Control / Command
-        (r"\b(open|launch|start|run)\s+(chrome|google\s+chrome|browser)\b", IntentType.COMMAND, "computer", 1),
+                (r"\b(open|launch|go\s+to|visit)\s+(?:https?://|www\.)?[a-zA-Z0-9-]+\.(?:com|org|net|io|edu|gov|co)\b", IntentType.COMMAND, "computer", 1),
+        (r"\b(open|launch|go\s+to)\s+(youtube|google|github|reddit|twitter|wikipedia|spotify)\b", IntentType.COMMAND, "computer", 1),
+        (r"\b(search\s+(?:for\s+)?(?:.+)\s+on\s+google|google\s+(?:for\s+)?.+)\b", IntentType.COMMAND, "computer", 1),
+(r"\b(open|launch|start|run)\s+(chrome|google\s+chrome|browser)\b", IntentType.COMMAND, "computer", 1),
         (r"\b(open|launch|start|run|close|switch to|maximize|minimize|type|click|press)\b.*\b(notepad|calc|calculator|browser|chrome|terminal|cmd|powershell|window|app|application|code)\b", IntentType.COMMAND, "computer", 1),
         (r"\b(safe\s+task|perform\s+a\s+safe\s+task|safe\s+command|run\s+command|execute\s+command|whoami|hostname|ipconfig|systeminfo)\b", IntentType.COMMAND, "computer", 1),
         (r"\b(screenshot|capture screen|take a snap)\b", IntentType.COMMAND, "computer", 1),
@@ -104,7 +111,7 @@ class IntentEngine:
         (r"\b(screen|camera|webcam|visible on my screen|what is on my screen|what is currently visible|read this image|ocr|look at this|scan this|inspect\s+(?:my\s+)?screen)\b", IntentType.VISION, "vision", 1),
 
         # 15. JARVIS Voice Synthesis
-        (r"\b(speak|say out loud|voice|volume|mute|listen|unmute|talk in hindi|bolna)\b", IntentType.VOICE, "voice", 0),
+        (r"\b(speak|say out loud|voice synthesis|talk in hindi|bolna)\b", IntentType.VOICE, "voice", 0),
 
         # 16. Repository Intelligence
         (r"\b(starred repo|repositories|github|integrate repo|hexstrike|ego-lite|chatterbox|agentmemory|select\s+tool|capability\s+gap|repository\s+capability|best\s+available\s+capability|suitable\s+repository\s+capability|find\s+(?:a\s+)?(?:suitable\s+)?(?:repository\s+)?capability)\b", IntentType.REPO_INTEL, "repo_intel", 1),

@@ -124,9 +124,41 @@ class MatrixBrain:
         is_hinglish_requested = any(w in prompt_lower for w in ["hinglish", "hindi me", "hindi mein", "batao", "kya"])
         language_hint = " Respond in natural conversational Hinglish." if is_hinglish_requested else ""
 
+        # Stage 10.5: Natural Response Synthesis for Real Executed Actions
+        first_step = orch_res.plan.steps[0] if orch_res.plan.steps else None
+        first_result = orch_res.results[0] if orch_res.results else None
+        res_data = first_result.data if first_result and isinstance(first_result.data, dict) else {}
+
+        if first_result and first_result.success:
+            act = first_result.action_taken
+            if act == "report_time_date":
+                reply_content = res_data.get("message", f"Current time is {res_data.get('time')} on {res_data.get('date')}, sir.")
+            elif act == "volume_up":
+                reply_content = f"Master volume increased to {res_data.get('volume_percent', 100)}%, sir."
+            elif act == "volume_down":
+                reply_content = f"Master volume reduced to {res_data.get('volume_percent', 50)}%, sir."
+            elif act == "mute":
+                reply_content = "Master audio output has been muted, sir."
+            elif act == "unmute":
+                reply_content = f"Audio unmuted at {res_data.get('volume_percent', 100)}%, sir."
+            elif act == "set_volume":
+                reply_content = f"Master volume adjusted to {res_data.get('volume_percent')}%, sir."
+            elif act == "open_url":
+                reply_content = f"Opening {res_data.get('opened_url')} in your default browser, sir."
+            elif act == "create_folder":
+                reply_content = f"Folder '{res_data.get('folder_name')}' created successfully at {res_data.get('folder_path')}, sir."
+            elif act == "list_directory":
+                count = res_data.get("total_items", 0)
+                reply_content = f"Found {count} items in {res_data.get('directory')}, sir."
+            elif act == "launch_application":
+                reply_content = f"Application '{res_data.get('application')}' has been launched and is active, sir."
+            elif act == "close_application":
+                reply_content = f"Application '{res_data.get('application')}' closed successfully ({res_data.get('terminated_processes', 0)} process(es) terminated), sir."
+
         # Stage 11: Intelligent Model Enrichment & Multi-lingual Synthesis
         # A. Direct Conversational / QA Intent (only if not an explicit capability gap or security gate block)
-        if orch_res.plan.steps and orch_res.plan.steps[0].tool_name == "generate_answer" and not (
+        if first_step and first_step.tool_name in ["generate_answer", "answer", "dialog"] and not (
+            first_result and first_result.action_taken == "report_time_date" or
             "Autonomous Capability Assessment" in orch_res.response_text or
             "Security policy requires explicit authorization" in orch_res.response_text
         ):

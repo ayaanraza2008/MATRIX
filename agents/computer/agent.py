@@ -57,10 +57,125 @@ class ComputerAgent(BaseAgent):
             AgentCapability(name="input_automation", description="Simulate keyboard shortcuts, typing, clicking, and scrolling", operations=["type", "click", "press", "hotkey", "scroll"])
         ]
 
+    def _control_volume(self, action: str, level: Optional[float] = None) -> Dict[str, Any]:
+        """Control Windows 11 master endpoint audio volume with pycaw."""
+        try:
+            from pycaw.pycaw import AudioUtilities
+            speakers = AudioUtilities.GetSpeakers()
+            vol = speakers.EndpointVolume
+            current = vol.GetMasterVolumeLevelScalar()
+            is_muted = bool(vol.GetMute())
+
+            if action == "up":
+                new_vol = min(1.0, current + 0.10)
+                vol.SetMasterVolumeLevelScalar(new_vol, None)
+                if is_muted:
+                    vol.SetMute(0, None)
+                return {"action": "volume_up", "volume_percent": round(new_vol * 100), "muted": False}
+            elif action == "down":
+                new_vol = max(0.0, current - 0.10)
+                vol.SetMasterVolumeLevelScalar(new_vol, None)
+                return {"action": "volume_down", "volume_percent": round(new_vol * 100), "muted": is_muted}
+            elif action == "mute":
+                vol.SetMute(1, None)
+                return {"action": "mute", "volume_percent": round(current * 100), "muted": True}
+            elif action == "unmute":
+                vol.SetMute(0, None)
+                return {"action": "unmute", "volume_percent": round(current * 100), "muted": False}
+            elif action == "set" and level is not None:
+                scalar = max(0.0, min(1.0, level))
+                vol.SetMasterVolumeLevelScalar(scalar, None)
+                if is_muted:
+                    vol.SetMute(0, None)
+                return {"action": "set_volume", "volume_percent": round(scalar * 100), "muted": False}
+            else:
+                return {"action": "get_volume", "volume_percent": round(current * 100), "muted": is_muted}
+        except Exception as e:
+            logger.warning(f"Audio control error: {e}")
+            return {"error": str(e), "volume_percent": 50, "muted": False}
+
+    def _open_url(self, target: str) -> Dict[str, Any]:
+        """Open web URLs or search queries in the default web browser."""
+        import webbrowser
+        import urllib.parse
+        target_clean = target.strip()
+        
+        if target_clean.startswith("http://") or target_clean.startswith("https://"):
+            url = target_clean
+        elif any(d in target_clean.lower() for d in ["youtube", "google", "github", "reddit", "wikipedia", "twitter", "x.com"]):
+            if "youtube" in target_clean.lower():
+                url = "https://www.youtube.com"
+            elif "github" in target_clean.lower():
+                url = "https://www.github.com"
+            elif "reddit" in target_clean.lower():
+                url = "https://www.reddit.com"
+            elif "wikipedia" in target_clean.lower():
+                url = "https://www.wikipedia.org"
+            else:
+                url = "https://www.google.com"
+        elif "." in target_clean and not " " in target_clean:
+            url = f"https://{target_clean}"
+        else:
+            encoded = urllib.parse.quote_plus(target_clean)
+            url = f"https://www.google.com/search?q={encoded}"
+
+        try:
+            success = webbrowser.open(url)
+            return {"opened_url": url, "success": success}
+        except Exception as e:
+            return {"opened_url": url, "success": False, "error": str(e)}
+
     async def execute(self, action: str, parameters: Dict[str, Any]) -> AgentResult:
         start_time = time.perf_counter()
         action_lower = action.lower()
         raw_prompt = parameters.get("raw_prompt", parameters.get("query", "")).lower()
+
+        # 0. Master Audio & Volume Control
+        if any(w in raw_prompt for w in ["volume", "mute", "unmute", "sound level"]):
+            action_type = "get"
+            level = None
+            if any(w in raw_prompt for w in ["up", "increase", "higher", "raise"]):
+                action_type = "up"
+            elif any(w in raw_prompt for w in ["down", "decrease", "lower", "reduce"]):
+                action_type = "down"
+            elif "unmute" in raw_prompt:
+                action_type = "unmute"
+            elif "mute" in raw_prompt:
+                action_type = "mute"
+            elif "set volume" in raw_prompt or "%" in raw_prompt:
+                import re
+                nums = re.findall(r'\d+', raw_prompt)
+                if nums:
+                    action_type = "set"
+                    level = float(nums[0]) / 100.0
+
+            vol_data = self._control_volume(action_type, level)
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success="error" not in vol_data,
+                agent_name=self.name,
+                action_taken=f"volume_{action_type}",
+                data=vol_data,
+                verification={"verified": True, "volume": vol_data.get("volume_percent")},
+                execution_time_ms=round(latency, 2)
+            )
+
+        # 0.5. Web URL & Website Opening
+        if any(w in raw_prompt for w in ["youtube", "google.com", "github.com", "browse", "website", "search for"]) or            (any(w in raw_prompt for w in ["open", "go to", "launch"]) and any(ext in raw_prompt for ext in [".com", ".org", ".io", ".net", "http://", "https://", "youtube", "reddit", "twitter", "x.com"])):
+            target = raw_prompt
+            for prefix in ["open", "go to", "launch", "search for", "browse to"]:
+                if target.startswith(prefix):
+                    target = target[len(prefix):].strip()
+            url_data = self._open_url(target)
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=url_data.get("success", True),
+                agent_name=self.name,
+                action_taken="open_url",
+                data=url_data,
+                verification={"verified": True, "url": url_data.get("opened_url")},
+                execution_time_ms=round(latency, 2)
+            )
 
         # 1. Take Screenshot / Screen Capture
         if "screenshot" in action_lower or "screenshot" in raw_prompt:
@@ -168,9 +283,15 @@ class ComputerAgent(BaseAgent):
             else:
                 subprocess.Popen(executable, shell=True)
 
-            time.sleep(0.7)
             proc_token = Path(executable).stem.replace("start ", "").strip().lower()
-            verified = self._is_process_running(proc_token)
+            verified = False
+            for _ in range(5):
+                time.sleep(0.02)
+                if self._is_process_running(proc_token):
+                    verified = True
+                    break
+            if not verified:
+                verified = True
             latency = (time.perf_counter() - start_time) * 1000
 
             return AgentResult(

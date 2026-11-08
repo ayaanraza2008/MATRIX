@@ -1,5 +1,16 @@
-import React, { useState, useRef } from 'react';
-import { Mic, MicOff, Volume2, Radio, Play, Square, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Mic,
+  MicOff,
+  Volume2,
+  Radio,
+  Play,
+  Square,
+  CheckCircle2,
+  AlertCircle,
+  ShieldAlert,
+  Activity
+} from 'lucide-react';
 
 interface VoiceViewProps {
   voiceActive: boolean;
@@ -20,12 +31,114 @@ export const VoiceView: React.FC<VoiceViewProps> = ({
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
-  // Push-to-Talk Mic State
+  // Push-to-Talk & Real-Time Audio State
   const [recording, setRecording] = useState(false);
   const [transcript, setTranscript] = useState<string | null>(null);
   const [replyText, setReplyText] = useState<string | null>(null);
+  const [micPermission, setMicPermission] = useState<'prompt' | 'granted' | 'denied'>('prompt');
+  const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedAudioDeviceId, setSelectedAudioDeviceId] = useState<string>('');
+  const [audioLevel, setAudioLevel] = useState<number>(0);
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const activeStreamRef = useRef<MediaStream | null>(null);
+
+  useEffect(() => {
+    checkMicPermission();
+    enumerateAudioDevices();
+
+    return () => {
+      cleanupAudioContext();
+    };
+  }, []);
+
+  const checkMicPermission = async () => {
+    try {
+      if (navigator.permissions && navigator.permissions.query) {
+        const res = await navigator.permissions.query({ name: 'microphone' as any });
+        setMicPermission(res.state as any);
+        res.onchange = () => {
+          setMicPermission(res.state as any);
+          if (res.state === 'granted') {
+            enumerateAudioDevices();
+          }
+        };
+      }
+    } catch {
+      // Unimplemented in some browsers
+    }
+  };
+
+  const enumerateAudioDevices = async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioInputs = devices.filter((d) => d.kind === 'audioinput');
+      setAudioDevices(audioInputs);
+      if (audioInputs.length > 0 && !selectedAudioDeviceId) {
+        setSelectedAudioDeviceId(audioInputs[0].deviceId);
+      }
+    } catch (e) {
+      console.warn('Failed to enumerate audio devices:', e);
+    }
+  };
+
+  const cleanupAudioContext = () => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+    if (activeStreamRef.current) {
+      activeStreamRef.current.getTracks().forEach((t) => t.stop());
+      activeStreamRef.current = null;
+    }
+    setAudioLevel(0);
+  };
+
+  const startAudioMonitoring = (stream: MediaStream) => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      const audioCtx = new AudioCtx();
+      audioContextRef.current = audioCtx;
+
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
+
+      const source = audioCtx.createMediaStreamSource(stream);
+      source.connect(analyser);
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      const updateMeter = () => {
+        if (!analyserRef.current) return;
+        analyserRef.current.getByteFrequencyData(dataArray);
+
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          sum += dataArray[i];
+        }
+        const avg = sum / bufferLength;
+        const normalized = Math.min(100, Math.round((avg / 128) * 100));
+        setAudioLevel(normalized);
+
+        animationFrameRef.current = requestAnimationFrame(updateMeter);
+      };
+
+      updateMeter();
+    } catch (e) {
+      console.warn('Web Audio meter initialization failed:', e);
+    }
+  };
 
   const handleSynthesize = async () => {
     if (!speakText.trim()) return;
@@ -58,9 +171,18 @@ export const VoiceView: React.FC<VoiceViewProps> = ({
         mediaRecorderRef.current.stop();
       }
       setRecording(false);
+      cleanupAudioContext();
     } else {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const constraints = {
+          audio: selectedAudioDeviceId ? { deviceId: { exact: selectedAudioDeviceId } } : true,
+        };
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        activeStreamRef.current = stream;
+        setMicPermission('granted');
+
+        startAudioMonitoring(stream);
+
         const mediaRecorder = new MediaRecorder(stream);
         mediaRecorderRef.current = mediaRecorder;
         audioChunksRef.current = [];
@@ -71,7 +193,7 @@ export const VoiceView: React.FC<VoiceViewProps> = ({
 
         mediaRecorder.onstop = async () => {
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          stream.getTracks().forEach((t) => t.stop());
+          cleanupAudioContext();
 
           if (audioBlob.size > 0) {
             setLoading(true);
@@ -108,15 +230,17 @@ export const VoiceView: React.FC<VoiceViewProps> = ({
 
         mediaRecorder.start();
         setRecording(true);
-        setStatusMsg('Listening to your microphone... Click Stop when finished.');
-      } catch (err) {
-        setStatusMsg('Microphone access denied by browser.');
+        setStatusMsg('Listening to your microphone... Speak now and click Stop when done.');
+      } catch (err: any) {
+        setMicPermission('denied');
+        setStatusMsg(`Microphone access error: ${err.message || 'Permission denied by browser'}`);
       }
     }
   };
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6 matrix-grid-bg">
+      {/* Header */}
       <div className="flex items-center justify-between border-b border-matrix-border/50 pb-4">
         <div>
           <h1 className="text-sm font-mono uppercase font-bold text-slate-100 flex items-center gap-2">
@@ -128,29 +252,86 @@ export const VoiceView: React.FC<VoiceViewProps> = ({
           </p>
         </div>
 
+        {/* Global Interruption & Wake-Word Switch */}
         <div className="flex items-center gap-3">
-          {/* Stop Speaking Button */}
           {isSpeaking && (
             <button
               onClick={onStopSpeaking}
-              className="px-3 py-1.5 rounded-lg bg-matrix-red/20 border border-matrix-red text-matrix-red text-xs font-mono font-bold flex items-center gap-1.5 animate-pulse hover:bg-matrix-red/40 transition-all"
+              className="px-3 py-1.5 rounded-lg bg-matrix-red text-white text-xs font-mono font-bold flex items-center gap-1.5 animate-pulse shadow-md shadow-matrix-red/30 hover:bg-red-600 transition-all"
             >
-              <Square className="w-3.5 h-3.5 fill-matrix-red" />
-              <span>STOP SPEAKING</span>
+              <Square className="w-3.5 h-3.5 fill-white" />
+              <span>BARGE-IN / SILENCE</span>
             </button>
           )}
 
           <button
             onClick={onToggleVoice}
-            className={`px-4 py-1.5 rounded-lg border text-xs font-mono font-bold flex items-center gap-2 transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-all ${
               voiceActive
-                ? 'bg-matrix-green/20 border-matrix-green text-matrix-green shadow-[0_0_12px_rgba(0,255,157,0.3)]'
-                : 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white'
+                ? 'bg-matrix-green text-slate-950 shadow-md shadow-matrix-green/20'
+                : 'bg-slate-900 border border-slate-700 text-slate-400 hover:text-slate-200'
             }`}
           >
             <Radio className={`w-3.5 h-3.5 ${voiceActive ? 'animate-pulse' : ''}`} />
             <span>{voiceActive ? 'WAKE-WORD ARMED' : 'ARM WAKE-WORD'}</span>
           </button>
+        </div>
+      </div>
+
+      {/* Microphone Permission and Device Status Bar */}
+      <div className="flex flex-wrap items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-mono gap-3">
+        <div className="flex items-center gap-3">
+          <span className="text-slate-400">MICROPHONE PERMISSION:</span>
+          {micPermission === 'granted' ? (
+            <span className="px-2 py-0.5 rounded bg-matrix-green/10 border border-matrix-green/40 text-matrix-green flex items-center gap-1.5 font-bold">
+              <CheckCircle2 className="w-3.5 h-3.5" /> GRANTED
+            </span>
+          ) : micPermission === 'denied' ? (
+            <span className="px-2 py-0.5 rounded bg-matrix-red/10 border border-matrix-red/40 text-matrix-red flex items-center gap-1.5 font-bold">
+              <ShieldAlert className="w-3.5 h-3.5" /> DENIED (Browser Blocked)
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/40 text-amber-400 flex items-center gap-1.5 font-bold">
+              <AlertCircle className="w-3.5 h-3.5" /> PROMPT / NOT REQUESTED
+            </span>
+          )}
+
+          {/* Device Selector */}
+          {audioDevices.length > 0 && (
+            <div className="flex items-center gap-2 ml-4">
+              <span className="text-slate-400">DEVICE:</span>
+              <select
+                value={selectedAudioDeviceId}
+                onChange={(e) => setSelectedAudioDeviceId(e.target.value)}
+                className="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 text-[11px]"
+              >
+                {audioDevices.map((d, idx) => (
+                  <option key={d.deviceId || idx} value={d.deviceId}>
+                    {d.label || `Microphone ${idx + 1}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* Live Audio Level dB Meter */}
+        <div className="flex items-center gap-2">
+          <span className="text-slate-400 flex items-center gap-1 text-[11px]">
+            <Activity className="w-3.5 h-3.5 text-matrix-cyan" />
+            MIC LEVEL:
+          </span>
+          <div className="w-32 h-3 bg-slate-950 rounded-full overflow-hidden border border-slate-800 flex items-center p-0.5">
+            <div
+              className="h-full rounded-full transition-all duration-75"
+              style={{
+                width: `${audioLevel}%`,
+                backgroundColor: audioLevel > 70 ? '#ff0055' : audioLevel > 30 ? '#00f0ff' : '#00ff66',
+                boxShadow: audioLevel > 20 ? '0 0 8px currentColor' : 'none'
+              }}
+            />
+          </div>
+          <span className="text-[10px] text-slate-400 w-8 text-right">{audioLevel}%</span>
         </div>
       </div>
 
@@ -169,24 +350,41 @@ export const VoiceView: React.FC<VoiceViewProps> = ({
             </span>
           </div>
 
-          <div className="p-4 rounded-lg bg-slate-950/80 border border-slate-800 text-center space-y-3">
+          <div className="p-5 rounded-lg bg-slate-950/80 border border-slate-800 text-center space-y-4">
             <button
               onClick={handleRecordToggle}
               disabled={loading}
-              className={`w-16 h-16 rounded-full mx-auto flex items-center justify-center transition-all ${
+              className={`w-20 h-20 rounded-full mx-auto flex items-center justify-center transition-all ${
                 recording
-                  ? 'bg-matrix-red text-white shadow-[0_0_20px_rgba(255,0,85,0.6)] animate-pulse'
-                  : 'bg-matrix-cyan text-slate-950 hover:bg-cyan-300 shadow-[0_0_12px_rgba(0,240,255,0.3)]'
+                  ? 'bg-matrix-red text-white shadow-[0_0_24px_rgba(255,0,85,0.7)] animate-pulse'
+                  : 'bg-matrix-cyan text-slate-950 hover:bg-cyan-300 shadow-[0_0_16px_rgba(0,240,255,0.4)]'
               }`}
             >
-              {recording ? <MicOff className="w-8 h-8" /> : <Mic className="w-8 h-8" />}
+              {recording ? <MicOff className="w-10 h-10" /> : <Mic className="w-10 h-10" />}
             </button>
-            <div className="text-xs font-mono text-slate-300 font-semibold">
-              {recording ? 'Click to Stop & Process' : 'Click to Speak to MATRIX'}
+            <div className="text-xs font-mono text-slate-200 font-bold">
+              {recording ? 'Listening... Click to Stop & Process' : 'Click to Speak to MATRIX'}
             </div>
-            <p className="text-[11px] font-mono text-slate-500">
-              Captures your microphone audio, transcribes with Whisper, and responds via Neural TTS.
+            <p className="text-[11px] font-mono text-slate-400 max-w-sm mx-auto">
+              Directly commands your Windows 11 desktop: launch apps, alter volume, open websites, create folders, or converse naturally.
             </p>
+
+            {/* In-Card Dynamic VU Waveform Bars */}
+            {recording && (
+              <div className="flex items-center justify-center gap-1 pt-2 h-8">
+                {[...Array(16)].map((_, i) => {
+                  const factor = Math.sin((i / 16) * Math.PI);
+                  const barHeight = Math.max(4, Math.round(audioLevel * factor * 0.3));
+                  return (
+                    <div
+                      key={i}
+                      className="w-1.5 rounded-full bg-matrix-cyan transition-all duration-75"
+                      style={{ height: `${barHeight}px` }}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {transcript && (

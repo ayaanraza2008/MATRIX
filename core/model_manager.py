@@ -56,6 +56,12 @@ class ModelManager:
         self._llama_instance = None
         self._loaded_model_path: Optional[Path] = None
         self._gemini_failed: bool = False
+        self._last_ollama_check: float = 0.0
+        self._ollama_online: bool = False
+        key = settings.gemini_api_key or os.getenv("GEMINI_API_KEY", "")
+        if key and not key.startswith("AIza"):
+            self._gemini_failed = True
+            logger.info("Configured Gemini API key does not match standard AIza format. Routing directly to local GGUF.")
 
     def benchmark_memory(self) -> MemoryBenchmark:
         """Evaluate system memory and calculate safe model parameter boundaries.
@@ -161,12 +167,18 @@ class ModelManager:
             gc.collect()
 
     async def check_ollama(self) -> bool:
-        """Check if local Ollama daemon is reachable."""
+        """Check if local Ollama daemon is reachable with 60s status cache."""
+        now = time.perf_counter()
+        if (now - self._last_ollama_check) < 60.0:
+            return self._ollama_online
+        self._last_ollama_check = now
         try:
-            async with httpx.AsyncClient(timeout=1.5) as client:
+            async with httpx.AsyncClient(timeout=0.5) as client:
                 res = await client.get(f"{self.ollama_base_url}/api/tags")
-                return res.status_code == 200
+                self._ollama_online = (res.status_code == 200)
+                return self._ollama_online
         except Exception:
+            self._ollama_online = False
             return False
 
     async def list_available_models(self) -> List[ModelCapability]:
@@ -258,9 +270,9 @@ class ModelManager:
             except Exception:
                 system_prompt = "You are MATRIX, an intelligent offline personal assistant."
 
-        # 1. Try Gemini API if configured and healthy
+        # 1. Try Gemini API if configured with valid key and healthy
         gemini_key = settings.gemini_api_key or os.getenv("GEMINI_API_KEY")
-        if gemini_key and not self._gemini_failed:
+        if gemini_key and gemini_key.startswith("AIza") and not self._gemini_failed:
             try:
                 import google.genai as genai
                 client = genai.Client(api_key=gemini_key)

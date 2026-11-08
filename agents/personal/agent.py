@@ -49,6 +49,22 @@ class PersonalAgent(BaseAgent):
                 execution_time_ms=round(latency, 2)
             )
 
+        # 0. Time & Date Inquiries
+        if any(w in raw_prompt for w in ["what time", "current time", "time is it", "what's the time", "today's date", "what is the date", "what's the date", "what day is"]):
+            import datetime
+            now = datetime.datetime.now()
+            time_str = now.strftime("%I:%M %p")
+            date_str = now.strftime("%A, %B %d, %Y")
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=True,
+                agent_name=self.name,
+                action_taken="report_time_date",
+                data={"time": time_str, "date": date_str, "message": f"The current time is {time_str} on {date_str}, sir."},
+                verification={"verified": True},
+                execution_time_ms=round(latency, 2)
+            )
+
         # 1. Draft Email / Message
         if "draft" in action_lower or any(w in raw_prompt for w in ["draft an email", "draft email", "compose email", "write an email to"]):
             return await self._handle_draft_email(parameters, raw_prompt, start_time)
