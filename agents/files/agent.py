@@ -75,7 +75,17 @@ class FileAgent(BaseAgent):
             return False
 
     def resolve_target_dir(self, path_str: str) -> Path:
-        """Resolve common natural-language directories (e.g. 'Downloads', 'Documents', 'Desktop')."""
+        """Resolve common natural-language directories (e.g. 'Downloads', 'Documents', 'Desktop') or explicit paths."""
+        if not path_str:
+            return Path.home() / "Downloads"
+
+        try:
+            p = Path(path_str)
+            if p.exists() and p.is_dir():
+                return p.resolve()
+        except Exception:
+            pass
+
         clean = path_str.strip().lower()
         user_home = Path.home()
 
@@ -87,9 +97,16 @@ class FileAgent(BaseAgent):
             return user_home / "Desktop"
         elif "matrix" in clean or "data" in clean:
             return settings.data_dir
-        elif path_str:
+
+        try:
             p = Path(path_str)
-            return p if p.is_absolute() else (Path.cwd() / p)
+            resolved = p if p.is_absolute() else (Path.cwd() / p)
+            if resolved.exists():
+                return resolved.resolve()
+            return resolved
+        except Exception:
+            pass
+
         return user_home / "Downloads"
 
     async def _create_folder(self, target_dir: Path, folder_name: str, start_time: float) -> AgentResult:
@@ -178,8 +195,10 @@ class FileAgent(BaseAgent):
             return await self._create_folder(dest_dir, folder_name, start_time)
 
         # 0.5. List Files / Directory
-        if any(w in raw_prompt for w in ["list files", "show files", "list directory", "view files", "what files are in"]):
-            dest_dir = self.resolve_target_dir(raw_prompt)
+        if "list" in action_lower or any(w in raw_prompt for w in ["list files", "show files", "list directory", "view files", "what files are in"]):
+            explicit_dir = parameters.get("directory") or parameters.get("path") or parameters.get("target")
+            target_input = explicit_dir if explicit_dir is not None else raw_prompt
+            dest_dir = self.resolve_target_dir(str(target_input))
             return await self._list_directory(dest_dir, start_time)
 
         # 1. Organize Folder (e.g. "Matrix, organize my Downloads folder")
@@ -227,17 +246,17 @@ class FileAgent(BaseAgent):
 
         # 7. File Metadata / Inspect
         if "metadata" in action_lower or "inspect" in action_lower or "info" in action_lower:
-            filepath = parameters.get("filepath", "")
+            filepath = parameters.get("filepath", parameters.get("path", ""))
             return await self._get_metadata(Path(filepath), start_time)
 
         # 8. Summarize File
         if "summarize" in action_lower or "summarize" in raw_prompt:
-            filepath = parameters.get("filepath", "")
+            filepath = parameters.get("filepath", parameters.get("path", ""))
             return await self._summarize_file(Path(filepath), start_time)
 
         # 9. Read / Parse Document
         if "read" in action_lower or "parse" in action_lower or "open" in action_lower:
-            filepath = parameters.get("filepath", "")
+            filepath = parameters.get("filepath", parameters.get("path", ""))
             return await self._read_file(Path(filepath), start_time)
 
         # Default fallback: List storage files

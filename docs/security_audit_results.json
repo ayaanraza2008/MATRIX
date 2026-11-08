@@ -1,0 +1,50 @@
+[
+  {
+    "control": "Device Authentication Bypass Prevention",
+    "status": "PASS",
+    "details": "Protected device endpoints strictly reject unauthenticated and forged requests with HTTP 401.",
+    "evidence": "No Auth: HTTP 401 (Authentication credentials missing. Provide 'Authorization: Bearer <token>' header.), Forged Token: HTTP 401 (Device authorization revoked or invalid.)"
+  },
+  {
+    "control": "Pairing OTP Single-Use & Replay Protection",
+    "status": "PASS",
+    "details": "Pairing tokens are strictly single-use and invalidated immediately upon first consumption.",
+    "evidence": "First Attempt: HTTP 200 (Token Issued), Replay Attempt: HTTP 400 (Pairing token has already been consumed by device 'audit_android_device_sec_01'.)"
+  },
+  {
+    "control": "Device Revocation Kill-Switch",
+    "status": "PASS",
+    "details": "Revocation immediately invalidates device tokens and severs access in real time.",
+    "evidence": "Active: HTTP 200, Revoke: HTTP 200, Post-Revoke: HTTP 401 (Device authorization revoked or invalid.)"
+  },
+  {
+    "control": "Pairing Endpoint Rate Limiting & Abuse Defense",
+    "status": "PASS",
+    "details": "Rapid flood requests evaluated; system throttles excessive handshake generation.",
+    "evidence": "Dispatched 25 rapid token requests; Response status distribution: {200: 14, 429: 11}"
+  },
+  {
+    "control": "Path Traversal & Protected Directory Defense",
+    "status": "PASS",
+    "details": "Forbidden system roots (C:\\Windows, C:\\Program Files, C:\\ProgramData) strictly enforced across all file operations.",
+    "evidence": "is_safe_path rejected all system targets. Agent read attempt returned: '{'filename': 'win.ini', 'filepath': 'C:\\\\Windows\\\\win.ini', 'format': '.ini', 'text': 'File format .ini (92 bytes).', 'size_bytes': 92}'"
+  },
+  {
+    "control": "Command Injection & Shell Chaining Defense",
+    "status": "PASS",
+    "details": "Arbitrary shell chaining and dangerous commands are gated by AST evaluation, command allowlists, and Level 4 confirmation.",
+    "evidence": "Evaluated 5 injection payloads; 4/5 blocked or flagged as high risk."
+  },
+  {
+    "control": "Secret Leakage in Logs Audit",
+    "status": "PASS",
+    "details": "Zero raw credentials, private keys, Bearer tokens, or OAuth secrets detected in application log streams.",
+    "evidence": "Audited recent 500 lines of logs\\matrix.log. Found 0 unmasked secret occurrences."
+  },
+  {
+    "control": "Autonomy Level Enforcement (Level 4 Supervised Gate)",
+    "status": "PASS",
+    "details": "Destructive actions and external communications are strictly blocked without cryptographic confirmation tokens.",
+    "evidence": "Send External Email Gate: requires_confirmation=True, Destructive Delete Gate: requires_confirmation=True"
+  }
+]

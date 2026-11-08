@@ -1,0 +1,76 @@
+{
+  "hardware": {
+    "cpu_model": "AMD Ryzen 7 5700U with Radeon Graphics",
+    "cores_physical": 8,
+    "threads_logical": 16,
+    "total_ram_mb": 7561.87,
+    "available_ram_mb": 574.22,
+    "used_ram_percent": 92.4
+  },
+  "server_process": {
+    "detected_procs": 2,
+    "main_pid": 114212,
+    "rss_memory_mb": 8.79
+  },
+  "api_health_latency": {
+    "samples": 10,
+    "p50_ms": 14.83,
+    "p95_ms": 50.52,
+    "min_ms": 12.45,
+    "max_ms": 50.52
+  },
+  "text_to_text": {
+    "queries": [
+      {
+        "query": "what is the time",
+        "latency_ms": 1990.01,
+        "plan_title": "Plan: QUERY (answer)"
+      },
+      {
+        "query": "give me a morning briefing",
+        "latency_ms": 5530.56,
+        "plan_title": "Morning Briefing"
+      },
+      {
+        "query": "check my computer health and suggest improvements",
+        "latency_ms": 7.5,
+        "plan_title": "Computer Health & Optimization"
+      },
+      {
+        "query": "open vs code and inspect my matrix project",
+        "latency_ms": 52.89,
+        "plan_title": "Launch VS Code Workspace"
+      }
+    ],
+    "average_ms": 1895.24
+  },
+  "android_api_latency": {
+    "p50_ms": 887.57,
+    "samples": 2
+  },
+  "voice_pipeline": {
+    "tts_synthesis_ms": 7703.16,
+    "tts_engine": "Edge TTS Neural (en-US-ChristopherNeural)",
+    "audio_output_file": "D:\\matrix_data\\cache\\audio\\speech_1794128381481.mp3",
+    "stt_model": "tiny",
+    "stt_quantization": "INT8 CPU-first AVX2",
+    "stt_estimated_latency_ms": 180.0,
+    "total_estimated_turnaround_ms": 9778.4
+  },
+  "background_scheduler": {
+    "registered_tasks_count": 4,
+    "task_names": [
+      "System Health & Diagnostics Monitor",
+      "Live Weather & Atmospheric Sync",
+      "Cache & Temp Frame Maintenance",
+      "Integration Connection Heartbeat"
+    ],
+    "scheduler_running": true,
+    "cpu_overhead_percent": "< 0.5% (Event-driven asyncio sleep)"
+  },
+  "host_under_load": {
+    "cpu_percent": 8.9,
+    "ram_used_percent": 93.5,
+    "ram_available_mb": 491.14
+  }
+}

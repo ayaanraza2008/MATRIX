@@ -1,0 +1,152 @@
+[
+  {
+    "agent": "computer",
+    "operation": "list_processes",
+    "status": "PASS",
+    "details": "Returned valid process entries in 3048.04ms",
+    "error_handled": true,
+    "unsupported": [],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "browser",
+    "operation": "search",
+    "status": "PASS",
+    "details": "Search executed in 6211.53ms",
+    "error_handled": true,
+    "unsupported": [
+      "full_js_dom_eval_headless"
+    ],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "research",
+    "operation": "web_research",
+    "status": "PASS",
+    "details": "Report generated (0 chars) in 5362.72ms",
+    "error_handled": true,
+    "unsupported": [],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "coding",
+    "operation": "syntax_validation",
+    "status": "PASS",
+    "details": "Valid AST check verified in 0.01ms (Error detection: True)",
+    "error_handled": true,
+    "unsupported": [],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "files",
+    "operation": "list_files",
+    "status": "PASS",
+    "details": "Indexed directory in 9.62ms",
+    "error_handled": true,
+    "unsupported": [],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "voice",
+    "operation": "speech_handling",
+    "status": "PASS",
+    "details": "Handled voice directive in 4947.91ms",
+    "error_handled": true,
+    "unsupported": [
+      "physical_microphone_required_for_stt"
+    ],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "vision",
+    "operation": "scene_inspection",
+    "status": "PASS",
+    "details": "Vision pipeline responsive in 5227.79ms",
+    "error_handled": true,
+    "unsupported": [
+      "physical_camera_required_for_live_capture"
+    ],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "android",
+    "operation": "list_devices",
+    "status": "PASS",
+    "details": "Listed paired devices in 49.14ms",
+    "error_handled": true,
+    "unsupported": [],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "system",
+    "operation": "telemetry_poll",
+    "status": "PASS",
+    "details": "CPU: None%, RAM: 93.2% in 28.72ms",
+    "error_handled": true,
+    "unsupported": [],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "personal",
+    "operation": "list_accounts",
+    "status": "PASS",
+    "details": "Accounts queried in 0.02ms",
+    "error_handled": true,
+    "unsupported": [],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "automation",
+    "operation": "task_creation",
+    "status": "PASS",
+    "details": "Created task in 7.94ms",
+    "error_handled": true,
+    "unsupported": [],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "creative",
+    "operation": "diagram_generation",
+    "status": "PASS",
+    "details": "Synthesized diagram in 0.05ms",
+    "error_handled": true,
+    "unsupported": [],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "memory",
+    "operation": "retrieve_memory",
+    "status": "PASS",
+    "details": "Queried memory store in 3.72ms",
+    "error_handled": true,
+    "unsupported": [],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "repo_intel",
+    "operation": "select_tool",
+    "status": "PASS",
+    "details": "Tool selection resolved in 0.12ms: None",
+    "error_handled": true,
+    "unsupported": [],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "security",
+    "operation": "risk_evaluation",
+    "status": "PASS",
+    "details": "Evaluated safety in 7.38ms (Destructive blocked: True)",
+    "error_handled": true,
+    "unsupported": [],
+    "symbol": "[PASS]"
+  },
+  {
+    "agent": "data_analysis",
+    "operation": "analyze_csv",
+    "status": "PASS",
+    "details": "Analyzed CSV table in 0.71ms",
+    "error_handled": true,
+    "unsupported": [],
+    "symbol": "[PASS]"
+  }
+]

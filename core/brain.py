@@ -274,13 +274,17 @@ class MatrixBrain:
         ]):
             target_dir = settings.data_dir / "organized_files"
             target_dir.mkdir(parents=True, exist_ok=True)
-            categories = ["Documents", "Media", "Code", "Archives", "Data"]
-            for cat in categories:
-                (target_dir / cat).mkdir(exist_ok=True)
+            from core.task_router import task_router
+            file_agent = task_router.get_agent("files")
+            organized_count = 0
+            if file_agent:
+                org_res = await file_agent.execute("organize", {"directory": str(target_dir), "raw_prompt": user_prompt})
+                organized_count = org_res.data.get("organized_count", 0) if isinstance(org_res.data, dict) else 0
 
             reply = (
                 f"File organization engine executed, sir. Destination taxonomy created at {target_dir} with categorical folders: "
-                f"Documents (PDF, DOCX, TXT), Media (PNG, JPG, MP3), Code (PY, JS, TS), Archives (ZIP, TAR), and Data (JSON, CSV). Ready to receive and catalog incoming files."
+                f"Documents, Media, Code, Archives, and Data. "
+                f"Successfully categorized and moved {organized_count} files into destination folders."
             )
             return {
                 "session_id": session_id,

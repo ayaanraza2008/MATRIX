@@ -98,6 +98,7 @@ class CodingAgent(BaseAgent):
                 agent_name=self.name,
                 action_taken="validate_syntax",
                 error=f"Syntax Error at line {e.lineno}: {e.msg}",
+                data={"valid": False, "error": f"Syntax Error at line {e.lineno}: {e.msg}"},
                 verification={"verified": False},
                 execution_time_ms=round(latency, 2)
             )

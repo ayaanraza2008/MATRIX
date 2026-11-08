@@ -366,6 +366,43 @@ class ComputerAgent(BaseAgent):
             execution_time_ms=round(latency, 2)
         )
 
+    async def _list_processes(self, start_time: float) -> AgentResult:
+        """List active running processes with pid, name, cpu and memory usage."""
+        processes = []
+        try:
+            for p in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
+                try:
+                    info = p.info
+                    processes.append({
+                        "pid": info['pid'],
+                        "name": info['name'],
+                        "cpu_percent": info.get('cpu_percent', 0.0) or 0.0,
+                        "memory_percent": round(info.get('memory_percent', 0.0) or 0.0, 2)
+                    })
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+            processes.sort(key=lambda x: x.get('memory_percent', 0.0), reverse=True)
+            top_procs = processes[:25]
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=True,
+                agent_name=self.name,
+                action_taken="list_processes",
+                data={"processes": top_procs, "total_count": len(processes)},
+                verification={"verified": True, "process_count": len(processes)},
+                execution_time_ms=round(latency, 2)
+            )
+        except Exception as e:
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken="list_processes",
+                error=str(e),
+                verification={"verified": False},
+                execution_time_ms=round(latency, 2)
+            )
+
     async def _switch_window(self, target_title: str, start_time: float) -> AgentResult:
         """Activate and bring to foreground a window matching the title."""
         if not target_title:

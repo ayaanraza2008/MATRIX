@@ -1,0 +1,90 @@
+[
+  {
+    "directive_number": 1,
+    "name": "VS Code Project Inspection",
+    "command": "open vs code and inspect my matrix project",
+    "action": "Launch VS Code Workspace",
+    "state_before": "11 VS Code processes active on host",
+    "state_after": "11 VS Code processes active. Target: C:\\Users\\Ali Raza Zaidi\\Desktop\\matrix",
+    "failure_scenario": "Launch unauthorized binary blocked: True",
+    "status": "PASS",
+    "notes": "Executed in 50.03ms: 'Visual Studio Code has been launched for your Matrix project at C:\\Users\\Ali Raz...'"
+  },
+  {
+    "directive_number": 2,
+    "name": "Error Root Cause Diagnostics",
+    "command": "find the cause of latest error and fix it",
+    "action": "Error Root Cause Investigation",
+    "state_before": "Injected synthetic error signature 'TEST_AUDIT_ERROR_SIMULATION_1794128085' into logs\\matrix.log",
+    "state_after": "Diagnostics engine parsed log: True",
+    "failure_scenario": "Handled clean/unhandled log gracefully: True",
+    "status": "PASS",
+    "notes": "Self-diagnostics verified in 861.6ms"
+  },
+  {
+    "directive_number": 3,
+    "name": "Calendar Events Check",
+    "command": "check my upcoming calendar events",
+    "action": "Google Calendar Check",
+    "state_before": "Google Workspace OAuth status: connected=False",
+    "state_after": "Returned prompt guidance: 'Google Workspace Calendar is not configured or authenticated. To conne...'",
+    "failure_scenario": "Unauthenticated direct call gracefully rejected: True",
+    "status": "PASS",
+    "notes": "Google Workspace Calendar OAuth NOT CONFIGURED; returned exact setup url"
+  },
+  {
+    "directive_number": 4,
+    "name": "Daily Morning Briefing",
+    "command": "give me a morning briefing",
+    "action": "Morning Briefing",
+    "state_before": "Briefing subsystems idle",
+    "state_after": "Generated multi-modal brief (Weather: True, System telemetry: True, Length: 405 chars)",
+    "failure_scenario": "Engine synthesis without external hard-crash: True",
+    "status": "PASS",
+    "notes": "Synthesized comprehensive morning report in 5730.49ms"
+  },
+  {
+    "directive_number": 5,
+    "name": "Server Health Monitoring",
+    "command": "monitor my server and alert me if it goes down",
+    "action": "Server Monitoring Activation",
+    "state_before": "4 active background tasks registered in scheduler",
+    "state_after": "Scheduler polling verified (4 tasks registered). Reply: 'Autonomous server health monitoring is active, sir. Background task schedul...'",
+    "failure_scenario": "Invalid cron syntax rejected safely: True",
+    "status": "PASS",
+    "notes": "Background monitor active (4 scheduler tasks)"
+  },
+  {
+    "directive_number": 6,
+    "name": "Autonomous File Taxonomy & Organization",
+    "command": "find a file and organize it into the correct folder",
+    "action": "File Organization",
+    "state_before": "Created 3 loose files at D:\\matrix_data\\organized_files (PDF, PNG, PY)",
+    "state_after": "Moved to subfolders -> Documents: True, Images/Media: True, Code: True",
+    "failure_scenario": "Protected Windows root access blocked: True",
+    "status": "PASS",
+    "notes": "Verified physical disk moves into Documents/, Media/, Code/. Handled in 7.08ms"
+  },
+  {
+    "directive_number": 7,
+    "name": "Authorized Email Summarization",
+    "command": "summarize my recent authorized emails",
+    "action": "Authorized Email Summary",
+    "state_before": "Google Gmail OAuth token status: connected=False",
+    "state_after": "Returned prompt guidance: 'Google Workspace Gmail access is not configured. Please authorize your...'",
+    "failure_scenario": "Unauthenticated direct call gracefully rejected: True",
+    "status": "PASS",
+    "notes": "Google Workspace Gmail OAuth NOT CONFIGURED; returned exact auth link"
+  },
+  {
+    "directive_number": 8,
+    "name": "Workstation Health Audit & Suggestions",
+    "command": "check my computer health and suggest improvements",
+    "action": "Computer Health & Optimization",
+    "state_before": "Baseline: RAM used 89.6%, CPU 24.4%",
+    "state_after": "Generated report (Has CPU: True, Has RAM: True, Has Suggestions: True)",
+    "failure_scenario": "Handled invalid system subpage gracefully: True",
+    "status": "PASS",
+    "notes": "Delivered comprehensive hardware health analysis in 6.64ms"
+  }
+]

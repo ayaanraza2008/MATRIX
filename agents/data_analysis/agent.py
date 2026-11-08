@@ -23,17 +23,29 @@ class DataAnalysisAgent(BaseAgent):
         start_time = time.perf_counter()
         csv_path_str = parameters.get("csv_path", "")
 
-        if csv_path_str and Path(csv_path_str).exists():
-            summary = self._analyze_csv(Path(csv_path_str))
-            latency = (time.perf_counter() - start_time) * 1000
-            return AgentResult(
-                success=True,
-                agent_name=self.name,
-                action_taken="analyze_csv",
-                data=summary,
-                verification={"verified": True},
-                execution_time_ms=round(latency, 2)
-            )
+        if "analyze" in action.lower() or csv_path_str:
+            p = Path(csv_path_str) if csv_path_str else None
+            if p and p.exists() and p.is_file():
+                summary = self._analyze_csv(p)
+                latency = (time.perf_counter() - start_time) * 1000
+                return AgentResult(
+                    success=True,
+                    agent_name=self.name,
+                    action_taken="analyze_csv",
+                    data=summary,
+                    verification={"verified": True},
+                    execution_time_ms=round(latency, 2)
+                )
+            else:
+                latency = (time.perf_counter() - start_time) * 1000
+                return AgentResult(
+                    success=False,
+                    agent_name=self.name,
+                    action_taken="analyze_csv",
+                    error=f"CSV file not found or invalid: '{csv_path_str}'",
+                    verification={"verified": False},
+                    execution_time_ms=round(latency, 2)
+                )
 
         latency = (time.perf_counter() - start_time) * 1000
         return AgentResult(

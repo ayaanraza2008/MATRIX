@@ -95,6 +95,12 @@ class TelephonyEngine:
     def get_policy(self) -> OutboundCallingPolicy:
         return self._policy
 
+    def is_configured(self) -> bool:
+        """Check if Twilio credentials (Account SID and Auth Token) are configured."""
+        sid = os.getenv("TWILIO_ACCOUNT_SID")
+        token = os.getenv("TWILIO_AUTH_TOKEN")
+        return bool(sid and token and sid.startswith("AC"))
+
     def get_policy_summary(self) -> Dict[str, Any]:
         return {
             "status": "OK",

@@ -10,14 +10,14 @@
     "name": "Pairing Token Generation",
     "status": "PASSED",
     "classification": "AUTOMATED-E2E-TESTED",
-    "details": "Generated single-use token: mtx_pair_cf62ba4... (TTL: 300s)",
+    "details": "Generated single-use token: mtx_pair_c7b11a4... (TTL: 300s)",
     "symbol": "[PASS]"
   },
   {
     "name": "Device Pairing Handshake",
     "status": "PASSED",
     "classification": "INTEGRATION-TESTED",
-    "details": "Device paired successfully. Auth token: mtx_auth_d2ab320... (Replay OTP consumed)",
+    "details": "Device paired successfully. Auth token: mtx_auth_1a81f6f... (Replay OTP consumed)",
     "symbol": "[PASS]"
   },
   {
@@ -59,21 +59,21 @@
     "name": "Connector: Open-Meteo Live Weather API",
     "status": "PASSED",
     "classification": "EXTERNAL-API-VERIFIED",
-    "details": "Status: CONNECTED, Latency: 1098.23ms",
+    "details": "Status: CONNECTED, Latency: 1101.65ms",
     "symbol": "[PASS]"
   },
   {
     "name": "Connector: Windows 11 OS Process Control",
     "status": "PASSED",
     "classification": "LOCAL-HARDWARE-VERIFIED",
-    "details": "Status: CONNECTED, Latency: 5.48ms",
+    "details": "Status: CONNECTED, Latency: 5.9ms",
     "symbol": "[PASS]"
   },
   {
     "name": "Connector: Windows Core Audio Endpoint",
     "status": "PASSED",
     "classification": "LOCAL-HARDWARE-VERIFIED",
-    "details": "Status: CONNECTED, Latency: 305.43ms",
+    "details": "Status: CONNECTED, Latency: 94.48ms",
     "symbol": "[PASS]"
   },
   {
@@ -129,63 +129,63 @@
     "name": "Directive 1: Open VS Code & inspect Matrix project",
     "status": "PASSED",
     "classification": "AUTOMATED-E2E-TESTED",
-    "details": "Executed in 40.03ms. Response: Visual Studio Code has been launched for your Matrix project at C:\\Users\\Ali Raz...",
+    "details": "Executed in 45.85ms. Response: Visual Studio Code has been launched for your Matrix project at C:\\Users\\Ali Raz...",
     "symbol": "[PASS]"
   },
   {
     "name": "Directive 2: Find the cause of latest error & fix it",
     "status": "PASSED",
     "classification": "AUTOMATED-E2E-TESTED",
-    "details": "Executed in 80.87ms. Response: Diagnosed recent log event: '2026-11-08 14:04:17 | ERROR    | matrix.database:40...",
+    "details": "Executed in 86.38ms. Response: Diagnosed recent log event: '2026-11-08 14:32:31 | ERROR    | matrix.database:40...",
     "symbol": "[PASS]"
   },
   {
     "name": "Directive 3: Check upcoming calendar events",
     "status": "PASSED",
     "classification": "AUTOMATED-E2E-TESTED",
-    "details": "Executed in 1.32ms. Response: Google Workspace Calendar is not configured or authenticated. To connect your Go...",
+    "details": "Executed in 8.24ms. Response: Google Workspace Calendar is not configured or authenticated. To connect your Go...",
     "symbol": "[PASS]"
   },
   {
     "name": "Directive 4: Morning briefing",
     "status": "PASSED",
     "classification": "AUTOMATED-E2E-TESTED",
-    "details": "Executed in 6078.75ms. Response: Good day, sir. Here is your MATRIX intelligence briefing for Sunday, November 08...",
+    "details": "Executed in 5702.13ms. Response: Good day, sir. Here is your MATRIX intelligence briefing for Sunday, November 08...",
     "symbol": "[PASS]"
   },
   {
     "name": "Directive 5: Monitor server & alert if down",
     "status": "PASSED",
     "classification": "AUTOMATED-E2E-TESTED",
-    "details": "Executed in 9.17ms. Response: Autonomous server health monitoring is active, sir. Background task scheduler ha...",
+    "details": "Executed in 10.16ms. Response: Autonomous server health monitoring is active, sir. Background task scheduler ha...",
     "symbol": "[PASS]"
   },
   {
     "name": "Directive 6: Find a file & organize into folder",
     "status": "PASSED",
     "classification": "AUTOMATED-E2E-TESTED",
-    "details": "Executed in 2.06ms. Response: File organization engine executed, sir. Destination taxonomy created at D:\\matri...",
+    "details": "Executed in 8.9ms. Response: File organization engine executed, sir. Destination taxonomy created at D:\\matri...",
     "symbol": "[PASS]"
   },
   {
     "name": "Directive 7: Summarize recent authorized emails",
     "status": "PASSED",
     "classification": "AUTOMATED-E2E-TESTED",
-    "details": "Executed in 1.18ms. Response: Google Workspace Gmail access is not configured. Please authorize your account v...",
+    "details": "Executed in 4.75ms. Response: Google Workspace Gmail access is not configured. Please authorize your account v...",
     "symbol": "[PASS]"
   },
   {
     "name": "Directive 8: Check computer health & optimizations",
     "status": "PASSED",
     "classification": "AUTOMATED-E2E-TESTED",
-    "details": "Executed in 5.78ms. Response: Host Workstation Health Report:\n\u2022 CPU Load: 11.2% across 16 threads (AMD Ryzen 7...",
+    "details": "Executed in 9.63ms. Response: Host Workstation Health Report:\n\u2022 CPU Load: 18.3% across 16 threads (AMD Ryzen 7...",
     "symbol": "[PASS]"
   },
   {
     "name": "Device Revocation Kill-Switch",
     "status": "PASSED",
     "classification": "INTEGRATION-TESTED",
-    "details": "Device test_master_1794126856 revoked and active bearer token cleared from session",
+    "details": "Device test_master_1794128550 revoked and active bearer token cleared from session",
     "symbol": "[PASS]"
   },
   {
