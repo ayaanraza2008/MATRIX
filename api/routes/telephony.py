@@ -13,6 +13,7 @@ import time
 import os
 from core.telephony.engine import telephony_engine, OutboundCallingPolicy, is_valid_phone
 from core.telephony.twilio_security import verify_twilio_request
+from core.telephony.bland_client import bland_client, DEFAULT_MATRIX_PHONE_TASK, DEFAULT_OPENING_SENTENCE
 from core.brain import brain
 from voice.text_to_speech.engine import tts_engine
 from config.logging_config import get_logger
@@ -206,4 +207,136 @@ async def twilio_call_status(
         logger.info(f"Twilio call status callback: SID {CallSid} -> {CallStatus} ({duration}s)")
 
     return Response(content="<Response/>", media_type="application/xml")
+
+
+# --- Bland AI Telephony Endpoints ---
+
+class BlandCallRequest(BaseModel):
+    phone_number: Optional[str] = "+919193002500"
+    task: Optional[str] = None
+    first_sentence: Optional[str] = None
+    voice: Optional[str] = "ryan"
+    max_duration: Optional[int] = 5
+    wait_for_greeting: Optional[bool] = False
+    metadata: Optional[Dict[str, Any]] = None
+
+
+@router.get("/bland/account")
+async def get_bland_account():
+    """Retrieve Bland AI account status, wallet credits balance, and active plan details."""
+    res = await bland_client.get_account_info()
+    return res
+
+
+@router.get("/bland/capabilities")
+async def check_bland_capabilities(phone_number: str = "+919193002500"):
+    """Verify Bland AI calling capabilities and balance requirements for a destination number."""
+    res = await bland_client.verify_target_capabilities(phone_number)
+    return res
+
+
+@router.get("/bland/voices")
+async def list_bland_voices(limit: int = 25):
+    """List available Bland AI conversational voice models."""
+    voices = await bland_client.list_voices(limit=limit)
+    return {"total": len(voices), "voices": voices}
+
+
+@router.get("/bland/calls")
+async def list_bland_calls(limit: int = 15):
+    """Retrieve recent call records dispatched via Bland AI."""
+    calls = await bland_client.list_recent_calls(limit=limit)
+    return {"total": len(calls), "calls": calls}
+
+
+@router.get("/bland/calls/{call_id}")
+async def get_bland_call_details(call_id: str):
+    """Query live call status, transcript, recording, and duration."""
+    res = await bland_client.get_call_details(call_id)
+    if not res.get("success"):
+        raise HTTPException(status_code=404, detail=res.get("error", "Call not found"))
+    return res
+
+
+@router.post("/bland/calls/{call_id}/stop")
+async def stop_bland_call(call_id: str):
+    """Immediately terminate an active Bland AI phone call."""
+    res = await bland_client.stop_call(call_id)
+    return res
+
+
+@router.post("/bland/call")
+async def dispatch_bland_call(payload: BlandCallRequest):
+    """Initiate an outbound AI phone call to destination number via Bland AI."""
+    target_number = payload.phone_number or "+919193002500"
+    if not is_valid_phone(target_number):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid phone number '{target_number}'. Must be in international E.164 format (e.g. +919193002500)."
+        )
+
+    # Check capabilities and balance
+    caps = await bland_client.verify_target_capabilities(target_number)
+    if not caps.get("callable"):
+        raise HTTPException(status_code=400, detail=caps.get("reason", "Target number not callable."))
+
+    # Dispatch call
+    res = await bland_client.send_call(
+        phone_number=target_number,
+        task=payload.task or DEFAULT_MATRIX_PHONE_TASK,
+        first_sentence=payload.first_sentence or DEFAULT_OPENING_SENTENCE,
+        voice=payload.voice or "ryan",
+        max_duration=payload.max_duration or 5,
+        wait_for_greeting=payload.wait_for_greeting or False,
+        metadata=payload.metadata or {"source": "matrix_api"}
+    )
+
+    if not res.get("success"):
+        raise HTTPException(status_code=502, detail=res.get("error", "Bland AI call dispatch failed."))
+
+    # Record in telephony engine
+    call_id = f"bland_{res.get('call_id')}"
+    from core.telephony.engine import CallRecord
+    record = CallRecord(
+        call_id=call_id,
+        direction="OUTBOUND",
+        call_type="AI_BLAND",
+        from_number="MATRIX-BLAND",
+        to_number=target_number,
+        status="DISPATCHED",
+        trigger_reason="EXPLICIT_BLAND_REQUEST",
+        bland_call_id=res.get("call_id")
+    )
+    telephony_engine._active_calls[call_id] = record
+    telephony_engine._hourly_call_timestamps.append(time.time())
+
+    return res
+
+
+@router.post("/bland/webhook")
+async def bland_call_webhook(request: Request):
+    """Webhook callback endpoint for Bland AI call completed and status events."""
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+
+    call_id = data.get("call_id")
+    status = data.get("status", "completed").upper()
+    duration = data.get("call_length")
+    transcript = data.get("concatenated_transcript") or data.get("summary")
+    recording_url = data.get("recording_url")
+
+    logger.info(f"Bland AI Webhook: Call {call_id} -> {status} (duration: {duration}s)")
+
+    if call_id:
+        telephony_engine.update_call_status(call_id, status, duration)
+        for record in telephony_engine._call_history:
+            if record.bland_call_id == call_id or record.call_id == f"bland_{call_id}":
+                record.transcript_summary = transcript
+                record.recording_url = recording_url
+                telephony_engine._save_history()
+                break
+
+    return {"status": "RECEIVED", "call_id": call_id}
 

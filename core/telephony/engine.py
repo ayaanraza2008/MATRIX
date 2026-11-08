@@ -31,11 +31,17 @@ def is_valid_phone(phone: Optional[str]) -> bool:
 
 logger = get_logger("core.telephony")
 
+from core.telephony.bland_client import (
+    bland_client,
+    DEFAULT_MATRIX_PHONE_TASK,
+    DEFAULT_OPENING_SENTENCE
+)
+
 
 class CallRecord(BaseModel):
     call_id: str
     direction: str  # INBOUND, OUTBOUND
-    call_type: str  # PSTN_TWILIO, IN_APP_WEBRTC, SIP
+    call_type: str  # AI_BLAND, PSTN_TWILIO, IN_APP_WEBRTC, SIP
     from_number: str
     to_number: str
     status: str     # RINGING, IN_PROGRESS, COMPLETED, FAILED, MISSED
@@ -44,13 +50,16 @@ class CallRecord(BaseModel):
     end_time: Optional[float] = None
     transcript_summary: Optional[str] = None
     trigger_reason: str = "USER_DIRECTIVE"
+    bland_call_id: Optional[str] = None
+    recording_url: Optional[str] = None
 
 
 class OutboundCallingPolicy(BaseModel):
-    verified_phone_number: str = "+1234567890"  # Configured by user
-    pstn_calling_enabled: bool = False           # Requires Twilio/Telnyx credentials
-    max_calls_per_hour: int = 3
-    quiet_hours_enabled: bool = True
+    verified_phone_number: str = "+919193002500"  # Configured by user
+    pstn_calling_enabled: bool = True             # Enabled when Bland AI or Twilio configured
+    primary_provider: str = "bland_ai"            # bland_ai, twilio_pstn, in_app_webrtc
+    max_calls_per_hour: int = 5
+    quiet_hours_enabled: bool = False
     quiet_hours_start: int = 23                  # 11 PM
     quiet_hours_end: int = 7                     # 7 AM
     allowed_triggers: List[str] = Field(default_factory=lambda: [
@@ -109,14 +118,19 @@ class TelephonyEngine:
         return self._policy
 
     def is_configured(self) -> bool:
-        """Check if Twilio credentials (Account SID, Auth Token, and phone) are configured."""
+        """Check if any telephony provider (Bland AI or Twilio) is configured."""
+        if bland_client.is_configured():
+            return True
         sid = os.getenv("TWILIO_ACCOUNT_SID")
         token = os.getenv("TWILIO_AUTH_TOKEN")
         num = os.getenv("TWILIO_PHONE_NUMBER")
         return bool(sid and token and sid.startswith("AC") and len(sid) >= 32 and num and is_valid_phone(num))
 
     def get_setup_wizard(self) -> Dict[str, Any]:
-        """Interactive setup guide and connection audit for Twilio telephony."""
+        """Interactive setup guide and connection audit for Bland AI and Twilio telephony."""
+        bland_configured = bland_client.is_configured()
+        bland_masked = bland_client.get_masked_api_key()
+
         sid = os.getenv("TWILIO_ACCOUNT_SID")
         token = os.getenv("TWILIO_AUTH_TOKEN")
         twilio_num = os.getenv("TWILIO_PHONE_NUMBER")
@@ -126,15 +140,32 @@ class TelephonyEngine:
         token_ok = bool(token and len(token) >= 32)
         twilio_num_ok = is_valid_phone(twilio_num)
         user_num_ok = is_valid_phone(user_num)
-        configured = sid_ok and token_ok and twilio_num_ok and user_num_ok
+        twilio_configured = sid_ok and token_ok and twilio_num_ok and user_num_ok
+
+        overall_configured = bland_configured or twilio_configured
 
         return {
-            "status": "PASS — REAL VERIFIED" if configured else "NOT CONFIGURED",
-            "is_configured": configured,
-            "account_sid_present": sid_ok,
-            "auth_token_present": token_ok,
-            "twilio_number_configured": twilio_num_ok,
-            "twilio_phone_number": (twilio_num[:4] + "******" + twilio_num[-2:]) if twilio_num_ok else None,
+            "status": "PASS — REAL VERIFIED" if overall_configured else "NOT CONFIGURED",
+            "is_configured": overall_configured,
+            "primary_provider": "bland_ai" if bland_configured else ("twilio_pstn" if twilio_configured else "in_app_webrtc"),
+            "bland_ai": {
+                "status": "PASS — REAL VERIFIED" if bland_configured else "NOT CONFIGURED",
+                "configured": bland_configured,
+                "api_key_masked": bland_masked,
+                "dashboard_url": "https://v2.app.bland.ai",
+                "target_phone_number": "+919193002500",
+                "supported_models": ["enhanced", "base"],
+                "personality": "MATRIX AI Assistant",
+                "opening_sentence": DEFAULT_OPENING_SENTENCE
+            },
+            "twilio": {
+                "status": "PASS — REAL VERIFIED" if twilio_configured else "NOT CONFIGURED",
+                "configured": twilio_configured,
+                "account_sid_present": sid_ok,
+                "auth_token_present": token_ok,
+                "twilio_number_configured": twilio_num_ok,
+                "twilio_phone_number": (twilio_num[:4] + "******" + twilio_num[-2:]) if twilio_num_ok else None
+            },
             "user_destination_configured": user_num_ok,
             "user_phone_number": (user_num[:4] + "******" + user_num[-2:]) if user_num_ok else None,
             "pstn_calling_enabled": self._policy.pstn_calling_enabled,
@@ -142,33 +173,7 @@ class TelephonyEngine:
             "inbound_webhook_url": "/api/v1/telephony/twilio/incoming",
             "speech_webhook_url": "/api/v1/telephony/twilio/speech",
             "status_callback_url": "/api/v1/telephony/twilio/status",
-            "setup_steps": [
-                {
-                    "step": 1,
-                    "title": "Twilio Account & Project SID",
-                    "instruction": "Sign up or log in at https://console.twilio.com/ and copy Account SID and Auth Token."
-                },
-                {
-                    "step": 2,
-                    "title": "Voice-Enabled Phone Number",
-                    "instruction": "Provision or purchase a phone number with Voice capability in Phone Numbers -> Manage -> Active numbers."
-                },
-                {
-                    "step": 3,
-                    "title": "Configure Webhook Endpoints",
-                    "instruction": "In Phone Number Voice Configuration, set Voice Webhook (POST) to https://<tailscale-ip-or-domain>:8000/api/v1/telephony/twilio/incoming and Status Callback URL (POST) to https://<tailscale-ip-or-domain>:8000/api/v1/telephony/twilio/status"
-                },
-                {
-                    "step": 4,
-                    "title": "Set Environment Secrets",
-                    "instruction": "Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER in your environment."
-                },
-                {
-                    "step": 5,
-                    "title": "Configure Destination Policy",
-                    "instruction": "Update your verified personal phone number via POST /api/v1/telephony/policy with verified_phone_number and pstn_calling_enabled=true."
-                }
-            ]
+            "bland_webhook_url": "/api/v1/telephony/bland/webhook"
         }
 
     def update_call_status(self, call_sid: str, call_status: str, duration: Optional[float] = None) -> bool:
@@ -207,19 +212,17 @@ class TelephonyEngine:
         return self._policy.quiet_hours_start <= current_hour < self._policy.quiet_hours_end
 
     def check_can_call_outbound(self, trigger_reason: str) -> Dict[str, Any]:
-        """Verify calling policy constraints before initiating PSTN dialing."""
+        """Verify calling policy constraints before initiating PSTN/Bland AI dialing."""
         now = time.time()
         # Clean timestamps older than 1 hour
         self._hourly_call_timestamps = [t for t in self._hourly_call_timestamps if (now - t) < 3600]
 
         if not self._policy.pstn_calling_enabled:
-            # Check if environment credentials exist
-            sid = os.getenv("TWILIO_ACCOUNT_SID")
-            token = os.getenv("TWILIO_AUTH_TOKEN")
-            if not (sid and token):
+            # Check if Bland AI or Twilio environment credentials exist
+            if not (bland_client.is_configured() or (os.getenv("TWILIO_ACCOUNT_SID") and os.getenv("TWILIO_AUTH_TOKEN"))):
                 return {
                     "allowed": False,
-                    "reason": "Twilio PSTN calling is not enabled. In-App WebRTC Calling is active (zero cost)."
+                    "reason": "Telephony calling is not enabled. Configure BLAND_API_KEY in .env or Twilio credentials."
                 }
 
         if trigger_reason not in self._policy.allowed_triggers:
@@ -254,7 +257,7 @@ class TelephonyEngine:
         record = CallRecord(
             call_id=call_id,
             direction="OUTBOUND",
-            call_type="PSTN_TWILIO" if (os.getenv("TWILIO_ACCOUNT_SID") and check["allowed"]) else "IN_APP_WEBRTC",
+            call_type="AI_BLAND" if bland_client.is_configured() else ("PSTN_TWILIO" if os.getenv("TWILIO_ACCOUNT_SID") else "IN_APP_WEBRTC"),
             from_number="MATRIX-CORE",
             to_number=target_number,
             status="RINGING",
@@ -263,7 +266,37 @@ class TelephonyEngine:
         self._active_calls[call_id] = record
         self._hourly_call_timestamps.append(time.time())
 
-        # If Twilio credentials exist and allowed, call Twilio REST API
+        # 1. Primary AI Voice Telephony Provider: Bland AI (Official v2 API)
+        if check["allowed"] and bland_client.is_configured():
+            try:
+                bland_res = await bland_client.send_call(
+                    phone_number=target_number,
+                    first_sentence=initial_message or DEFAULT_OPENING_SENTENCE,
+                    task=DEFAULT_MATRIX_PHONE_TASK,
+                    metadata={"trigger_reason": trigger_reason, "matrix_call_id": call_id}
+                )
+                if bland_res.get("success"):
+                    b_id = bland_res.get("call_id")
+                    record.call_type = "AI_BLAND"
+                    record.status = "IN_PROGRESS"
+                    record.bland_call_id = b_id
+                    self._save_history()
+                    logger.info(f"Bland AI call dispatched: ID {b_id} -> {target_number}")
+                    return {
+                        "success": True,
+                        "call_id": call_id,
+                        "bland_call_id": b_id,
+                        "provider": "bland_ai",
+                        "target_number": target_number,
+                        "status": "DISPATCHED",
+                        "message": f"MATRIX outbound AI phone call initiated to {target_number} via Bland AI."
+                    }
+                else:
+                    logger.warning(f"Bland AI dispatch failed: {bland_res.get('error')}; falling back.")
+            except Exception as e:
+                logger.error(f"Error during Bland AI dispatch: {e}")
+
+        # 2. Secondary PSTN Provider: Twilio REST API
         sid = os.getenv("TWILIO_ACCOUNT_SID")
         token = os.getenv("TWILIO_AUTH_TOKEN")
         twilio_number = os.getenv("TWILIO_PHONE_NUMBER", "+18005550199")

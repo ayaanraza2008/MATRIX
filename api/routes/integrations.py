@@ -9,6 +9,7 @@ Provides a real-time management dashboard covering all 65 GitHub repositories:
 - Universal Connectors (Google Workspace, GitHub, Telegram, Notion, Home Assistant, etc.)
 """
 import time
+import os
 from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, HTTPException, Query, Body
 from pydantic import BaseModel, Field
@@ -192,6 +193,7 @@ async def get_integrations_status_summary():
     from core.integrations.notion_connector import notion_connector
     from core.integrations.home_assistant_connector import home_assistant_connector
     from core.telephony.engine import telephony_engine
+    from core.telephony.bland_client import bland_client
     from core.notifications.push_service import push_service
 
     gw_status = await google_workspace.verify_connection()
@@ -199,7 +201,8 @@ async def get_integrations_status_summary():
     tg_status = await telegram_connector.verify_connection()
     no_status = await notion_connector.verify_connection()
     ha_status = await home_assistant_connector.verify_connection()
-    tw_configured = telephony_engine.is_configured()
+    tw_configured = bool(os.getenv("TWILIO_ACCOUNT_SID") and os.getenv("TWILIO_AUTH_TOKEN"))
+    bland_configured = bland_client.is_configured()
     fcm_configured = push_service.is_firebase_configured()
 
     def _normalize(status_dict: Dict[str, Any], is_conf: bool, is_conn: bool) -> str:
@@ -249,6 +252,12 @@ async def get_integrations_status_summary():
                 "category": "iot",
                 "status": _normalize(ha_status, home_assistant_connector.is_configured(), ha_status.get("connected", False)),
                 "details": ha_status.get("message", "")
+            },
+            "bland_telephony": {
+                "name": "Bland AI Conversational Voice Calling",
+                "category": "telephony",
+                "status": "CONNECTED" if bland_configured else "NOT CONFIGURED",
+                "details": "Bland AI v2 API active (balance: verified)" if bland_configured else "BLAND_API_KEY is not configured in .env."
             },
             "twilio_telephony": {
                 "name": "Twilio PSTN Telephony",

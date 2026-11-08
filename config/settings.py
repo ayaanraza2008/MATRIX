@@ -65,6 +65,11 @@ class Settings(BaseSettings):
     speech_language: str = Field(default="en", alias="MATRIX_SPEECH_LANGUAGE")
     tts_voice: str = Field(default="en_US-lessac-medium", alias="MATRIX_TTS_VOICE")
 
+    # Telephony & Calling
+    bland_api_key: str = Field(default="", alias="BLAND_API_KEY")
+    bland_api_base_url: str = Field(default="https://api.bland.ai", alias="BLAND_API_BASE_URL")
+    bland_target_phone: str = Field(default="+919193002500", alias="BLAND_TARGET_PHONE")
+
     # Security & Autonomy
     security_level: int = Field(default=3, alias="MATRIX_SECURITY_LEVEL")
     require_approval_high_risk: bool = Field(
