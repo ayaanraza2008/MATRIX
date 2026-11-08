@@ -130,3 +130,41 @@ class Capability(Base):
     is_enabled = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class BackgroundTask(Base):
+    """Recurring or scheduled background jobs (e.g. daily briefing, health monitor, server check)."""
+    __tablename__ = "background_tasks"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    task_id = Column(String(64), unique=True, nullable=False, index=True)
+    name = Column(String(150), nullable=False)
+    description = Column(Text, nullable=False)
+    interval_seconds = Column(Integer, default=300, nullable=False)
+    priority = Column(Integer, default=1, nullable=False)
+    status = Column(String(30), default="ACTIVE", nullable=False)  # ACTIVE, PAUSED, COMPLETED, FAILED
+    assigned_agent = Column(String(50), default="automation", nullable=False)
+    required_autonomy_level = Column(Integer, default=2, nullable=False)
+    last_run_at = Column(DateTime, nullable=True)
+    next_run_at = Column(DateTime, nullable=True)
+    execution_count = Column(Integer, default=0, nullable=False)
+    retry_count = Column(Integer, default=0, nullable=False)
+    last_result = Column(JSON, nullable=True)
+    error_log = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class MemoryEntry(Base):
+    """Searchable personal context, preferences, project memory, routines, and contacts."""
+    __tablename__ = "memories"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    memory_id = Column(String(64), unique=True, nullable=False, index=True)
+    category = Column(String(50), default="personal", nullable=False)  # personal, project, preference, routine, contact
+    key = Column(String(150), nullable=False, index=True)
+    content = Column(Text, nullable=False)
+    tags = Column(JSON, default=list)
+    relevance_score = Column(Float, default=1.0)
+    access_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

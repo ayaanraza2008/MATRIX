@@ -1,73 +1,98 @@
 """MATRIX Memory Management API Route.
-Allows users to inspect, create, edit, and delete stored personal facts with zero fabrication.
+Allows users to inspect, create, edit, search, and delete stored personal facts, project contexts,
+preferences, routines, and contacts with automatic secret scrubbing.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
-from pydantic import BaseModel
-from typing import List, Dict, Any
-from database.session import get_db
-from database.models import UserPreference
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
+from typing import List, Dict, Any, Optional
+from memory.manager import memory_manager
 from config.logging_config import get_logger
 
 logger = get_logger("api.memory")
 router = APIRouter(prefix="/memory", tags=["Personal Knowledge & Memory"])
 
 
-class MemoryCreate(BaseModel):
+class MemoryCreatePayload(BaseModel):
     key: str
-    value: Dict[str, Any]
-    category: str = "user_memory"
+    content: str
+    category: str = "personal"
+    tags: List[str] = Field(default_factory=list)
+    relevance_score: float = 1.0
 
 
-class MemoryResponse(BaseModel):
-    id: int
-    key: str
-    value: Dict[str, Any]
-    category: str
+class MemorySearchResponse(BaseModel):
+    query: str
+    total_found: int
+    results: List[Dict[str, Any]]
 
 
-@router.get("", response_model=List[MemoryResponse])
-async def list_memories(db: AsyncSession = Depends(get_db)):
-    """Retrieve all stored user preferences and factual memories."""
-    stmt = select(UserPreference).order_by(UserPreference.updated_at.desc())
-    res = await db.execute(stmt)
-    return res.scalars().all()
+@router.get("", response_model=List[Dict[str, Any]])
+async def list_memories(
+    category: Optional[str] = Query(None, description="Filter by category: personal, project, preference, routine, contact"),
+    limit: int = Query(100, ge=1, le=500)
+):
+    """Retrieve all stored user memories, preferences, and project context."""
+    return await memory_manager.list_memories(category=category, limit=limit)
 
 
-@router.post("", response_model=MemoryResponse, status_code=status.HTTP_201_CREATED)
-async def store_memory(payload: MemoryCreate, db: AsyncSession = Depends(get_db)):
-    """Save an approved user memory or preference."""
-    stmt = select(UserPreference).where(UserPreference.key == payload.key)
-    res = await db.execute(stmt)
-    existing = res.scalar_one_or_none()
-
-    if existing:
-        existing.value = payload.value
-        existing.category = payload.category
-        await db.commit()
-        await db.refresh(existing)
-        return existing
-    else:
-        new_pref = UserPreference(
-            key=payload.key,
-            value=payload.value,
-            category=payload.category,
-            is_user_editable=True
-        )
-        db.add(new_pref)
-        await db.commit()
-        await db.refresh(new_pref)
-        return new_pref
+@router.get("/search", response_model=MemorySearchResponse)
+async def search_memories(
+    q: str = Query(..., min_length=1, description="Keywords to search"),
+    category: Optional[str] = Query(None, description="Optional category filter"),
+    limit: int = Query(10, ge=1, le=50)
+):
+    """Search stored memories by semantic keywords with relevance ranking."""
+    results = await memory_manager.search_memory(query=q, category=category, limit=limit)
+    return {
+        "query": q,
+        "total_found": len(results),
+        "results": results
+    }
 
 
-@router.delete("/{key}", status_code=status.HTTP_200_OK)
-async def delete_memory(key: str, db: AsyncSession = Depends(get_db)):
-    """Delete a stored memory record."""
-    stmt = delete(UserPreference).where(UserPreference.key == key)
-    res = await db.execute(stmt)
-    await db.commit()
-    if res.rowcount == 0:
-        raise HTTPException(status_code=404, detail="Memory entry not found.")
-    logger.info(f"Deleted user memory key: '{key}'")
-    return {"status": "DELETED", "key": key}
+@router.get("/categories")
+async def get_categories():
+    """Return available memory categories."""
+    return {
+        "categories": list(memory_manager.CATEGORIES),
+        "descriptions": {
+            "personal": "User profile, background, identity, and personal context",
+            "project": "Workspaces, active repositories, milestones, architectural decisions",
+            "preference": "Editor choices, themes, notification thresholds, coding styles",
+            "routine": "Schedules, daily briefings, recurring habits, quiet hours",
+            "contact": "Frequent collaborators, emergency numbers, VIP contacts"
+        }
+    }
+
+
+@router.get("/export")
+async def export_all_memories():
+    """Export all memory entries for backup or offline storage."""
+    memories = await memory_manager.export_memories()
+    return {
+        "count": len(memories),
+        "memories": memories
+    }
+
+
+@router.post("", status_code=status.HTTP_201_CREATED)
+async def store_memory(payload: MemoryCreatePayload):
+    """Save an approved user memory or preference with privacy scrubbing."""
+    saved = await memory_manager.add_memory(
+        key=payload.key,
+        content=payload.content,
+        category=payload.category,
+        tags=payload.tags,
+        relevance_score=payload.relevance_score
+    )
+    return saved
+
+
+@router.delete("/{key_or_id}", status_code=status.HTTP_200_OK)
+async def delete_memory(key_or_id: str):
+    """Delete a stored memory record by key or ID."""
+    deleted = await memory_manager.delete_memory(key_or_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Memory entry '{key_or_id}' not found.")
+    logger.info(f"Deleted user memory: '{key_or_id}'")
+    return {"status": "DELETED", "key_or_id": key_or_id}

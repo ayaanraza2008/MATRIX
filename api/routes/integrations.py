@@ -187,3 +187,24 @@ async def test_integration(repo_owner: str, repo_name: str, req: TestIntegration
         "execution_time_ms": res.execution_time_ms,
         "error": res.error
     }
+
+
+@router.get("/marketplace/all")
+async def get_universal_marketplace(category: Optional[str] = None):
+    """Retrieve full catalog of Universal Connectors (OS, Productivity, Communication, Information, IoT)."""
+    from core.integrations.manager import integration_manager
+    items = integration_manager.list_integrations(category=category)
+    return {
+        "status": "OK",
+        "total_integrations": len(items),
+        "connected_count": sum(1 for i in items if i["status"] == "CONNECTED"),
+        "integrations": items
+    }
+
+
+@router.post("/marketplace/{integration_id}/test")
+async def test_universal_integration(integration_id: str):
+    """Trigger a live operational health test against a Universal Connector."""
+    from core.integrations.manager import integration_manager
+    res = await integration_manager.test_integration(integration_id)
+    return res

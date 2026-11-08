@@ -114,3 +114,54 @@ async def revoke_device(device_id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Device not found.")
     logger.info(f"Revoked authorization for device '{device_id}'")
     return {"status": "REVOKED", "device_id": device_id}
+
+
+@router.post("/stop-remote", status_code=status.HTTP_200_OK)
+async def stop_remote_access(db: AsyncSession = Depends(get_db)):
+    """Emergency cut-off: Revoke all paired remote devices and invalidate all pairing tokens."""
+    pairing_manager._registry.clear()
+    stmt = delete(DeviceModel)
+    result = await db.execute(stmt)
+    await db.commit()
+    logger.warning(f"EMERGENCY: Stopped all remote access. Revoked {result.rowcount} paired devices.")
+    return {
+        "status": "REMOTE_ACCESS_STOPPED",
+        "revoked_devices": result.rowcount,
+        "message": "All remote mobile/web device authorizations and active tokens have been terminated."
+    }
+
+
+@router.get("/remote-status", status_code=status.HTTP_200_OK)
+async def get_remote_status(db: AsyncSession = Depends(get_db)):
+    """Retrieve current remote connectivity, paired devices count, and LAN IP."""
+    import socket
+    lan_ip = "127.0.0.1"
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        lan_ip = s.getsockname()[0]
+        s.close()
+    except Exception:
+        pass
+
+    stmt = select(DeviceModel)
+    res = await db.execute(stmt)
+    devices = res.scalars().all()
+
+    return {
+        "lan_ip": lan_ip,
+        "port": 8000,
+        "paired_device_count": len(devices),
+        "active_tokens": len(pairing_manager.list_active_tokens()),
+        "remote_access_enabled": True,
+        "devices": [
+            {
+                "device_id": d.device_id,
+                "name": d.name,
+                "platform": d.platform,
+                "is_paired": d.is_paired,
+                "last_seen_at": d.last_seen_at.isoformat() if d.last_seen_at else None
+            }
+            for d in devices
+        ]
+    }

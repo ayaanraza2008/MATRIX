@@ -15,6 +15,8 @@ import { FilesView } from './components/modules/FilesView';
 import { MemoryView } from './components/modules/MemoryView';
 import { DeveloperStudioView } from './components/modules/DeveloperStudioView';
 import { DevicesView } from './components/modules/DevicesView';
+import { PhoneCallingView } from './components/modules/PhoneCallingView';
+import { IntegrationsMarketplaceView } from './components/modules/IntegrationsMarketplaceView';
 import { SettingsView } from './components/modules/SettingsView';
 
 import {
@@ -599,6 +601,10 @@ export const App: React.FC = () => {
           {currentSection === 'developer' && <DeveloperStudioView />}
 
           {currentSection === 'devices' && <DevicesView />}
+
+          {currentSection === 'telephony' && <PhoneCallingView />}
+
+          {currentSection === 'integrations' && <IntegrationsMarketplaceView />}
 
           {currentSection === 'settings' && <SettingsView />}
         </main>

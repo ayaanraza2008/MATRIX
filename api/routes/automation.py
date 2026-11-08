@@ -85,3 +85,49 @@ async def complete_task(task_id: str, db: AsyncSession = Depends(get_db)):
     await db.commit()
     await db.refresh(task)
     return task
+
+
+# --- Persistent Background Task Scheduler Endpoints ---
+
+@router.get("/background/all")
+async def get_background_tasks():
+    """List persistent scheduled background tasks from SQLite."""
+    from automation.scheduler.engine import background_scheduler
+    tasks = await background_scheduler.list_tasks()
+    return {
+        "status": "OK",
+        "is_paused": background_scheduler.is_paused,
+        "total": len(tasks),
+        "tasks": tasks
+    }
+
+
+@router.post("/background/pause")
+async def pause_background_tasks():
+    """Pause execution of all background tasks."""
+    from automation.scheduler.engine import background_scheduler
+    background_scheduler.pause_all()
+    return {"status": "PAUSED", "is_paused": True}
+
+
+@router.post("/background/resume")
+async def resume_background_tasks():
+    """Resume execution of all background tasks."""
+    from automation.scheduler.engine import background_scheduler
+    background_scheduler.resume_all()
+    return {"status": "ACTIVE", "is_paused": False}
+
+
+automation_router = APIRouter(prefix="/automation", tags=["Background Automation"])
+
+@automation_router.get("/background/all")
+async def get_background_tasks_alias():
+    return await get_background_tasks()
+
+@automation_router.post("/background/pause")
+async def pause_background_tasks_alias():
+    return await pause_background_tasks()
+
+@automation_router.post("/background/resume")
+async def resume_background_tasks_alias():
+    return await resume_background_tasks()

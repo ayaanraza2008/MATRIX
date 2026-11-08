@@ -13,7 +13,7 @@ from config.logging_config import get_logger
 from database.init_db import init_database
 from api.routes import (
     health, system, sessions, capabilities, devices, memory, voice, vision, repositories,
-    automation, files, audit, developer, integrations, airtouch
+    automation, files, audit, developer, integrations, airtouch, telephony, briefing, security
 )
 from api.websocket.manager import ws_manager
 
@@ -58,11 +58,24 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Could not hook hands-free event broker, mic listener, or model preloader: {e}")
 
+    
+        # Start persistent background task scheduler and Autonomy Core
+        from automation.scheduler.engine import background_scheduler
+        await background_scheduler.start()
+        from core.autonomy.autonomous_core import autonomy_core
+        await autonomy_core.initialize()
+        logger.info("Autonomous persistent background task scheduler and Autonomy Core online.")
     logger.info(f"MATRIX Server online at http://{settings.host}:{settings.port}")
     yield
     try:
         from voice.mic_listener import mic_listener
         mic_listener.stop()
+    except Exception:
+        pass
+    
+    try:
+        from automation.scheduler.engine import background_scheduler
+        await background_scheduler.stop()
     except Exception:
         pass
     logger.info("MATRIX Server shutting down cleanly...")
@@ -124,11 +137,15 @@ app.include_router(voice.router, prefix="/api/v1")
 app.include_router(vision.router, prefix="/api/v1")
 app.include_router(repositories.router, prefix="/api/v1")
 app.include_router(automation.router, prefix="/api/v1")
+app.include_router(automation.automation_router, prefix="/api/v1")
 app.include_router(files.router, prefix="/api/v1")
 app.include_router(audit.router, prefix="/api/v1")
 app.include_router(developer.router, prefix="/api/v1")
 app.include_router(integrations.router, prefix="/api/v1")
 app.include_router(airtouch.router, prefix="/api/v1")
+app.include_router(telephony.router, prefix="/api/v1")
+app.include_router(briefing.router, prefix="/api/v1")
+app.include_router(security.router, prefix="/api/v1")
 
 # Direct alias for /api/v1/telemetry
 @app.get("/api/v1/telemetry", tags=["System Telemetry"])

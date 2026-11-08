@@ -12,6 +12,8 @@ export type NavSection =
   | 'repositories'
   | 'system'
   | 'devices'
+  | 'telephony'
+  | 'integrations'
   | 'settings';
 
 export type HologramState =

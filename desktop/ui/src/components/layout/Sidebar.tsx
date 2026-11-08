@@ -13,6 +13,8 @@ import {
   GitBranch,
   Activity,
   Smartphone,
+  PhoneCall,
+  Blocks,
   Settings as SettingsIcon,
   ChevronLeft,
   ChevronRight,
@@ -48,6 +50,8 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'repositories', label: 'Repo Intelligence', icon: GitBranch, badge: '65' },
   { id: 'system', label: 'System Telemetry', icon: Activity },
   { id: 'devices', label: 'Device Sync', icon: Smartphone },
+  { id: 'telephony', label: 'Phone Calling', icon: PhoneCall, badge: 'PSTN' },
+  { id: 'integrations', label: 'Integrations Hub', icon: Blocks, badge: 'New' },
   { id: 'settings', label: 'System Security', icon: SettingsIcon },
 ];
 
