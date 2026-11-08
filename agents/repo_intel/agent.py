@@ -7,6 +7,8 @@ from agents.base_agent import BaseAgent, AgentResult
 from core.repository_intelligence.engine import repo_intelligence
 from core.tool_adapters.manager import adapter_manager
 from core.capability_registry.registry import capability_registry
+from core.reference_knowledge.engine import reference_knowledge_engine
+from core.repository_intelligence.hardware_guard import hardware_guard
 
 
 class RepoIntelAgent(BaseAgent):
@@ -63,6 +65,77 @@ class RepoIntelAgent(BaseAgent):
                 data=res.data,
                 verification=res.verification,
                 error=res.error,
+                execution_time_ms=round(latency, 2)
+            )
+
+        elif act == "chain_adapters":
+            # Multi-repository autonomous pipeline execution
+            pipeline_steps = parameters.get("steps", [])
+            results = []
+            chain_success = True
+            shared_context = parameters.get("initial_context", {})
+
+            for idx, step in enumerate(pipeline_steps):
+                aid = step.get("adapter_id", "")
+                op = step.get("operation", "")
+                # Step explicit parameters take precedence over inherited context
+                params = dict(shared_context)
+                params.update(step.get("parameters", {}))
+                step_res = await adapter_manager.execute(aid, op, params, is_user_confirmed=True)
+                results.append({
+                    "step_index": idx + 1,
+                    "adapter_id": aid,
+                    "operation": op,
+                    "success": step_res.success,
+                    "data": step_res.data,
+                    "execution_time_ms": step_res.execution_time_ms
+                })
+                if step_res.success and isinstance(step_res.data, dict):
+                    shared_context.update(step_res.data)
+                elif not step_res.success:
+                    chain_success = False
+                    break
+
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=chain_success,
+                agent_name=self.name,
+                action_taken="chain_adapters",
+                data={"pipeline_steps": results, "final_context": shared_context},
+                verification={"pipeline_completed": chain_success, "steps_executed": len(results)},
+                execution_time_ms=round(latency, 2)
+            )
+
+        elif act == "query_reference":
+            query = parameters.get("query", "")
+            cat = parameters.get("category")
+            res = reference_knowledge_engine.query_reference_catalog(query, category=cat)
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=True,
+                agent_name=self.name,
+                action_taken="query_reference",
+                data=res,
+                verification={"reference_queried": True},
+                execution_time_ms=round(latency, 2)
+            )
+
+        elif act == "assess_hardware":
+            repo_name = parameters.get("repo_name", "")
+            if repo_name:
+                assess = hardware_guard.assess_repository(repo_name)
+                data = {"assessment": assess.model_dump() if assess else None}
+            else:
+                all_assess = hardware_guard.get_all_incompatible_assessments()
+                data = {"assessments": {k: v.model_dump() for k, v in all_assess.items()}}
+            data["host_profile"] = hardware_guard.profile.model_dump()
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=True,
+                agent_name=self.name,
+                action_taken="assess_hardware",
+                data=data,
+                verification={"hardware_assessed": True},
                 execution_time_ms=round(latency, 2)
             )
 

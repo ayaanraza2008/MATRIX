@@ -72,6 +72,10 @@ class TTSEngine:
         except Exception as e:
             logger.warning(f"Audio playback encountered an exception: {e}")
 
+    async def synthesize_to_file(self, text: str, voice_override: Optional[str] = None) -> Optional[Path]:
+        """Synthesize text to audio file without playing to speakers."""
+        return await self.speak(text, voice_override=voice_override, play_audio=False)
+
     async def speak(self, text: str, voice_override: Optional[str] = None, play_audio: bool = True) -> Optional[Path]:
         """Synthesize text to audio, optionally play through speakers, and return audio file path."""
         self._stop_requested = False

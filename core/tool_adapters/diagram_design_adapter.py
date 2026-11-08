@@ -56,15 +56,17 @@ class DiagramDesignAdapter(BaseAdapter):
             if op == "generate_mermaid":
                 title = parameters.get("title", "MATRIX System Architecture")
                 diagram_type = parameters.get("diagram_type", "graph TD")
-                nodes = parameters.get("nodes", [
-                    ("User", "Microphone"),
-                    ("Microphone", "Silero VAD"),
-                    ("Silero VAD", "Faster Whisper STT"),
-                    ("Faster Whisper STT", "Matrix Brain"),
-                    ("Matrix Brain", "Autonomous Multi-Agent Orchestrator"),
-                    ("Autonomous Multi-Agent Orchestrator", "Tool Adapters"),
-                    ("Matrix Brain", "Edge TTS Audio Engine")
-                ])
+                nodes = parameters.get("nodes")
+                if not isinstance(nodes, (list, tuple)) or (nodes and isinstance(nodes[0], (int, str))):
+                    nodes = [
+                        ("User", "Microphone"),
+                        ("Microphone", "Silero VAD"),
+                        ("Silero VAD", "Faster Whisper STT"),
+                        ("Faster Whisper STT", "Matrix Brain"),
+                        ("Matrix Brain", "Autonomous Multi-Agent Orchestrator"),
+                        ("Autonomous Multi-Agent Orchestrator", "Tool Adapters"),
+                        ("Matrix Brain", "Edge TTS Audio Engine")
+                    ]
 
                 lines = [diagram_type, f"    %% Title: {title}"]
                 for n1, n2 in nodes:

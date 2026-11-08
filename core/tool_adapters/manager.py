@@ -15,6 +15,65 @@ from core.tool_adapters.free_llm_adapter import FreeLlmRouterAdapter
 from core.tool_adapters.diagram_design_adapter import DiagramDesignAdapter
 from core.tool_adapters.system_telemetry_adapter import SystemTelemetryAdapter
 from core.tool_adapters.scientific_research_adapter import ScientificResearchAdapter
+from core.tool_adapters.coding_dev_adapters import (
+    HermesAgentAdapter,
+    ReaReverseEngineeringAdapter,
+    CapCaptureAdapter,
+    OpenDesignAdapter,
+    NotAiRuleAdapter,
+    JcodeRunnerAdapter,
+    OpenCluelySymbolsAdapter,
+    AgencyAgentsAdapter,
+)
+from core.tool_adapters.browser_web_adapters import (
+    EgoLiteWebAdapter,
+    ObscuraCrawlerAdapter,
+    FreeClaudeCodeAdapter,
+    GodsEyeViewAdapter,
+)
+from core.tool_adapters.security_mcp_adapters import (
+    NightcrawlerSecurityAdapter,
+    EccCybersecurityAdapter,
+    AnthropicSecuritySkillsAdapter,
+    KaliGptDefenseAdapter,
+)
+from core.tool_adapters.voice_audio_adapters import (
+    ChatterboxAcousticsAdapter,
+    AtticusAudioAdapter,
+    OpenWhisprAdapter,
+    OmniVoiceSynthesisAdapter,
+    HandyVoiceAssistantAdapter,
+)
+from core.tool_adapters.memory_llm_adapters import (
+    AgentMemoryStorageAdapter,
+    DshGodLlmAdapter,
+    StrataProviderAdapter,
+)
+from core.tool_adapters.creative_media_adapters import (
+    JarvisUltimateMediaAdapter,
+    PenpotVectorDesignAdapter,
+    ComfyUiWorkflowAdapter,
+)
+from core.tool_adapters.science_research_adapters import (
+    GeoSleuthResearchAdapter,
+)
+from core.tool_adapters.workflow_productivity_adapters import (
+    ImmichMediaAdapter,
+    Harness2WorkflowAdapter,
+    AutomatonWorkflowAdapter,
+    SparkAutomationAdapter,
+    RakazoFileOrganizerAdapter,
+    HereticTextPipelineAdapter,
+    YoutubeAutomationAdapter,
+    ChatwootWebhookAdapter,
+    CalDiySchedulerAdapter,
+    OpenProjectTrackerAdapter,
+    AppFlowyDocumentAdapter,
+    OpenSeoAuditAdapter,
+    HeyGemPresentationAdapter,
+    PaperclipDocumentAdapter,
+    OpenGenerativeAiAdapter,
+)
 from core.autonomy_policy.policy import autonomy_policy, ActionCategory
 from core.repository_intelligence.resource_guard import resource_guard
 from config.logging_config import get_logger
@@ -33,6 +92,7 @@ class AdapterManager:
     def _register_default_adapters(self):
         """Instantiate and index all default core adapters."""
         default_list: List[BaseAdapter] = [
+            # 10 Core Installed Integrations (Preserved)
             BrowserUseAdapter(),
             HexStrikeAdapter(),
             VoiceStudioAdapter(),
@@ -43,6 +103,57 @@ class AdapterManager:
             DiagramDesignAdapter(),
             SystemTelemetryAdapter(),
             ScientificResearchAdapter(),
+            # 8 Coding & DevTools Adapters
+            HermesAgentAdapter(),
+            ReaReverseEngineeringAdapter(),
+            CapCaptureAdapter(),
+            OpenDesignAdapter(),
+            NotAiRuleAdapter(),
+            JcodeRunnerAdapter(),
+            OpenCluelySymbolsAdapter(),
+            AgencyAgentsAdapter(),
+            # 4 Browser & Web Adapters
+            EgoLiteWebAdapter(),
+            ObscuraCrawlerAdapter(),
+            FreeClaudeCodeAdapter(),
+            GodsEyeViewAdapter(),
+            # 4 Security & MCP Adapters
+            NightcrawlerSecurityAdapter(),
+            EccCybersecurityAdapter(),
+            AnthropicSecuritySkillsAdapter(),
+            KaliGptDefenseAdapter(),
+            # 5 Voice & Audio Adapters
+            ChatterboxAcousticsAdapter(),
+            AtticusAudioAdapter(),
+            OpenWhisprAdapter(),
+            OmniVoiceSynthesisAdapter(),
+            HandyVoiceAssistantAdapter(),
+            # 3 Memory & LLM Provider Adapters
+            AgentMemoryStorageAdapter(),
+            DshGodLlmAdapter(),
+            StrataProviderAdapter(),
+            # 3 Creative & Media Adapters
+            JarvisUltimateMediaAdapter(),
+            PenpotVectorDesignAdapter(),
+            ComfyUiWorkflowAdapter(),
+            # 1 Research & Science Adapter
+            GeoSleuthResearchAdapter(),
+            # 15 Workflow & Productivity Adapters
+            ImmichMediaAdapter(),
+            Harness2WorkflowAdapter(),
+            AutomatonWorkflowAdapter(),
+            SparkAutomationAdapter(),
+            RakazoFileOrganizerAdapter(),
+            HereticTextPipelineAdapter(),
+            YoutubeAutomationAdapter(),
+            ChatwootWebhookAdapter(),
+            CalDiySchedulerAdapter(),
+            OpenProjectTrackerAdapter(),
+            AppFlowyDocumentAdapter(),
+            OpenSeoAuditAdapter(),
+            HeyGemPresentationAdapter(),
+            PaperclipDocumentAdapter(),
+            OpenGenerativeAiAdapter(),
         ]
         for adp in default_list:
             self.register(adp)

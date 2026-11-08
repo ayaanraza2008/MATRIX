@@ -77,8 +77,8 @@ class BaseAdapter(ABC):
     def resource_requirements(self) -> Dict[str, Any]:
         """Estimated resource requirements on AMD Ryzen 7 5700U."""
         return {
-            "ram_mb": 150,
-            "cpu_threads": 2,
+            "ram_mb": 40,
+            "cpu_threads": 1,
             "requires_gpu": False,
             "supports_avx2": True
         }

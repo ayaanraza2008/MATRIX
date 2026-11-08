@@ -17,6 +17,13 @@ class SecurityAgent(BaseAgent):
         "reg delete", "net user", "shutdown /s", "icacls", "takeown"
     ]
 
+    JAILBREAK_PATTERNS = [
+        "ignore all previous instructions", "ignore previous instructions",
+        "do anything now", "dan mode", "developer mode enabled",
+        "bypass safety guidelines", "unrestricted mode",
+        "<|im_start|>system", "--- system prompt override ---", "jailbreak"
+    ]
+
     def __init__(self):
         super().__init__(
             name="security",
@@ -30,7 +37,7 @@ class SecurityAgent(BaseAgent):
 
         # 1. Audit Command Payload
         if "evaluate" in action_lower or "inspect" in action_lower:
-            payload = parameters.get("command", "")
+            payload = parameters.get("command") or parameters.get("payload", "")
             is_safe, reason = self.inspect_payload(payload)
             await self._record_audit(
                 event_type="PAYLOAD_INSPECTION",
@@ -45,7 +52,13 @@ class SecurityAgent(BaseAgent):
                 success=is_safe,
                 agent_name=self.name,
                 action_taken="evaluate_payload",
-                data={"safe": is_safe, "reason": reason, "policy_level": settings.security_level},
+                data={
+                    "safe": is_safe,
+                    "is_safe": is_safe,
+                    "reason": reason,
+                    "jailbreak_detected": [reason] if not is_safe else [],
+                    "policy_level": settings.security_level
+                },
                 verification={"verified": True},
                 execution_time_ms=round(latency, 2)
             )
@@ -67,11 +80,16 @@ class SecurityAgent(BaseAgent):
         )
 
     def inspect_payload(self, text: str) -> (bool, str):
-        """Scan command string against known dangerous patterns."""
+        """Scan command string against known dangerous patterns and adversarial jailbreak injection vectors."""
         t_low = text.lower()
         for p in self.DANGEROUS_PATTERNS:
             if p in t_low:
                 return False, f"Blocked dangerous command pattern '{p}'"
+
+        for j in self.JAILBREAK_PATTERNS:
+            if j in t_low:
+                return False, f"Blocked adversarial prompt injection/jailbreak pattern '{j}'"
+
         return True, "Payload verified clean."
 
     async def _record_audit(self, event_type: str, risk_level: int, tool_name: str, actor: str, summary: str, status: str):
