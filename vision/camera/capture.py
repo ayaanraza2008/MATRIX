@@ -21,13 +21,13 @@ class CameraCapture:
         self.output_dir = settings.cache_dir / "vision"
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def list_devices(self) -> List[Dict[str, Any]]:
+    def list_devices(self, max_devices: int = 1) -> List[Dict[str, Any]]:
         """Probe available video capture devices across MSMF and DirectShow backends."""
         available = []
         backends = [cv2.CAP_MSMF, cv2.CAP_DSHOW] if os.name == 'nt' else [cv2.CAP_ANY]
 
         for backend in backends:
-            for idx in range(2):
+            for idx in range(max_devices):
                 cap = cv2.VideoCapture(idx, backend)
                 if cap.isOpened():
                     ret, frame = cap.read()
@@ -35,7 +35,6 @@ class CameraCapture:
                     if ret and frame is not None:
                         h, w, c = frame.shape
                         backend_name = "MSMF" if backend == cv2.CAP_MSMF else "DirectShow"
-                        # Check if device already listed
                         if not any(d["index"] == idx for d in available):
                             available.append({
                                 "index": idx,

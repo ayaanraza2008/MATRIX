@@ -84,6 +84,8 @@ class GesturEyeTracker:
 
         # Initialize detector
         self.mp_landmarker = None
+        self._face_cascade = None
+        self._eye_cascade = None
         self.engine_type = "opencv_fallback"
         self._init_detector(model_path)
 
@@ -108,12 +110,28 @@ class GesturEyeTracker:
                 )
                 self.mp_landmarker = vision.FaceLandmarker.create_from_options(options)
                 self.engine_type = "mediapipe_tasks"
+                # Pre-warm FaceLandmarker graph to eliminate cold-start graph compilation latency
+                try:
+                    dummy_bgr = np.zeros((480, 640, 3), dtype=np.uint8)
+                    dummy_rgb = cv2.cvtColor(dummy_bgr, cv2.COLOR_BGR2RGB)
+                    dummy_mp = mp.Image(image_format=mp.ImageFormat.SRGB, data=dummy_rgb)
+                    self.mp_landmarker.detect(dummy_mp)
+                except Exception:
+                    pass
                 logger.info(f"GesturEye initialized with MediaPipe FaceLandmarker ({effective_model.name})")
             except Exception as e:
                 logger.warning(f"Failed to initialize MediaPipe FaceLandmarker ({e}). Using OpenCV fallback.")
                 self.mp_landmarker = None
-        else:
-            logger.info("FaceLandmarker task model not found. Using OpenCV fallback engine.")
+
+        if self.mp_landmarker is None:
+            logger.info("FaceLandmarker task model unavailable. Initializing OpenCV fallback engine.")
+            try:
+                face_cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+                eye_cascade_path = cv2.data.haarcascades + "haarcascade_eye.xml"
+                self._face_cascade = cv2.CascadeClassifier(face_cascade_path)
+                self._eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
+            except Exception as e:
+                logger.warning(f"Failed to load OpenCV cascades: {e}")
 
     def process_frame(self, frame: np.ndarray) -> Dict[str, Any]:
         """Process video frame and extract eye tracking, gaze vector, blinks, and gestures."""
@@ -123,14 +141,14 @@ class GesturEyeTracker:
         start_time = time.perf_counter()
         h, w = frame.shape[:2]
 
+        # Authoritative MediaPipe FaceLandmarker engine (478 3D landmarks)
         if self.engine_type == "mediapipe_tasks" and self.mp_landmarker is not None:
             result = self._process_mediapipe(frame, w, h)
-            if result.get("face_detected"):
-                result["engine"] = "mediapipe_tasks"
-                result["latency_ms"] = round((time.perf_counter() - start_time) * 1000, 2)
-                return result
+            result["engine"] = "mediapipe_tasks"
+            result["latency_ms"] = round((time.perf_counter() - start_time) * 1000, 2)
+            return result
 
-        # Fallback to OpenCV Haar Cascade engine
+        # Fallback to cached OpenCV Haar Cascade engine only if MediaPipe is unavailable
         result = self._process_opencv(frame, w, h)
         result["engine"] = "opencv_fallback"
         result["latency_ms"] = round((time.perf_counter() - start_time) * 1000, 2)
@@ -140,7 +158,17 @@ class GesturEyeTracker:
         """Extract eye landmarks, iris centers, EAR, gaze, and head pose from MediaPipe."""
         import mediapipe as mp
 
-        rgb_frame = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+        # Fast path downscaling for frames larger than 640px to eliminate memory bandwidth overhead
+        # MediaPipe coordinates are normalized in [0, 1] relative space
+        max_dim = max(w, h)
+        if max_dim > 640:
+            scale = 640.0 / max_dim
+            proc_w, proc_h = int(w * scale), int(h * scale)
+            resized_bgr = cv2.resize(frame_bgr, (proc_w, proc_h), interpolation=cv2.INTER_LINEAR)
+            rgb_frame = cv2.cvtColor(resized_bgr, cv2.COLOR_BGR2RGB)
+        else:
+            rgb_frame = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
         detection = self.mp_landmarker.detect(mp_image)
 
@@ -275,21 +303,24 @@ class GesturEyeTracker:
 
     def _process_opencv(self, frame_bgr: np.ndarray, w: int, h: int) -> Dict[str, Any]:
         """OpenCV Haar cascade fallback for face and eye tracking."""
-        gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
-        face_cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-        eye_cascade_path = cv2.data.haarcascades + "haarcascade_eye.xml"
+        if self._face_cascade is None or self._eye_cascade is None:
+            face_cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+            eye_cascade_path = cv2.data.haarcascades + "haarcascade_eye.xml"
+            self._face_cascade = cv2.CascadeClassifier(face_cascade_path)
+            self._eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
 
-        face_cascade = cv2.CascadeClassifier(face_cascade_path)
-        eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
-
-        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=4, minSize=(80, 80))
+        # Scale down for fast fallback evaluation
+        small_gray = cv2.resize(cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY), (w // 2, h // 2))
+        faces = self._face_cascade.detectMultiScale(small_gray, scaleFactor=1.2, minNeighbors=4, minSize=(40, 40))
         if len(faces) == 0:
             return {"face_detected": False, "confidence": 0.0}
 
-        fx, fy, fw, fh = faces[0]
+        # Scale coordinates back up
+        fx, fy, fw, fh = [int(v * 2) for v in faces[0]]
+        gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
         face_roi_gray = gray[fy:fy + fh, fx:fx + fw]
 
-        eyes = eye_cascade.detectMultiScale(face_roi_gray, scaleFactor=1.1, minNeighbors=3, minSize=(20, 20))
+        eyes = self._eye_cascade.detectMultiScale(face_roi_gray, scaleFactor=1.1, minNeighbors=3, minSize=(20, 20))
         
         # Approximate EAR from detected eye count and aspect ratios
         is_blinking = len(eyes) < 2

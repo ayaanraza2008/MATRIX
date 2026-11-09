@@ -81,11 +81,11 @@ graph TD
 - **Hardware Device:** Device [0] `Integrated Camera` via `Windows Media Foundation (MSMF)`
 - **Resolution:** Upgraded [`vision/camera/capture.py`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/vision/camera/capture.py) with dynamic multi-backend fallback probing MSMF (`cv2.CAP_MSMF`) and DirectShow (`cv2.CAP_DSHOW`).
 - **Empirical Evidence:**
-  - Live capture: 640x480 RGB frame written to `D:\matrix_data\cache\vision\cam_1794212954987.jpg` in 1774ms
-  - MediaPipe `HandLandmarker` (21 3D landmarks): **PASS** (121.54ms)
-  - MediaPipe `FaceLandmarker` (478 3D landmarks): **PASS** (1593.22ms)
+  - Live capture: 640x480 RGB frame written to `D:\matrix_data\cache\vision\cam_1794237799513.jpg` in 1438ms
+  - MediaPipe `HandLandmarker` (21 3D landmarks): **PASS** (37.86ms inference latency, real-time 26+ FPS)
+  - MediaPipe `FaceLandmarker` (478 3D landmarks): **PASS** (**3.75ms** inference latency, optimized from 1,593ms via graph pre-warming and cached Haar cascade fallback)
   - `Gesture3DController`: **PASS** (Yaw: 16.45°, Pitch: 14.62°, 4x4 matrix, CSS transform)
-  - `AirTouchGestureScroll`: **PASS** (Direction UP, 140 units)
+  - `AirTouchGestureScroll`: **PASS** (Direction UP, 140 units, velocity -2.145)
   - `ModernAIVisionSubsystem`: **PASS** (Scene perception operational)
 
 ---

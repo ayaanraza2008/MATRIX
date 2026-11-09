@@ -83,10 +83,18 @@ class DPAPIVault:
         logger.info(f"Secret '{clean_key}' securely stored in DPAPI vault.")
         return True
 
+    ALIASES = {
+        "BLAND_AI_API_KEY": "BLAND_API_KEY",
+        "BLAND_API_KEY": "BLAND_AI_API_KEY",
+    }
+
     def retrieve_secret(self, key: str) -> Optional[str]:
         """Retrieve a decrypted secret from the vault."""
         clean_key = (key or "").strip().upper()
-        return self._cache.get(clean_key)
+        val = self._cache.get(clean_key)
+        if val is None and clean_key in self.ALIASES:
+            val = self._cache.get(self.ALIASES[clean_key])
+        return val
 
     get_secret = retrieve_secret
 

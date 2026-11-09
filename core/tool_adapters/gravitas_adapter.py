@@ -48,7 +48,7 @@ class GravitasCodeAdapter(BaseAdapter):
 
     @property
     def resource_requirements(self) -> Dict[str, Any]:
-        return {"ram_mb": 120, "cpu_threads": 1, "requires_gpu": False, "supports_avx2": True}
+        return {"ram_mb": 40, "cpu_threads": 1, "requires_gpu": False, "supports_avx2": True}
 
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()

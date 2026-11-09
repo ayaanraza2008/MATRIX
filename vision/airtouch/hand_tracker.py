@@ -64,6 +64,14 @@ class AirTouchHandTracker:
                 )
                 self.mp_landmarker = vision.HandLandmarker.create_from_options(options)
                 self.engine_type = "mediapipe_tasks"
+                # Pre-warm HandLandmarker graph to eliminate initial compilation latency
+                try:
+                    dummy_bgr = np.zeros((480, 640, 3), dtype=np.uint8)
+                    dummy_rgb = cv2.cvtColor(dummy_bgr, cv2.COLOR_BGR2RGB)
+                    dummy_mp = mp.Image(image_format=mp.ImageFormat.SRGB, data=dummy_rgb)
+                    self.mp_landmarker.detect(dummy_mp)
+                except Exception:
+                    pass
                 logger.info(f"AirTouch HandTracker initialized with MediaPipe engine: {effective_model.name}")
             except Exception as e:
                 logger.warning(f"Failed to initialize MediaPipe HandLandmarker ({e}). Falling back to OpenCV engine.")
@@ -93,7 +101,15 @@ class AirTouchHandTracker:
         """Process frame via MediaPipe Tasks HandLandmarker."""
         import mediapipe as mp
 
-        rgb_frame = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+        max_dim = max(w, h)
+        if max_dim > 640:
+            scale = 640.0 / max_dim
+            proc_w, proc_h = int(w * scale), int(h * scale)
+            resized_bgr = cv2.resize(frame_bgr, (proc_w, proc_h), interpolation=cv2.INTER_LINEAR)
+            rgb_frame = cv2.cvtColor(resized_bgr, cv2.COLOR_BGR2RGB)
+        else:
+            rgb_frame = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
         detection_result = self.mp_landmarker.detect(mp_image)
 

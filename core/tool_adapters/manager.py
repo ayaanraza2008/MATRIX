@@ -210,6 +210,15 @@ class AdapterManager:
         req_ram = adapter.resource_requirements.get("ram_mb", 150)
         has_headroom, reason, _ = resource_guard.check_headroom(required_ram_mb=req_ram)
         if not has_headroom:
+            # Attempt autonomous memory recovery before rejecting
+            try:
+                from core.self_maintenance.recovery import recovery_engine
+                await recovery_engine.recover_memory()
+                has_headroom, reason, _ = resource_guard.check_headroom(required_ram_mb=req_ram)
+            except Exception:
+                pass
+
+        if not has_headroom:
             return AdapterExecutionResult(
                 success=False,
                 adapter_id=adapter_id,

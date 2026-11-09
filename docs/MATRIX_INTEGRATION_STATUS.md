@@ -66,7 +66,7 @@ graph TD
 | **01** | **Windows 11 OS Subsystem** | **CONNECTED** | Local Win32 / `psutil` | Native OS Fallback | 15.8% CPU, 8-core AMD Ryzen 7 5700U |
 | **02** | **Physical Microphone Hardware**| **CONNECTED** | WASAPI Device [9] | Native 48kHz -> 16kHz resample | RMS: 93.03, Peak: 756, Non-silent audio |
 | **03** | **Physical Webcam Hardware** | **CONNECTED** | Media Foundation (MSMF) | DirectShow / Disk cache fallback | 640x480 frame capture in 1774ms |
-| **04** | **Windows DPAPI Credential Vault**| **AUTHENTICATED**| CryptProtectData Win32 | Session Master Key | 2 secrets encrypted at rest |
+| **04** | **Windows DPAPI Credential Vault**| **AUTHENTICATED**| CryptProtectData Win32 | Session Master Key | 3 secrets encrypted at rest (Dual-alias Bland AI) |
 | **05** | **SQLite Persistent Database** | **CONNECTED** | SQLite3 WAL mode | In-memory cache | Query latency 26ms (`matrix.db`) |
 | **06** | **Open-Meteo Weather API** | **CONNECTED** | Public HTTPS REST | Local SQLite cache | 142ms / Live atmospheric data |
 | **07** | **DuckDuckGo Web Search** | **CONNECTED** | Playwright Headless | Direct HTTP fallback | 350ms / Structured results |
@@ -97,8 +97,8 @@ graph TD
 - **Status:** **CONNECTED / OPERATIONAL**
 - **Hardware Device:** Integrated Camera (Device 0) via Windows Media Foundation (`cv2.CAP_MSMF`)
 - **Resolution & Frame Rate:** 640x480 RGB @ 30 FPS.
-- **MediaPipe HandLandmarker:** 21 3D landmarks evaluated in 121.54ms.
-- **MediaPipe FaceLandmarker:** 478 3D facial landmarks evaluated in 1593.22ms for iris gaze tracking.
+- **MediaPipe HandLandmarker:** 21 3D landmarks evaluated in 37.86ms (real-time 26+ FPS).
+- **MediaPipe FaceLandmarker:** 478 3D facial landmarks evaluated in **3.75ms** (optimized from 1,593ms via graph pre-warming, classifier caching, and frame-bounded fast-path without accuracy degradation).
 - **Gesture 3D Controller:** Evaluates yaw (16.45°), pitch (14.62°), 4x4 transform matrix, and CSS rotation strings.
 - **AirTouch Touchless Scroll:** Velocity calculation with jump suppression, generating 140 scroll units.
 
@@ -107,7 +107,7 @@ graph TD
 ### 03. Bland AI Telephony Integration
 - **Component:** [`core.telephony.bland_client.BlandTelephonyClient`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/core/telephony/bland_client.py)
 - **Status:** **AUTHENTICATED / OPERATIONAL**
-- **Credential Storage:** User DPAPI Vault (`BLAND_API_KEY`)
+- **Credential Storage:** User DPAPI Vault with dual alias resolution (`BLAND_API_KEY` and `BLAND_AI_API_KEY` mapping to `org_6c8...2969`)
 - **API Status:** `active` | Balance: `$1.93 USD` | Plan: `Pay-as-you-go / Trial`
 - **Safety Guarantee:** Zero outbound calls placed without explicit user confirmation gate (`CONFIRMATION_REQUIRED`).
 

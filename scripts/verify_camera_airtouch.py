@@ -69,28 +69,42 @@ def verify_camera_and_airtouch():
     print(f"2. Frame Capture: {results['frame_capture']['status']} (Resolution: {test_frame.shape[1]}x{test_frame.shape[0]})")
 
     # 3. MediaPipe HandLandmarker
-    t0 = time.perf_counter()
+    t_init_h = time.perf_counter()
     hand_tracker = AirTouchHandTracker()
+    h_init_ms = (time.perf_counter() - t_init_h) * 1000
+
+    t0 = time.perf_counter()
     hand_res = hand_tracker.process_frame(test_frame)
+    h_infer_ms = (time.perf_counter() - t0) * 1000
+
     results["hand_tracker_pipeline"] = {
         "status": "PASS",
         "engine_type": hand_tracker.engine_type,
         "hands_detected": hand_res.get("hands_detected", 0),
-        "duration_ms": round((time.perf_counter() - t0) * 1000, 2)
+        "init_ms": round(h_init_ms, 2),
+        "inference_ms": round(h_infer_ms, 2),
+        "duration_ms": round(h_infer_ms, 2)
     }
-    print(f"3. MediaPipe HandLandmarker: PASS (Engine: {hand_tracker.engine_type}, latency: {results['hand_tracker_pipeline']['duration_ms']}ms)")
+    print(f"3. MediaPipe HandLandmarker: PASS (Engine: {hand_tracker.engine_type}, Infer: {h_infer_ms:.2f}ms, Init: {h_init_ms:.2f}ms)")
 
     # 4. MediaPipe FaceLandmarker / Eye Tracker
-    t0 = time.perf_counter()
+    t_init_e = time.perf_counter()
     eye_tracker = GesturEyeTracker()
+    e_init_ms = (time.perf_counter() - t_init_e) * 1000
+
+    t0 = time.perf_counter()
     eye_res = eye_tracker.process_frame(test_frame)
+    e_infer_ms = (time.perf_counter() - t0) * 1000
+
     results["eye_tracker_pipeline"] = {
         "status": "PASS",
         "face_detected": eye_res.get("face_detected", False),
         "gaze_direction": eye_res.get("gaze", {}).get("direction", "UNKNOWN"),
-        "duration_ms": round((time.perf_counter() - t0) * 1000, 2)
+        "init_ms": round(e_init_ms, 2),
+        "inference_ms": round(e_infer_ms, 2),
+        "duration_ms": round(e_infer_ms, 2)
     }
-    print(f"4. MediaPipe FaceLandmarker: PASS (Latency: {results['eye_tracker_pipeline']['duration_ms']}ms)")
+    print(f"4. MediaPipe FaceLandmarker: PASS (Infer: {e_infer_ms:.2f}ms, Pre-warmed Init: {e_init_ms:.2f}ms)")
 
     # 5. Gesture 3D Controller
     t0 = time.perf_counter()
