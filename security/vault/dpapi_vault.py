@@ -88,6 +88,8 @@ class DPAPIVault:
         clean_key = (key or "").strip().upper()
         return self._cache.get(clean_key)
 
+    get_secret = retrieve_secret
+
     def delete_secret(self, key: str) -> bool:
         """Remove a secret from the vault."""
         clean_key = (key or "").strip().upper()

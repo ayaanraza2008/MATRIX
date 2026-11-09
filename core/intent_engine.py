@@ -46,12 +46,12 @@ class IntentEngine:
 
     INTENT_RULES = [
         # Master Windows Volume Control & Sound Level
-        (r"\b(volume\s+(?:up|down|increase|decrease|raise|lower|reduce|to|\d+)|turn\s+(?:the\s+)?volume(?:\s+(?:up|down))?|mute(?:\s+sound|\s+volume)?|unmute|sound\s+level|set\s+volume)\b", IntentType.COMMAND, "computer", 0),
+        (r"\b(volume\s+(?:up|down|increase|decrease|raise|lower|reduce|to|set(?:\s+to)?|\d+)|turn\s+(?:the\s+)?volume(?:\s+(?:up|down))?|mute(?:\s+sound|\s+volume)?|unmute|sound\s+level|set\s+volume)\b", IntentType.COMMAND, "computer", 0),
         # 1. High-Risk Destructive Commands (Mandatory Level 3 Safety Gate)
         (r"\b(format\s+[a-z]:|del\s+/[fsq]|rmdir\s+/[sq]|rm\s+-rf|drop\s+table|drop\s+database|reg\s+delete|delete\s+all\s+system\s+files)\b", IntentType.COMMAND, "computer", 3),
 
         # 2. Voice Directives (Stop speaking, go to sleep, continuous listening)
-        (r"\b(stop\s+speaking|be\s+quiet|shut\s+up|silence|mute\s+speech|stop\s+talking)\b", IntentType.VOICE, "voice", 0),
+        (r"\b(stop\s+speaking|be\s+quiet|shut\s+up|silence|mute\s+speech|stop\s+talking|stop|matrix\s+stop)\b", IntentType.VOICE, "voice", 0),
         (r"\b(go\s+to\s+sleep|sleep\s+mode|standby\s+mode|sleep\s+now|enter\s+sleep)\b", IntentType.VOICE, "voice", 0),
         (r"\b(continue\s+listening|keep\s+listening|hands[- ]free\s+mode|continuous\s+listening|continue\s+listening\s+after\s+answering)\b", IntentType.VOICE, "voice", 0),
 
@@ -66,7 +66,7 @@ class IntentEngine:
         (r"\b(create|make|new|mkdir)\s+(?:a\s+)?(?:folder|directory)\b", IntentType.FILES, "files", 1),
         (r"\b(list\s+(?:my\s+)?(?:files|desktop|downloads|documents)|show\s+(?:my\s+)?files|view\s+(?:my\s+)?files)\b", IntentType.FILES, "files", 1),
         (r"\b(organize\s+(?:my\s+)?downloads(?:\s+folder)?|organize\s+(?:my\s+)?(?:folder|files|documents))\b", IntentType.FILES, "files", 1),
-        (r"\b(pdf|docx|xlsx|read document|summarize file|convert format|extract text from file|organize files|find files|personal files|storage files|list\s+files)\b", IntentType.FILES, "files", 1),
+        (r"\b(write\s+(?:a\s+)?file|read\s+(?:a\s+)?file|create\s+(?:a\s+)?file|delete\s+(?:a\s+)?file|open\s+(?:a\s+)?file|pdf|docx|xlsx|read document|summarize file|convert format|extract text from file|organize files|find files|personal files|storage files|list\s+files)\b", IntentType.FILES, "files", 1),
 
         # 6. System Diagnostics & Telemetry
         (r"\b(explain\s+what\s+you\s+are\s+(?:currently\s+)?doing|what\s+are\s+you\s+(?:currently\s+)?doing|current\s+status|system\s+status)\b", IntentType.SYSTEM, "system", 0),

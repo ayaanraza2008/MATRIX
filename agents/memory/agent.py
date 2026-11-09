@@ -47,6 +47,11 @@ class MemoryAgent(BaseAgent):
                     key = m.group(1).strip().replace(" ", "_").lower()
             if key:
                 deleted = await self._delete_preference(key)
+                try:
+                    from memory.manager import memory_manager
+                    await memory_manager.delete_memory(key)
+                except Exception:
+                    pass
                 latency = (time.perf_counter() - start_time) * 1000
                 return AgentResult(
                     success=deleted,
@@ -58,15 +63,33 @@ class MemoryAgent(BaseAgent):
                 )
 
         # 2. Fetch Preferences / Memory
-        if "list" in action_lower or "get" in action_lower or "inspect" in action_lower or "retrieve" in raw_prompt.lower():
+        if any(w in action_lower for w in ["list", "get", "inspect", "retrieve", "search"]) or any(w in raw_prompt.lower() for w in ["retrieve", "what is", "get preference", "search memory"]):
             category = parameters.get("category")
-            preferences = await self._list_preferences(category=category)
+            key = parameters.get("key")
+            query = parameters.get("query")
+
+            if key:
+                preferences = await self._list_preferences(category=category, key=key)
+            elif query:
+                all_prefs = await self._list_preferences(category=category)
+                q_clean = query.lower()
+                preferences = [p for p in all_prefs if q_clean in p["key"].lower() or q_clean in str(p["value"]).lower()]
+            else:
+                preferences = await self._list_preferences(category=category)
+
             latency = (time.perf_counter() - start_time) * 1000
+            val = preferences[0]["value"] if (key and preferences) else (preferences[0]["value"] if len(preferences) == 1 else None)
             return AgentResult(
                 success=True,
                 agent_name=self.name,
-                action_taken="list_memory",
-                data={"stored_memories": preferences, "count": len(preferences)},
+                action_taken="retrieve_memory" if key else ("search_memory" if query else "list_memory"),
+                data={
+                    "stored_memories": preferences,
+                    "matches": preferences,
+                    "count": len(preferences),
+                    "key": key,
+                    "value": val
+                },
                 verification={"verified": True, "count": len(preferences)},
                 execution_time_ms=round(latency, 2)
             )
@@ -100,6 +123,17 @@ class MemoryAgent(BaseAgent):
             except Exception:
                 pass
 
+            try:
+                from memory.manager import memory_manager
+                await memory_manager.add_memory(
+                    key=key,
+                    content=str(value),
+                    category="preference",
+                    tags=[category, "user_preference"]
+                )
+            except Exception:
+                pass
+
             latency = (time.perf_counter() - start_time) * 1000
             return AgentResult(
                 success=saved,
@@ -124,11 +158,13 @@ class MemoryAgent(BaseAgent):
             execution_time_ms=round(latency, 2)
         )
 
-    async def _list_preferences(self, category: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def _list_preferences(self, category: Optional[str] = None, key: Optional[str] = None) -> List[Dict[str, Any]]:
         async with AsyncSessionLocal() as session:
             stmt = select(UserPreference)
             if category:
                 stmt = stmt.where(UserPreference.category == category)
+            if key:
+                stmt = stmt.where(UserPreference.key == key)
             res = await session.execute(stmt)
             prefs = res.scalars().all()
             return [{"key": p.key, "value": p.value, "category": p.category} for p in prefs]

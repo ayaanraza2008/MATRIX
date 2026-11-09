@@ -348,6 +348,8 @@ class BlandTelephonyClient:
             logger.warning(f"Error fetching Bland calls: {e}")
         return []
 
+    get_account_details = get_account_info
+
     async def list_voices(self, limit: int = 25) -> List[Dict[str, Any]]:
         """List available Bland AI voices."""
         if not self.is_configured():
@@ -367,3 +369,4 @@ class BlandTelephonyClient:
 
 # Global singleton instance
 bland_client = BlandTelephonyClient()
+BlandAIClient = BlandTelephonyClient

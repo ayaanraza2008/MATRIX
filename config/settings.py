@@ -69,7 +69,7 @@ class Settings(BaseSettings):
     audio_input_preferred_api: str = Field(default="WASAPI", alias="MATRIX_AUDIO_PREFERRED_API")
     audio_native_resampling: bool = Field(default=True, alias="MATRIX_AUDIO_NATIVE_RESAMPLING")
     voice_silence_duration_ms: int = Field(default=1200, alias="MATRIX_VOICE_SILENCE_MS")
-    voice_playback_post_pause_ms: int = Field(default=350, alias="MATRIX_VOICE_PLAYBACK_POST_PAUSE_MS")
+    voice_playback_post_pause_ms: int = Field(default=850, alias="MATRIX_VOICE_PLAYBACK_POST_PAUSE_MS")
     voice_speech_rate: str = Field(default="+0%", alias="MATRIX_VOICE_SPEECH_RATE")
     wake_word_sensitivity: float = Field(default=0.35, alias="MATRIX_WAKE_WORD_SENSITIVITY")
 

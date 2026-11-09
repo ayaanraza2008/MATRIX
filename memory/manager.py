@@ -137,7 +137,8 @@ class MemoryManager:
         limit: int = 10
     ) -> List[Dict[str, Any]]:
         """Search stored memories by keyword query with relevance scoring."""
-        query_terms = [q.strip().lower() for q in query.split() if len(q.strip()) > 1]
+        raw_words = re.findall(r'\b[a-zA-Z0-9_-]+\b', query.lower())
+        query_terms = [w for w in raw_words if len(w) > 1]
         if not query_terms:
             return await self.list_memories(category=category, limit=limit)
 

@@ -132,6 +132,7 @@ class PairingManager:
             "tailscale_host": ts_endpoint,
             "tailscale_qr_protocol": ts_qr_uri,
             "port": port,
+            "expires_in": ttl_seconds,
             "expires_in_seconds": ttl_seconds,
             "created_at": record.created_at,
             "remote_compatible": bool(ts_ip)

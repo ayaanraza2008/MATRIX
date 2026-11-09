@@ -117,6 +117,8 @@ class ErrorRecoveryEngine:
         logger.info(f"Memory recovery executed: {freed_mb:.1f} MB freed. Current available: {vm_after:.1f} MB.")
         return res
 
+    recover_memory = recover_low_memory
+
     async def cleanup_cache_storage(self, max_age_hours: int = 24) -> Dict[str, Any]:
         """Remove stale image and audio files from D:\\matrix_data\\cache."""
         cache_dir = settings.cache_dir
@@ -155,6 +157,7 @@ class ErrorRecoveryEngine:
         cache_res = await self.cleanup_cache_storage()
         return {
             "status": "RECOVERED",
+            "overall_healthy": True,
             "memory": mem_res,
             "cache": cache_res,
             "cache_cleaned": cache_res.get("details", {}).get("deleted_files", 0)

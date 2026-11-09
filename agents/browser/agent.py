@@ -70,7 +70,8 @@ class BrowserAgent(BaseAgent):
             urls = re.findall(r'https?://[^\s]+', raw_prompt)
             target_url = urls[0] if urls else "https://news.ycombinator.com"
 
-        return await self._navigate_url(target_url, start_time)
+        tout = parameters.get("timeout_seconds")
+        return await self._navigate_url(target_url, start_time, timeout_seconds=tout)
 
     async def _search_web(self, query: str, start_time: float) -> AgentResult:
         """Execute real search query via Bing and extract top organic results with URLs and snippets."""
@@ -152,7 +153,7 @@ class BrowserAgent(BaseAgent):
                     execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
                 )
 
-    async def _navigate_url(self, url: str, start_time: float) -> AgentResult:
+    async def _navigate_url(self, url: str, start_time: float, timeout_seconds: float = None) -> AgentResult:
         """Navigate to website using Playwright, extract title, text, and page screenshot."""
         logger.info(f"Navigating to {url} via Playwright...")
         try:
@@ -160,7 +161,8 @@ class BrowserAgent(BaseAgent):
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
                 page = await browser.new_page()
-                await page.goto(url, timeout=12000, wait_until="domcontentloaded")
+                nav_timeout = int(timeout_seconds * 1000) if timeout_seconds else 12000
+                await page.goto(url, timeout=nav_timeout, wait_until="domcontentloaded")
                 
                 title = await page.title()
                 text_content = await page.inner_text("body")
@@ -187,6 +189,15 @@ class BrowserAgent(BaseAgent):
                     execution_time_ms=round(latency, 2)
                 )
         except Exception as e:
+            if timeout_seconds and (time.perf_counter() - start_time) >= timeout_seconds:
+                return AgentResult(
+                    success=False,
+                    agent_name=self.name,
+                    action_taken="navigate_url",
+                    error=f"Navigation timed out after {round((time.perf_counter() - start_time) * 1000, 1)}ms: {e}",
+                    verification={"verified": False, "timed_out": True},
+                    execution_time_ms=round((time.perf_counter() - start_time) * 1000, 2)
+                )
             try:
                 import httpx
                 async with httpx.AsyncClient(timeout=8.0, follow_redirects=True) as client:
@@ -199,7 +210,7 @@ class BrowserAgent(BaseAgent):
                         success=(resp.status_code == 200),
                         agent_name=self.name,
                         action_taken="navigate_url_fallback",
-                        data={"url": url, "title": title, "status_code": resp.status_code, "length": len(resp.text)},
+                        data={"url": url, "title": title, "status_code": resp.status_code, "text_sample": resp.text[:1200], "total_chars": len(resp.text), "length": len(resp.text)},
                         verification={"verified": resp.status_code == 200},
                         execution_time_ms=round(latency, 2)
                     )

@@ -53,7 +53,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.236826Z"
+    "last_updated": "2026-11-09T04:59:41.500769Z"
   },
   "cap_gravitas": {
     "capability_id": "cap_gravitas",
@@ -107,7 +107,7 @@
     "health_status": "healthy",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.245569Z"
+    "last_updated": "2026-11-09T04:59:41.514272Z"
   },
   "cap_hexstrike_ai": {
     "capability_id": "cap_hexstrike_ai",
@@ -161,7 +161,7 @@
     "health_status": "healthy",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.254875Z"
+    "last_updated": "2026-11-09T04:59:41.523123Z"
   },
   "cap_jarvis_ultimate": {
     "capability_id": "cap_jarvis_ultimate",
@@ -215,7 +215,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.264231Z"
+    "last_updated": "2026-11-09T04:59:41.532146Z"
   },
   "cap_ultron": {
     "capability_id": "cap_ultron",
@@ -269,7 +269,7 @@
     "health_status": "healthy",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.275762Z"
+    "last_updated": "2026-11-09T04:59:41.541755Z"
   },
   "cap_ego_lite": {
     "capability_id": "cap_ego_lite",
@@ -325,7 +325,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.286353Z"
+    "last_updated": "2026-11-09T04:59:41.550633Z"
   },
   "cap_mobile_mcp": {
     "capability_id": "cap_mobile_mcp",
@@ -379,7 +379,7 @@
     "health_status": "healthy",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.294624Z"
+    "last_updated": "2026-11-09T04:59:41.557767Z"
   },
   "cap_diorama": {
     "capability_id": "cap_diorama",
@@ -433,7 +433,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.303919Z"
+    "last_updated": "2026-11-09T04:59:41.566811Z"
   },
   "cap_nightcrawler": {
     "capability_id": "cap_nightcrawler",
@@ -487,7 +487,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.311217Z"
+    "last_updated": "2026-11-09T04:59:41.572937Z"
   },
   "cap_dsh_god": {
     "capability_id": "cap_dsh_god",
@@ -541,7 +541,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.319366Z"
+    "last_updated": "2026-11-09T04:59:41.580843Z"
   },
   "cap_chatterbox": {
     "capability_id": "cap_chatterbox",
@@ -595,7 +595,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.326933Z"
+    "last_updated": "2026-11-09T04:59:41.594230Z"
   },
   "cap_penpot": {
     "capability_id": "cap_penpot",
@@ -649,7 +649,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.337018Z"
+    "last_updated": "2026-11-09T04:59:41.603958Z"
   },
   "cap_immich": {
     "capability_id": "cap_immich",
@@ -703,7 +703,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.350658Z"
+    "last_updated": "2026-11-09T04:59:41.613070Z"
   },
   "cap_freellmapi": {
     "capability_id": "cap_freellmapi",
@@ -759,7 +759,7 @@
     "health_status": "healthy",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.357328Z"
+    "last_updated": "2026-11-09T04:59:41.621582Z"
   },
   "cap_awesome_free_llm_apis": {
     "capability_id": "cap_awesome_free_llm_apis",
@@ -815,7 +815,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.369517Z"
+    "last_updated": "2026-11-09T04:59:41.629916Z"
   },
   "cap_airllm": {
     "capability_id": "cap_airllm",
@@ -869,7 +869,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.377559Z"
+    "last_updated": "2026-11-09T04:59:41.635607Z"
   },
   "cap_harness2": {
     "capability_id": "cap_harness2",
@@ -923,7 +923,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.387644Z"
+    "last_updated": "2026-11-09T04:59:41.645884Z"
   },
   "cap_g0dm0d3": {
     "capability_id": "cap_g0dm0d3",
@@ -977,7 +977,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.395711Z"
+    "last_updated": "2026-11-09T04:59:41.655173Z"
   },
   "cap_automaton": {
     "capability_id": "cap_automaton",
@@ -1031,7 +1031,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.403920Z"
+    "last_updated": "2026-11-09T04:59:41.661238Z"
   },
   "cap_spark_x2.6": {
     "capability_id": "cap_spark_x2.6",
@@ -1085,7 +1085,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.413782Z"
+    "last_updated": "2026-11-09T04:59:41.670519Z"
   },
   "cap_rakazo": {
     "capability_id": "cap_rakazo",
@@ -1139,7 +1139,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.422379Z"
+    "last_updated": "2026-11-09T04:59:41.681039Z"
   },
   "cap_mocha": {
     "capability_id": "cap_mocha",
@@ -1193,7 +1193,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.429504Z"
+    "last_updated": "2026-11-09T04:59:41.689314Z"
   },
   "cap_build_your_own_x": {
     "capability_id": "cap_build_your_own_x",
@@ -1247,7 +1247,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.438854Z"
+    "last_updated": "2026-11-09T04:59:41.697726Z"
   },
   "cap_era_system_prompts": {
     "capability_id": "cap_era_system_prompts",
@@ -1301,7 +1301,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.449397Z"
+    "last_updated": "2026-11-09T04:59:41.708009Z"
   },
   "cap_heretic": {
     "capability_id": "cap_heretic",
@@ -1355,7 +1355,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.461239Z"
+    "last_updated": "2026-11-09T04:59:41.718386Z"
   },
   "cap_atticus_mac": {
     "capability_id": "cap_atticus_mac",
@@ -1411,7 +1411,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.470226Z"
+    "last_updated": "2026-11-09T04:59:41.728751Z"
   },
   "cap_ecc": {
     "capability_id": "cap_ecc",
@@ -1465,7 +1465,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.479100Z"
+    "last_updated": "2026-11-09T04:59:41.739171Z"
   },
   "cap_hermes_agent": {
     "capability_id": "cap_hermes_agent",
@@ -1519,7 +1519,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.488613Z"
+    "last_updated": "2026-11-09T04:59:41.749436Z"
   },
   "cap_obscura": {
     "capability_id": "cap_obscura",
@@ -1575,7 +1575,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.497120Z"
+    "last_updated": "2026-11-09T04:59:41.763779Z"
   },
   "cap_rea": {
     "capability_id": "cap_rea",
@@ -1629,7 +1629,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.505634Z"
+    "last_updated": "2026-11-09T04:59:41.773548Z"
   },
   "cap_youtube_automation_agent": {
     "capability_id": "cap_youtube_automation_agent",
@@ -1685,7 +1685,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.511781Z"
+    "last_updated": "2026-11-09T04:59:41.782379Z"
   },
   "cap_cap": {
     "capability_id": "cap_cap",
@@ -1739,7 +1739,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.523674Z"
+    "last_updated": "2026-11-09T04:59:41.790590Z"
   },
   "cap_chatwoot": {
     "capability_id": "cap_chatwoot",
@@ -1793,7 +1793,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.532251Z"
+    "last_updated": "2026-11-09T04:59:41.801039Z"
   },
   "cap_cal.diy": {
     "capability_id": "cap_cal.diy",
@@ -1847,7 +1847,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.542396Z"
+    "last_updated": "2026-11-09T04:59:41.811123Z"
   },
   "cap_openproject": {
     "capability_id": "cap_openproject",
@@ -1901,7 +1901,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.542396Z"
+    "last_updated": "2026-11-09T04:59:41.815785Z"
   },
   "cap_openwhispr": {
     "capability_id": "cap_openwhispr",
@@ -1955,7 +1955,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.555077Z"
+    "last_updated": "2026-11-09T04:59:41.830551Z"
   },
   "cap_appflowy": {
     "capability_id": "cap_appflowy",
@@ -2009,7 +2009,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.562644Z"
+    "last_updated": "2026-11-09T04:59:41.838188Z"
   },
   "cap_open_seo": {
     "capability_id": "cap_open_seo",
@@ -2063,7 +2063,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.572710Z"
+    "last_updated": "2026-11-09T04:59:41.847906Z"
   },
   "cap_open_higgsfield": {
     "capability_id": "cap_open_higgsfield",
@@ -2117,7 +2117,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.582773Z"
+    "last_updated": "2026-11-09T04:59:41.920489Z"
   },
   "cap_free_claude_code": {
     "capability_id": "cap_free_claude_code",
@@ -2173,7 +2173,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.592909Z"
+    "last_updated": "2026-11-09T04:59:41.931880Z"
   },
   "cap_voicestudio": {
     "capability_id": "cap_voicestudio",
@@ -2227,7 +2227,7 @@
     "health_status": "healthy",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.592909Z"
+    "last_updated": "2026-11-09T04:59:41.942288Z"
   },
   "cap_geo_sleuth": {
     "capability_id": "cap_geo_sleuth",
@@ -2281,7 +2281,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.610749Z"
+    "last_updated": "2026-11-09T04:59:41.952054Z"
   },
   "cap_heygem.ai": {
     "capability_id": "cap_heygem.ai",
@@ -2335,7 +2335,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.619685Z"
+    "last_updated": "2026-11-09T04:59:41.962336Z"
   },
   "cap_comfyui": {
     "capability_id": "cap_comfyui",
@@ -2391,7 +2391,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.628940Z"
+    "last_updated": "2026-11-09T04:59:41.973896Z"
   },
   "cap_omnivoice": {
     "capability_id": "cap_omnivoice",
@@ -2445,7 +2445,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.637833Z"
+    "last_updated": "2026-11-09T04:59:41.982852Z"
   },
   "cap_handy": {
     "capability_id": "cap_handy",
@@ -2499,7 +2499,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.647030Z"
+    "last_updated": "2026-11-09T04:59:41.993416Z"
   },
   "cap_openviking": {
     "capability_id": "cap_openviking",
@@ -2553,7 +2553,7 @@
     "health_status": "healthy",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.655385Z"
+    "last_updated": "2026-11-09T04:59:42.002421Z"
   },
   "cap_awesome_harness_engineering": {
     "capability_id": "cap_awesome_harness_engineering",
@@ -2607,7 +2607,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.666023Z"
+    "last_updated": "2026-11-09T04:59:42.012603Z"
   },
   "cap_anthropic_cybersecurity_skills": {
     "capability_id": "cap_anthropic_cybersecurity_skills",
@@ -2661,7 +2661,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.666023Z"
+    "last_updated": "2026-11-09T04:59:42.021118Z"
   },
   "cap_diagram_design": {
     "capability_id": "cap_diagram_design",
@@ -2715,7 +2715,7 @@
     "health_status": "healthy",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.681618Z"
+    "last_updated": "2026-11-09T04:59:42.031887Z"
   },
   "cap_scientific_agent_skills": {
     "capability_id": "cap_scientific_agent_skills",
@@ -2769,7 +2769,7 @@
     "health_status": "healthy",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.689808Z"
+    "last_updated": "2026-11-09T04:59:42.041360Z"
   },
   "cap_agentmemory": {
     "capability_id": "cap_agentmemory",
@@ -2823,7 +2823,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.697361Z"
+    "last_updated": "2026-11-09T04:59:42.052514Z"
   },
   "cap_browser_use": {
     "capability_id": "cap_browser_use",
@@ -2879,7 +2879,7 @@
     "health_status": "healthy",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.707912Z"
+    "last_updated": "2026-11-09T04:59:42.058766Z"
   },
   "cap_gods_eye_view": {
     "capability_id": "cap_gods_eye_view",
@@ -2935,7 +2935,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.718312Z"
+    "last_updated": "2026-11-09T04:59:42.068764Z"
   },
   "cap_kaligpt": {
     "capability_id": "cap_kaligpt",
@@ -2989,7 +2989,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.728620Z"
+    "last_updated": "2026-11-09T04:59:42.080069Z"
   },
   "cap_paperclip": {
     "capability_id": "cap_paperclip",
@@ -3043,7 +3043,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.739275Z"
+    "last_updated": "2026-11-09T04:59:42.092166Z"
   },
   "cap_strata": {
     "capability_id": "cap_strata",
@@ -3099,7 +3099,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.752627Z"
+    "last_updated": "2026-11-09T04:59:42.103825Z"
   },
   "cap_open_design": {
     "capability_id": "cap_open_design",
@@ -3153,7 +3153,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.762954Z"
+    "last_updated": "2026-11-09T04:59:42.112914Z"
   },
   "cap_not_ai": {
     "capability_id": "cap_not_ai",
@@ -3207,7 +3207,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.772707Z"
+    "last_updated": "2026-11-09T04:59:42.123013Z"
   },
   "cap_jcode": {
     "capability_id": "cap_jcode",
@@ -3261,7 +3261,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.784355Z"
+    "last_updated": "2026-11-09T04:59:42.129776Z"
   },
   "cap_open_generative_ai": {
     "capability_id": "cap_open_generative_ai",
@@ -3315,7 +3315,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.793383Z"
+    "last_updated": "2026-11-09T04:59:42.137612Z"
   },
   "cap_dramaclaw": {
     "capability_id": "cap_dramaclaw",
@@ -3369,7 +3369,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.804111Z"
+    "last_updated": "2026-11-09T04:59:42.150865Z"
   },
   "cap_opencluely": {
     "capability_id": "cap_opencluely",
@@ -3423,7 +3423,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.813678Z"
+    "last_updated": "2026-11-09T04:59:42.162805Z"
   },
   "cap_public_apis": {
     "capability_id": "cap_public_apis",
@@ -3479,7 +3479,7 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.822253Z"
+    "last_updated": "2026-11-09T04:59:42.171054Z"
   },
   "cap_agency_agents": {
     "capability_id": "cap_agency_agents",
@@ -3533,6 +3533,6 @@
     "health_status": "uninstalled",
     "version": "1.0.0",
     "test_results": {},
-    "last_updated": "2026-11-09T04:24:09.831972Z"
+    "last_updated": "2026-11-09T04:59:42.182503Z"
   }
 }

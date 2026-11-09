@@ -65,6 +65,20 @@ class PersonalAgent(BaseAgent):
                 execution_time_ms=round(latency, 2)
             )
 
+        # Weather Inquiries (Open-Meteo)
+        if "weather" in action_lower or "weather" in raw_prompt:
+            from core.information.briefing import briefing_engine
+            w_res = await briefing_engine.get_live_weather()
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=w_res.get("success", False),
+                agent_name=self.name,
+                action_taken="query_weather",
+                data=w_res,
+                verification={"verified": w_res.get("success", False), "temperature": w_res.get("temperature_c")},
+                execution_time_ms=round(latency, 2)
+            )
+
         # 1. Draft Email / Message
         if "draft" in action_lower or any(w in raw_prompt for w in ["draft an email", "draft email", "compose email", "write an email to"]):
             return await self._handle_draft_email(parameters, raw_prompt, start_time)
