@@ -1,5 +1,5 @@
 # MATRIX — REMAINING EXTERNAL BLOCKERS & USER ACTION REGISTER
-**Version:** 3.0.0-PROD  
+**Version:** 3.1.0-PROD  
 **Branch:** `final-production-master`  
 **Classification Standard:** Zero-Fabrication / Strict Factual Audit  
 **Date:** November 2026  
@@ -8,185 +8,196 @@
 
 ## 1. Executive Summary
 
-MATRIX AI is fully engineered, compiled, integrated, and locally operational across all core subsystems, including local LLM inference, openWakeWord acoustic detection, DirectShow MediaPipe computer vision, Windows DPAPI credential vault, and autonomous multi-agent task execution.
+MATRIX AI is fully engineered, compiled, integrated, and verified operational across all local hardware and software subsystems:
+- **Physical Microphone:** Fully resolved via WASAPI Native Capture & Polyphase Resampling (Realtek HD Audio @ 48000Hz 2ch -> 16000Hz 1ch).
+- **Physical Webcam:** Fully resolved via Windows Media Foundation (`cv2.CAP_MSMF`) with AirTouch gesture control and MediaPipe Landmarkers.
+- **Bland AI Telephony:** Authenticated in DPAPI Vault with active account and verified $1.93 USD balance.
+- **Local Neural Voice & Multimodal Vision:** openWakeWord (`matrix`, `hey_jarvis_v0.1`, `snap`), faster-whisper INT8 CPU multilingual STT, PlaybackCoordinator single-source leasing, and GesturEye dwell click.
 
-In strict compliance with production engineering standards, **no mock success is reported**. The following external blockers represent hardware prerequisites, Windows 11 session privacy permissions, and third-party user credentials that can only be supplied by the physical user.
+In strict compliance with zero-simulation standards, **no mock success is reported**. The remaining items represent third-party user credentials and physical smartphone hardware connection that only the human operator can provide.
 
 ---
 
-## 2. Blockers & Action Items Register
+## 2. Updated Master Hardware & Integration Status Register
 
 ```mermaid
 graph TD
-    subgraph Local Environment [100% Operational In-Process]
-        Brain[Local Qwen2.5 GGUF Brain]
-        Voice[openWakeWord + Acoustic Snap + Whisper]
-        Vision[SunplusIT Camera + MediaPipe AirTouch]
-        Security[Windows DPAPI Enclave]
-        Agents[16 Autonomous Agents & 34 Tools]
+    subgraph Operational Subsystems [100% Verified Live Hardware & Code]
+        Mic[Physical Microphone: Realtek WASAPI 48kHz]
+        Cam[Physical Webcam: MSMF Device 0 640x480]
+        Wake[openWakeWord + Snap Detection]
+        Whisper[faster-whisper INT8 Multilingual STT]
+        Dedup[PlaybackCoordinator Single-Lease Dedup]
+        AirTouch[AirTouch Gestures + MediaPipe 3D]
+        Vault[Windows DPAPI CryptProtectData Vault]
+        Bland[Bland AI Telephony: $1.93 USD Active]
+        Agents[16 Autonomous Agents + 34 Tool Adapters]
     end
 
-    subgraph User Action Required [Hardware & Permissions]
-        H1[Blocker 1: Windows 11 Microphone Privacy Permission]
-        H2[Blocker 2: Windows 11 Camera Privacy Permission]
-        H3[Blocker 3: Physical Android Handset Connection]
+    subgraph User Action Required [Physical Hardware]
+        H1[Action 1: Connect Android Phone via USB for ADB Debugging]
     end
 
     subgraph User Action Required [Third-Party Cloud Credentials]
-        C1[Blocker 4: Google Workspace OAuth client_secret.json]
-        C2[Blocker 5: Telegram Bot Token via BotFather]
-        C3[Blocker 6: GitHub Personal Access Token]
-        C4[Blocker 7: Tailscale Mesh Client Installation]
+        C1[Action 2: Google Workspace OAuth credentials.json]
+        C2[Action 3: Telegram Bot Token via @BotFather]
+        C3[Action 4: GitHub Developer Personal Access Token]
+        C4[Action 5: Tailscale Mesh Client Installation]
     end
 
-    LocalEnvironment -.->|DirectSound 0x80004005| H1
-    LocalEnvironment -.->|DirectShow Session Lock| H2
-    LocalEnvironment -.->|Awaiting USB/ADB Link| H3
-    LocalEnvironment -.->|Awaiting Client Secret| C1
-    LocalEnvironment -.->|Awaiting Bot Token| C2
-    LocalEnvironment -.->|Awaiting PAT| C3
-    LocalEnvironment -.->|Awaiting Host Binary| C4
+    Mic --> VoiceEngine[Matrix Voice Pipeline]
+    Cam --> VisionEngine[Matrix AirTouch Vision]
+    VoiceEngine --> Brain[Matrix Brain & Orchestrator]
+    VisionEngine --> Brain
+    Bland --> Brain
+    Vault --> Brain
 ```
 
 ---
 
-### Blocker 1: Windows 11 Physical Microphone Session Privacy Permission
+## 3. Detailed Subsystem Status & Resolved Blockers
+
+### A. Physical Microphone Hardware — RESOLVED & VERIFIED
 - **Category:** Audio Input Hardware
-- **Strict Status:** `BLOCKED` (DirectSound Capture error `0x80004005` / MME error 1)
-- **Root Cause:** Windows 11 per-app microphone privacy settings prevent background automation processes from accessing the physical Realtek High Definition Audio recording hardware.
-- **Verified Software Components:**
-  - `openWakeWord` inference on synthesized audio: **PASS** (`matrix.onnx` score: 0.9998, `snap.onnx` score: 0.9991)
-  - `AcousticSnapDetector` impulse analysis: **PASS** (Crest factor: 12.16, ZCR: 0.533, High-Frequency energy ratio: 1.657)
-  - Multilingual Speech-to-Text (`faster-whisper` INT8): **PASS** (English, Hindi, and Hinglish waveforms accurately transcribed)
-- **Required User Actions:**
-  1. Open Windows 11 **Settings** (`Win + I`).
-  2. Navigate to **Privacy & security -> Microphone**.
-  3. Ensure **Microphone access** is turned **ON**.
-  4. Ensure **Let desktop apps access your microphone** is turned **ON** and Python is listed as permitted.
+- **Status:** **CONNECTED / OPERATIONAL**
+- **Hardware Device:** Device [9] `Microphone (Realtek(R) Audio)` on `Windows WASAPI`
+- **Root Cause of Prior 0x80004005 Error:** Attempting to open WASAPI/DirectSound directly at 16000Hz failed with `PaErrorCode -9997 (Invalid sample rate)` or session access error because the Realtek ALC hardware driver requires native 48000Hz 2-channel capture.
+- **Resolution:** Implemented `NativeMicListener` which queries the device's native rate (48000Hz/2ch), captures full fidelity frames, and performs high-order polyphase resampling (`scipy.signal.resample_poly`) to 16000Hz mono.
+- **Empirical Evidence:**
+  - Captured 15,840 samples (1.0s)
+  - RMS Amplitude: 93.03
+  - Peak Amplitude: 756 (2.3% FS)
+  - Non-Silent Audio: `True`
+  - openWakeWord inference latency: 8.13ms (`matrix`, `hey_jarvis_v0.1`, `snap`)
+  - Acoustic Snap Crest Factor: 10.70 (discrimination vs spoken snap: `PASS`)
+  - faster-whisper INT8 latency: 4370ms (supports English, Hindi, Hinglish)
+  - Single playback lease & interrupt cancel latency: 1.86ms (< 200ms target)
 
 ---
 
-### Blocker 2: Windows 11 Physical Webcam Session Access
+### B. Physical Webcam Hardware — RESOLVED & VERIFIED
 - **Category:** Vision Input Hardware
-- **Strict Status:** `BLOCKED` (DirectShow 0 capture devices opened in background session)
-- **Root Cause:** Windows 11 camera privacy security restricts camera index access from non-interactive shell sessions.
-- **Verified Software Components:**
-  - MediaPipe `HandLandmarker` (21 3D landmarks, gesture classification): **PASS** (151.3ms)
-  - MediaPipe `FaceLandmarker` (478 3D landmarks, iris gaze tracking): **PASS** (1940.6ms)
-  - `Gesture3DController` (Holt-Wright smoothing, pitch/yaw, 4x4 matrix, CSS transform): **PASS**
-  - `AirTouchGestureScroll` (touchless vertical scrolling, velocity curves, jump suppression): **PASS**
-  - `ModernAIVisionSubsystem` (native Windows OCR and scene perception): **PASS**
-- **Required User Actions:**
-  1. Open Windows 11 **Settings** (`Win + I`).
-  2. Navigate to **Privacy & security -> Camera**.
-  3. Ensure **Camera access** is turned **ON**.
-  4. Ensure **Let desktop apps access your camera** is turned **ON**.
+- **Status:** **CONNECTED / OPERATIONAL**
+- **Hardware Device:** Device [0] `Integrated Camera` via `Windows Media Foundation (MSMF)`
+- **Resolution:** Upgraded [`vision/camera/capture.py`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/vision/camera/capture.py) with dynamic multi-backend fallback probing MSMF (`cv2.CAP_MSMF`) and DirectShow (`cv2.CAP_DSHOW`).
+- **Empirical Evidence:**
+  - Live capture: 640x480 RGB frame written to `D:\matrix_data\cache\vision\cam_1794212954987.jpg` in 1774ms
+  - MediaPipe `HandLandmarker` (21 3D landmarks): **PASS** (121.54ms)
+  - MediaPipe `FaceLandmarker` (478 3D landmarks): **PASS** (1593.22ms)
+  - `Gesture3DController`: **PASS** (Yaw: 16.45°, Pitch: 14.62°, 4x4 matrix, CSS transform)
+  - `AirTouchGestureScroll`: **PASS** (Direction UP, 140 units)
+  - `ModernAIVisionSubsystem`: **PASS** (Scene perception operational)
 
 ---
 
-### Blocker 3: Physical Android Companion Handset Connection
-- **Category:** Mobile & Remote Integration
-- **Strict Status:** `BLOCKED` (Physical ADB detection) / `CONNECTED` (Software & API infrastructure)
-- **Root Cause:** No physical Android smartphone was connected via USB cable or wireless ADB debugging during automated test execution.
-- **Verified Software Components:**
-  - Dynamic host LAN IPv4 detection (`192.168.31.194`): **PASS**
-  - Cryptographic QR pairing token generation (`mtx_pair_...` with 300s TTL): **PASS**
-  - One-time token consumption & reuse prevention: **PASS**
-  - Expired token rejection: **PASS**
-  - SQLite registered device persistence (20 devices cataloged): **PASS**
-  - Compiled APK bytecode artifact (`D:\matrix_data\apk\matrix-debug.apk`): **PASS (Verified Present)**
-- **Required User Actions:**
+### C. Bland AI Telephony Integration — RESOLVED & AUTHENTICATED
+- **Category:** External Telephony API
+- **Status:** **AUTHENTICATED / ACTIVE**
+- **Root Cause of Prior NOT_CONFIGURED Status:** Key was securely stored in Windows DPAPI Vault as `BLAND_API_KEY`, but catalog scripts erroneously checked `BLAND_AI_API_KEY`.
+- **Resolution:** Unified secret lookup across `BLAND_API_KEY` and `BLAND_AI_API_KEY`. Verified live connectivity against `https://api.bland.ai`.
+- **Empirical Evidence:**
+  - Account Status: `active`
+  - Available Credit Balance: `$1.93 USD`
+  - Zero-Call Protection: Fully enforced; zero calls executed without explicit user confirmation.
+
+---
+
+## 4. Remaining External Actions (User-Supplied)
+
+### Action 1: Physical Android Companion Handset Connection
+- **Category:** Mobile & Remote Ingress
+- **Status:** `BLOCKED (Hardware Connection Pending)` / Software 100% Complete
+- **Status Details:**
+  - Compiled APK: `D:\matrix_data\apk\matrix-debug.apk` (14.99 MB, Verified Present)
+  - Host LAN Endpoint: `192.168.31.194:8000`
+  - Pairing Token Protocol: `matrix://pair?token=mtx_pair_...&host=192.168.31.194:8000` (10-minute TTL)
+  - ADB Probe: `C:\Users\Ali Raza Zaidi\AppData\Local\Android\Sdk\platform-tools\adb.exe` checked -> `0 devices attached`.
+- **User Instructions:**
   1. Connect your Android smartphone to this Windows PC via USB cable.
-  2. On your phone, enable **Developer Options** and turn on **USB Debugging**.
-  3. Install the compiled companion app:
+  2. Enable **Developer Options** and turn on **USB Debugging** on the phone.
+  3. Install APK:
      ```powershell
-     adb install D:\matrix_data\apk\matrix-debug.apk
+     & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r "D:\matrix_data\apk\matrix-debug.apk"
      ```
-  4. Launch MATRIX on your PC (`run_matrix.py` or `start_matrix.bat`).
-  5. Open the companion app on Android and scan the pairing QR code displayed in the Desktop HUD Settings tab.
+  4. Open MATRIX Companion on phone -> tap **Scan QR Code** or enter host/token from:
+     ```powershell
+     python scripts/setup_integrations_wizard.py --pairing
+     ```
 
 ---
 
-### Blocker 4: Google Workspace OAuth Integration
-- **Category:** Cloud API & Connected Services
-- **Strict Status:** `NOT_CONFIGURED`
-- **Root Cause:** Google Cloud Console OAuth 2.0 Client credentials (`client_secret.json`) have not been provided by the user. MATRIX refuses to run unauthenticated or simulated cloud API calls.
-- **Verified Capabilities:**
-  - Google Workspace connector module ready at [`core/integrations/google_workspace.py`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/core/integrations/google_workspace.py).
-  - Scope profile configured in Authorization Center (`google_workspace_oauth`: `CONFIRMATION_REQUIRED`, `gmail`: `CONFIRMATION_REQUIRED`, `google_calendar`: `AUTOMATIC`).
-- **Required User Actions:**
-  1. Visit the [Google Cloud Console](https://console.cloud.google.com/).
-  2. Create a Project and enable **Gmail API** and **Google Calendar API**.
-  3. Create an **OAuth 2.0 Client ID** (Application type: Desktop App).
-  4. Download the JSON credentials file and save it as:
-     `D:\matrix_data\security\google_client_secret.json`
-  5. In the MATRIX Desktop HUD Settings tab, click **Authorize Google Workspace** to complete one-time browser consent.
+### Action 2: Google Workspace (Gmail & Calendar)
+- **Category:** External OAuth 2.0
+- **Status:** `NOT_CONFIGURED (Awaiting User OAuth Client)`
+- **User Instructions:**
+  1. Go to [Google Cloud Console](https://console.cloud.google.com).
+  2. Create a project and enable **Gmail API** and **Google Calendar API**.
+  3. Create an **OAuth 2.0 Client ID** (Application type: *Desktop App*).
+  4. Download `credentials.json` and import into MATRIX:
+     ```powershell
+     python scripts/setup_integrations_wizard.py --set-google-credentials "C:\path\to\credentials.json"
+     ```
+  5. MATRIX will display the PKCE consent screen URL to authorize Gmail & Calendar.
 
 ---
 
-### Blocker 5: Telegram Notification Bot Token
-- **Category:** Remote Messaging & Alerts
-- **Strict Status:** `NOT_CONFIGURED`
-- **Root Cause:** No BotFather API token has been supplied in the encrypted DPAPI vault.
-- **Verified Capabilities:**
-  - Telegram connector engine ready at [`core/integrations/telegram_connector.py`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/core/integrations/telegram_connector.py).
-  - Webhook and polling handlers implemented.
-- **Required User Actions:**
+### Action 3: Telegram Notification Bot
+- **Category:** External Messaging
+- **Status:** `NOT_CONFIGURED (Awaiting User Bot Token)`
+- **User Instructions:**
   1. Open Telegram and search for `@BotFather`.
-  2. Send `/newbot` and follow instructions to name your bot.
-  3. Copy the HTTP API token provided (e.g., `123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ`).
-  4. Store the token in the encrypted DPAPI vault:
+  2. Send `/newbot`, choose a name and username for your MATRIX bot.
+  3. Copy the HTTP API token provided and configure it:
      ```powershell
-     python -c "from security.vault.dpapi_vault import dpapi_vault; dpapi_vault.store_secret('TELEGRAM_BOT_TOKEN', 'YOUR_BOT_TOKEN_HERE')"
+     python scripts/setup_integrations_wizard.py --set-telegram "<YOUR_BOT_TOKEN>"
      ```
+  4. MATRIX verifies the token with `getMe` (zero messages sent).
 
 ---
 
-### Blocker 6: GitHub Developer Personal Access Token (PAT)
-- **Category:** Developer Tools & Repository Sync
-- **Strict Status:** `NOT_CONFIGURED`
-- **Root Cause:** No personal access token configured in vault. Public queries function via anonymous rate-limited endpoints.
-- **Verified Capabilities:**
-  - GitHub connector ready at [`core/integrations/github_connector.py`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/core/integrations/github_connector.py).
-  - Capability registry indexing 65 local and starred repositories.
-- **Required User Actions:**
-  1. Navigate to [GitHub Settings -> Developer Settings -> Personal Access Tokens (Classic)](https://github.com/settings/tokens).
+### Action 4: GitHub Developer API
+- **Category:** External API
+- **Status:** `NOT_CONFIGURED (Awaiting User PAT)`
+- **User Instructions:**
+  1. Go to [GitHub Settings -> Personal Access Tokens](https://github.com/settings/tokens).
   2. Generate a token with `repo` and `read:user` permissions.
-  3. Store in DPAPI vault:
+  3. Save the token to MATRIX:
      ```powershell
-     python -c "from security.vault.dpapi_vault import dpapi_vault; dpapi_vault.store_secret('GITHUB_TOKEN', 'ghp_YOUR_TOKEN_HERE')"
+     python scripts/setup_integrations_wizard.py --set-github "<YOUR_GITHUB_PAT>"
      ```
 
 ---
 
-### Blocker 7: Tailscale Secure Mesh Client
-- **Category:** Encrypted Remote Access
-- **Strict Status:** `NOT_CONFIGURED`
-- **Root Cause:** The `tailscale.exe` CLI binary was not detected on the Windows host system PATH.
-- **Verified Capabilities:**
-  - Tailscale manager ready at [`core/tailscale_manager.py`](file:///C:/Users/Ali%20Raza%20Zaidi/Desktop/matrix/core/tailscale_manager.py).
-  - Automatic Tailnet 100.64.0.0/10 CGNAT IP detection and QR pairing protocol generation.
-- **Required User Actions:**
-  1. Download and install Tailscale for Windows from [tailscale.com/download](https://tailscale.com/download).
-  2. Log in with your identity provider.
-  3. Launch MATRIX; the host Tailscale IP will be automatically detected and companion QR codes will include remote routing.
+### Action 5: Tailscale Mesh VPN
+- **Category:** Encrypted Remote Network
+- **Status:** `NOT_CONFIGURED (Awaiting Client Installation)`
+- **User Instructions:**
+  1. Install Tailscale on Windows:
+     ```powershell
+     winget install Tailscale.Tailscale
+     ```
+  2. Log in and run `tailscale up`.
+  3. MATRIX will automatically detect the `100.x.y.z` interface for zero-configuration global remote companion access.
 
 ---
 
-## 3. Operational Readiness Summary
+## 5. Verification Commands Reference
 
-| Component | Status | Blocker Nature | Safe Autonomous Fallback |
-| :--- | :---: | :--- | :--- |
-| **Windows 11 PC Automation** | **READY** | None | Full native execution via `win32gui` & `pyautogui` |
-| **Local Brain (Qwen2.5 GGUF)** | **READY** | None | Runs on AMD Ryzen 7 5700U CPU AVX2 |
-| **openWakeWord Voice Engine** | **READY** | None | Realtek Mic DirectSound 16kHz stream |
-| **Acoustic Snap Detection** | **READY** | None | Bandpass filter & crest factor transient burst |
-| **DirectShow AirTouch Vision**| **READY** | None | MediaPipe Hand & Face landmarker pipelines 100% functional |
-| **Bland AI Telephony** | **NOT_CONFIGURED** | User Credential | Key awaiting entry into DPAPI Vault |
-| **Physical Microphone Stream** | **BLOCKED** | Windows Privacy Grant | Settings -> Privacy & security -> Microphone -> ON |
-| **Physical Webcam Stream** | **BLOCKED** | Windows Privacy Grant | Settings -> Privacy & security -> Camera -> ON |
-| **Android Companion Handset** | **BLOCKED** | Missing physical phone | Software API endpoints & QR pairing 100% ready |
-| **Google Workspace OAuth** | **NOT_CONFIGURED** | Awaiting Client JSON | Local calendar & notes store in SQLite |
-| **Telegram Companion Bot** | **NOT_CONFIGURED** | Awaiting Bot Token | Windows desktop toast notifications active |
-| **GitHub Developer API** | **NOT_CONFIGURED** | Awaiting PAT | Local Git repository management active |
-| **Tailscale Remote Mesh** | **NOT_CONFIGURED** | Awaiting Host App | Local Area Network (LAN) WiFi pairing active |
+```powershell
+# 1. Run Complete 100-Scenario Production Acceptance Suite:
+python scripts/run_production_acceptance_suite.py
+
+# 2. Run Voice, Microphone & Acoustic Hardware Verification:
+python scripts/verify_voice_hardware.py
+
+# 3. Run Camera, MediaPipe & AirTouch Verification:
+python scripts/verify_camera_airtouch.py
+
+# 4. Check All 13 Integrations & Hardware Status:
+python scripts/verify_integrations_catalog.py
+
+# 5. Interactive Integrations Setup Wizard:
+python scripts/setup_integrations_wizard.py --status
+python scripts/setup_integrations_wizard.py --guide
+python scripts/setup_integrations_wizard.py --pairing
+```

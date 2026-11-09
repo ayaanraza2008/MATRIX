@@ -61,7 +61,7 @@ def verify_camera_and_airtouch():
     
     results["frame_capture"] = {
         "status": "PASS" if frame_ok else "PARTIAL",
-        "method": frame_res.get("method", "directshow"),
+        "method": frame_res.get("backend", "directshow"),
         "resolution": f"{test_frame.shape[1]}x{test_frame.shape[0]}",
         "filepath": frame_res.get("filepath"),
         "duration_ms": round((time.perf_counter() - t0) * 1000, 2)

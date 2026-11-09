@@ -1,6 +1,6 @@
 """MATRIX Camera Frame Capture Engine.
-Accesses hardware camera devices (Integrated Camera) with Windows DirectShow acceleration,
-automatic fallback, and clean handle release.
+Accesses hardware camera devices (Integrated Camera) with Windows Media Foundation (MSMF)
+and DirectShow (DSHOW) acceleration, automatic fallback, and clean handle release.
 """
 from typing import Optional, Dict, Any, List
 from pathlib import Path
@@ -22,39 +22,56 @@ class CameraCapture:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def list_devices(self) -> List[Dict[str, Any]]:
-        """Probe available video capture devices."""
+        """Probe available video capture devices across MSMF and DirectShow backends."""
         available = []
-        backend = cv2.CAP_DSHOW if os.name == 'nt' else cv2.CAP_ANY
-        for idx in range(3):
-            cap = cv2.VideoCapture(idx, backend)
-            if cap.isOpened():
-                ret, _ = cap.read()
-                cap.release()
-                if ret:
-                    available.append({"index": idx, "name": f"Camera Device {idx}", "available": True})
-            else:
-                cap.release()
+        backends = [cv2.CAP_MSMF, cv2.CAP_DSHOW] if os.name == 'nt' else [cv2.CAP_ANY]
+
+        for backend in backends:
+            for idx in range(2):
+                cap = cv2.VideoCapture(idx, backend)
+                if cap.isOpened():
+                    ret, frame = cap.read()
+                    cap.release()
+                    if ret and frame is not None:
+                        h, w, c = frame.shape
+                        backend_name = "MSMF" if backend == cv2.CAP_MSMF else "DirectShow"
+                        # Check if device already listed
+                        if not any(d["index"] == idx for d in available):
+                            available.append({
+                                "index": idx,
+                                "name": f"Integrated Camera (Device {idx})",
+                                "backend": backend_name,
+                                "resolution": f"{w}x{h}",
+                                "available": True
+                            })
+                else:
+                    cap.release()
+            if available:
+                break
         return available
 
     def capture_frame(self, device_override: Optional[int] = None) -> Dict[str, Any]:
-        """Capture a single frame from the camera using DirectShow with fallback."""
+        """Capture a single frame from the camera using MSMF or DirectShow with automatic fallback."""
         start_time = time.perf_counter()
         target_idx = device_override if device_override is not None else self.device_index
-        backend = cv2.CAP_DSHOW if os.name == 'nt' else cv2.CAP_ANY
+        backends = [cv2.CAP_MSMF, cv2.CAP_DSHOW, cv2.CAP_ANY] if os.name == 'nt' else [cv2.CAP_ANY]
 
-        cap = cv2.VideoCapture(target_idx, backend)
+        cap = None
+        used_backend = "UNKNOWN"
+
+        for b_id in backends:
+            c = cv2.VideoCapture(target_idx, b_id)
+            if c.isOpened():
+                cap = c
+                used_backend = "MSMF" if b_id == cv2.CAP_MSMF else ("DirectShow" if b_id == cv2.CAP_DSHOW else "ANY")
+                break
+            c.release()
+
         try:
-            if not cap.isOpened():
-                # Fallback to alternate indices if 0 is busy
-                logger.warning(f"Device index {target_idx} not open; trying alternate index 1...")
-                cap.release()
-                target_idx = 1 if target_idx == 0 else 0
-                cap = cv2.VideoCapture(target_idx, backend)
-
-            if not cap.isOpened():
+            if cap is None or not cap.isOpened():
                 return {
                     "success": False,
-                    "error": f"Camera device is busy or permissions are not granted by Windows.",
+                    "error": f"Camera device {target_idx} is busy or permissions are not granted by Windows.",
                     "latency_ms": round((time.perf_counter() - start_time) * 1000, 2)
                 }
 
@@ -74,7 +91,7 @@ class CameraCapture:
             cv2.imwrite(str(target_path), frame)
 
             latency = (time.perf_counter() - start_time) * 1000
-            logger.info(f"Captured camera frame ({width}x{height}) -> {target_path.name}")
+            logger.info(f"Captured camera frame ({width}x{height} via {used_backend}) -> {target_path.name}")
 
             return {
                 "success": True,
@@ -82,6 +99,7 @@ class CameraCapture:
                 "width": width,
                 "height": height,
                 "channels": channels,
+                "backend": used_backend,
                 "latency_ms": round(latency, 2)
             }
         finally:

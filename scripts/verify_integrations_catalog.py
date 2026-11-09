@@ -30,13 +30,16 @@ async def audit_all_integrations():
     catalog = {}
 
     # 1. Bland AI Telephony
-    bland_key = dpapi_vault.retrieve_secret("BLAND_AI_API_KEY") or getattr(settings, "bland_ai_api_key", None)
+    bland_key = dpapi_vault.retrieve_secret("BLAND_AI_API_KEY") or dpapi_vault.retrieve_secret("BLAND_API_KEY") or getattr(settings, "bland_ai_api_key", None)
     if bland_key:
+        from core.telephony.bland_client import bland_client
+        bland_info = await bland_client.get_account_info()
+        balance = bland_info.get("current_balance", 0.0) if isinstance(bland_info, dict) else 0.0
         catalog["bland_ai"] = {
             "name": "Bland AI Telephony",
             "category": "External API",
             "status": "AUTHENTICATED",
-            "evidence": "Key configured in DPAPI Vault",
+            "evidence": f"Key verified in DPAPI Vault. Bland AI account active with ${balance} USD balance",
             "auth_type": "Bearer API Key"
         }
     else:
@@ -183,24 +186,55 @@ async def audit_all_integrations():
     }
 
     # 10. Hardware Microphone
-    # Confirmed PortAudio / DirectSound permission status
-    catalog["hardware_microphone"] = {
-        "name": "Physical Microphone (Realtek Audio)",
-        "category": "Audio Hardware Input",
-        "status": "BLOCKED",
-        "evidence": "Windows 11 Audio Session DirectSound capture error 0x80004005",
-        "auth_type": "Windows OS Privacy Permission"
-    }
+    try:
+        from voice.mic_listener import NativeMicListener
+        mic_listener = NativeMicListener()
+        mic_res = mic_listener.test_capture(duration_seconds=0.5)
+        samples = mic_res.get("samples_captured", 0)
+        if samples > 0:
+            catalog["hardware_microphone"] = {
+                "name": f"Physical Microphone ({mic_res.get('device_name', 'Realtek Audio')})",
+                "category": "Audio Hardware Input",
+                "status": "CONNECTED",
+                "evidence": f"WASAPI Dev [{mic_res.get('device_index')}] {mic_res.get('native_sample_rate')}Hz ({mic_res.get('native_channels')}ch) -> 16kHz. Captured {samples} samples, RMS: {mic_res.get('rms_amplitude', 0):.1f}",
+                "auth_type": "Windows OS Privacy Permission"
+            }
+        else:
+            catalog["hardware_microphone"] = {
+                "name": "Physical Microphone (Realtek Audio)",
+                "category": "Audio Hardware Input",
+                "status": "BLOCKED",
+                "evidence": "Capture returned 0 samples",
+                "auth_type": "Windows OS Privacy Permission"
+            }
+    except Exception as e:
+        catalog["hardware_microphone"] = {
+            "name": "Physical Microphone (Realtek Audio)",
+            "category": "Audio Hardware Input",
+            "status": "BLOCKED",
+            "evidence": f"Audio capture error: {e}",
+            "auth_type": "Windows OS Privacy Permission"
+        }
 
     # 11. Hardware Camera
     cam_devices = camera_capture.list_devices()
-    catalog["hardware_camera"] = {
-        "name": "Physical Webcam (SunplusIT Integrated Camera)",
-        "category": "Vision Hardware Input",
-        "status": "BLOCKED" if len(cam_devices) == 0 else "CONNECTED",
-        "evidence": f"DirectShow probed: {len(cam_devices)} devices opened (Restricted session)",
-        "auth_type": "Windows DirectShow Device Access"
-    }
+    if cam_devices:
+        first_cam = cam_devices[0]
+        catalog["hardware_camera"] = {
+            "name": f"Physical Webcam ({first_cam.get('name', 'Integrated Camera')})",
+            "category": "Vision Hardware Input",
+            "status": "CONNECTED",
+            "evidence": f"Hardware camera operational on Device {first_cam.get('index', 0)} ({first_cam.get('backend', 'MSMF')} backend, {first_cam.get('resolution', '640x480')})",
+            "auth_type": "Windows MSMF / DirectShow Access"
+        }
+    else:
+        catalog["hardware_camera"] = {
+            "name": "Physical Webcam",
+            "category": "Vision Hardware Input",
+            "status": "BLOCKED",
+            "evidence": "No video capture device opened across MSMF and DirectShow backends",
+            "auth_type": "Windows MSMF / DirectShow Access"
+        }
 
     # 12. Windows DPAPI Credential Vault
     vault_keys = dpapi_vault.list_keys()

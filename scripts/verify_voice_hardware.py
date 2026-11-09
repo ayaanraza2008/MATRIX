@@ -26,41 +26,38 @@ from core.intent_engine import intent_engine
 def verify_microphone_hardware():
     print("\n--- 1. Windows Core Audio Hardware & Microphone Capture ---")
     try:
-        import sounddevice as sd
-        default_in = sd.default.device[0]
-        devices = sd.query_devices()
-        dev_info = devices[default_in] if default_in is not None and default_in >= 0 else None
+        from voice.mic_listener import NativeMicListener
+        listener = NativeMicListener()
+        res = listener.test_capture(duration_seconds=1.0)
         
-        print(f"Default Input Device Index : {default_in}")
-        if dev_info:
-            print(f"Device Name                : {dev_info.get('name')}")
-            print(f"Max Input Channels         : {dev_info.get('max_input_channels')}")
-            print(f"Default Sample Rate        : {dev_info.get('default_samplerate')} Hz")
+        dev_name = res.get("device_name", "Unknown")
+        host_api = res.get("host_api", "Unknown")
+        dev_idx = res.get("device_index", -1)
+        sr = res.get("target_sample_rate", 16000)
+        samples = res.get("samples_captured", 0)
+        rms = res.get("rms_amplitude", 0.0)
+        peak = res.get("peak_amplitude", 0)
+        is_non_silent = res.get("is_non_silent", False)
         
-        # Test real capture for 0.5s at 16000Hz mono
-        sr = 16000
-        duration = 0.5
-        print(f"Recording {duration}s live microphone buffer at {sr}Hz...")
-        recording = sd.rec(int(duration * sr), samplerate=sr, channels=1, dtype='float32')
-        sd.wait()
+        print(f"Discovered Hardware Input : [{dev_idx}] {dev_name} ({host_api})")
+        print(f"Native -> Target Rate     : {res.get('native_sample_rate')}Hz ({res.get('native_channels')}ch) -> {sr}Hz (1ch)")
+        print(f"Live Audio Capture Result : Received {samples} samples ({res.get('duration_seconds')}s)")
+        print(f"Audio RMS Amplitude       : {rms:.2f}")
+        print(f"Audio Peak Amplitude      : {peak} ({res.get('peak_percent_fs', 0.0):.1f}% FS)")
+        print(f"Non-Silent Signal Present : {is_non_silent}")
         
-        rms = float(np.sqrt(np.mean(recording**2)))
-        peak = float(np.max(np.abs(recording)))
-        has_signal = peak > 1e-6
-        
-        print(f"Live Audio Capture Result  : Received {len(recording)} frames")
-        print(f"Audio RMS Level            : {rms:.6f}")
-        print(f"Audio Peak Amplitude       : {peak:.6f}")
-        print(f"Non-Silent Signal Present  : {has_signal}")
-        
+        status = "PASS" if (samples > 0 and is_non_silent) else "SILENT_BUFFER"
         return {
-            "status": "PASS" if has_signal else "SILENT_BUFFER",
-            "device": dev_info.get("name") if dev_info else "Unknown",
-            "channels": dev_info.get("max_input_channels") if dev_info else 0,
+            "status": status,
+            "device": dev_name,
+            "host_api": host_api,
+            "device_index": dev_idx,
+            "channels": res.get("native_channels", 1),
             "sample_rate": sr,
             "rms": rms,
             "peak": peak,
-            "frames": len(recording)
+            "samples": samples,
+            "is_non_silent": is_non_silent
         }
     except Exception as e:
         print(f"Microphone hardware capture error: {e}")
@@ -69,13 +66,14 @@ def verify_microphone_hardware():
 def verify_wakeword_pipeline():
     print("\n--- 2. openWakeWord Neural Model Pipeline ---")
     try:
-        from voice.wake_word.detector import WakeWordDetector
+        from voice.wake_word.engine import WakeWordDetector
         detector = WakeWordDetector()
+        detector.start_listening()
         
         # Generate 16kHz test frame of 1280 samples (80ms standard chunk)
         chunk = np.zeros(1280, dtype=np.int16)
         t0 = time.perf_counter()
-        scores = detector.predict(chunk) if hasattr(detector, "predict") else {}
+        scores = detector._model.predict(chunk) if detector._model else {}
         latency_ms = (time.perf_counter() - t0) * 1000
         
         models_loaded = list(scores.keys()) if isinstance(scores, dict) else []
@@ -119,10 +117,10 @@ def verify_finger_snap_vs_spoken_snap():
     snap_crest = 0.0
     for i in range(0, len(snap_audio) - 560, 280):
         chunk = snap_audio[i:i + 560]
-        detected, crest, zcr = snap_detector.detect_snap(chunk)
+        detected, metrics = snap_detector.analyze_frame(chunk)
         if detected:
             snap_detected = True
-            snap_crest = crest
+            snap_crest = metrics.get("crest_factor", 0.0)
             break
             
     # Test spoken snap audio
@@ -130,10 +128,10 @@ def verify_finger_snap_vs_spoken_snap():
     spoken_crest = 0.0
     for i in range(0, len(spoken_snap) - 560, 280):
         chunk = spoken_snap[i:i + 560]
-        detected, crest, zcr = snap_detector.detect_snap(chunk)
+        detected, metrics = snap_detector.analyze_frame(chunk)
         if detected:
             spoken_detected = True
-            spoken_crest = crest
+            spoken_crest = metrics.get("crest_factor", 0.0)
             break
             
     print(f"Physical Finger-Snap Detected : {snap_detected} (Measured Crest Factor: {snap_crest:.2f})")
