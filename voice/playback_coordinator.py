@@ -195,6 +195,7 @@ class PlaybackCoordinator:
                 logger.info(f"Playback '{pid}' -> CANCELLED idempotently.")
         if self._active_playing_id in target_ids:
             self._active_playing_id = None
+        return len(target_ids) > 0
 
     def is_playable(self, response_id: str, owner: str) -> bool:
         """Check if response_id is eligible for audible playback by owner."""

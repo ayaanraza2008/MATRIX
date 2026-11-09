@@ -107,6 +107,16 @@ class ResponseGenerator:
                 return f"Security audit complete: {data.get('reason')} (Policy Level {data.get('policy_level')})."
             elif action in ["generate_pairing_token", "pair"]:
                 return f"Android companion pairing token generated: `{data.get('pairing_token')}`. Protocol: `{data.get('qr_protocol')}` (Expires in {data.get('expires_in_seconds')}s)."
+            elif action == "calculate":
+                expr = data.get("expression") or data.get("formula", "Expression")
+                res_val = data.get("result", data.get("verified_result"))
+                return f"Calculation verified: {expr} = {res_val}."
+            elif action in ["create_folder", "create_directory"]:
+                f_path = data.get("folder_path") or data.get("folder_name", "folder")
+                return f"Folder '{f_path}' created and verified on disk."
+            elif action in ["create_file", "write_file"]:
+                fp = data.get("filepath", "file")
+                return f"File '{fp}' ({data.get('bytes_written', 0)} bytes) created and verified on disk."
             elif action in ["data_status", "analyze_csv"]:
                 num_s = data.get("numerical_summary", {})
                 if num_s:

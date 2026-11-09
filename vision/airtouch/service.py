@@ -121,6 +121,26 @@ class AirTouchVisionService:
         except Exception as e:
             logger.warning(f"Could not open hardware camera index {self.device_index}: {e}")
 
+        # Fallback to native FFmpeg DirectShow capture pipe if cv2 VideoCapture fails (e.g. Windows Store sandbox)
+        ffmpeg_proc = None
+        if cap is None or not cap.isOpened():
+            try:
+                import subprocess
+                cmd = [
+                    "ffmpeg", "-loglevel", "error",
+                    "-f", "dshow",
+                    "-video_size", "640x480",
+                    "-framerate", "30",
+                    "-i", "video=Integrated Camera",
+                    "-pix_fmt", "bgr24",
+                    "-f", "rawvideo",
+                    "pipe:1"
+                ]
+                ffmpeg_proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, bufsize=640*480*3)
+                logger.info("AirTouch hardware camera opened via native DirectShow FFmpeg pipe fallback.")
+            except Exception as e:
+                logger.warning(f"FFmpeg camera capture pipe failed: {e}")
+
         while not self._stop_event.is_set():
             loop_start = time.perf_counter()
             frame = None
@@ -129,6 +149,13 @@ class AirTouchVisionService:
                 ret, grabbed_frame = cap.read()
                 if ret and grabbed_frame is not None:
                     frame = grabbed_frame
+            elif ffmpeg_proc is not None and ffmpeg_proc.poll() is None:
+                try:
+                    raw_bytes = ffmpeg_proc.stdout.read(640 * 480 * 3)
+                    if len(raw_bytes) == 640 * 480 * 3:
+                        frame = np.frombuffer(raw_bytes, dtype=np.uint8).reshape((480, 640, 3))
+                except Exception:
+                    frame = None
 
             # If physical camera is unavailable or not returning frames, wait briefly
             if frame is None:
@@ -146,6 +173,12 @@ class AirTouchVisionService:
 
         if cap is not None:
             cap.release()
+        if ffmpeg_proc is not None:
+            try:
+                ffmpeg_proc.terminate()
+                ffmpeg_proc.wait(timeout=2)
+            except Exception:
+                pass
         logger.info("AirTouch capture loop ended cleanly.")
 
     def process_frame(self, frame: np.ndarray) -> Dict[str, Any]:

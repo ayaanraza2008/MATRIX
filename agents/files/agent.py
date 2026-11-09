@@ -79,8 +79,20 @@ class FileAgent(BaseAgent):
         if not path_str:
             return Path.home() / "Downloads"
 
+        # 1. Direct path check if path_str is an absolute path or existing directory
+        clean_path = path_str.strip().strip('"\'')
+        try:
+            p = Path(clean_path)
+            if p.is_absolute():
+                if p.is_file():
+                    return p.parent
+                return p
+        except Exception:
+            pass
+
+        # 2. Windows Drive match (allow spaces in path, e.g. C:\Users\Ali Raza Zaidi\...)
         import re
-        drive_match = re.search(r'([a-zA-Z]:[\\/][^\s*?"<>|]+)', path_str)
+        drive_match = re.search(r'([a-zA-Z]:[\/][^:*?"<>|]+)', path_str)
         if drive_match:
             try:
                 candidate = Path(drive_match.group(1).strip())
@@ -789,6 +801,7 @@ class FileAgent(BaseAgent):
                 "filepath": str(path),
                 "format": suffix,
                 "text": text_content[:3000],
+                "content": text_content[:3000],
                 "size_bytes": path.stat().st_size
             },
             verification={"verified": True, "read_chars": len(text_content)},

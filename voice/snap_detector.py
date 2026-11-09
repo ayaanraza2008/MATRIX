@@ -75,8 +75,15 @@ class AcousticSnapDetector:
         end_idx = min(len(int16_frame), peak_idx + win_post)
         transient_region = int16_frame[start_idx:end_idx]
 
-        signs = np.signbit(transient_region)
-        zcr = float(np.mean(np.abs(np.diff(signs)))) if len(signs) > 1 else 0.0
+        # Focus zero-crossing rate calculation on active transient burst to avoid silence dilution
+        active_mask = np.abs(transient_region) >= int(0.05 * peak)
+        if np.sum(active_mask) >= 3:
+            active_samples = transient_region[active_mask]
+            active_signs = np.signbit(active_samples)
+            zcr = float(np.mean(np.abs(np.diff(active_signs))))
+        else:
+            signs = np.signbit(transient_region)
+            zcr = float(np.mean(np.abs(np.diff(signs)))) if len(signs) > 1 else 0.0
 
         # High-pass energy check on transient region
         trans_float = transient_region.astype(np.float32)

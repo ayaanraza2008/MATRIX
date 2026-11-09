@@ -38,6 +38,78 @@ class ScopeItem(BaseModel):
     details: Dict[str, Any] = Field(default_factory=dict)
 
 
+ACTION_SCOPE_MAP = {
+    # Filesystem
+    "create_file": "file_folder_access",
+    "write_file": "file_folder_access",
+    "read_file": "file_folder_access",
+    "delete_file": "file_folder_access",
+    "list_files": "file_folder_access",
+    "list_directory": "file_folder_access",
+    "search_files": "file_folder_access",
+    "organize_folder": "file_folder_access",
+    "create_folder": "file_folder_access",
+    "create_directory": "file_folder_access",
+    "rename_file": "file_folder_access",
+    "extract_zip": "file_folder_access",
+    "compress_zip": "file_folder_access",
+    # Computer / OS
+    "launch_app": "app_launch",
+    "open_app": "app_launch",
+    "close_app": "app_launch",
+    "terminate_app": "app_launch",
+    "switch_window": "ui_automation",
+    "click": "keyboard_mouse",
+    "type_text": "keyboard_mouse",
+    "press_key": "keyboard_mouse",
+    "hotkey": "keyboard_mouse",
+    "move_mouse": "keyboard_mouse",
+    "simulate_input": "keyboard_mouse",
+    "screenshot": "screen_capture",
+    "take_screenshot": "screen_capture",
+    "ocr": "screen_capture",
+    "execute_command": "isolated_execution_environments",
+    # Telemetry / System
+    "get_telemetry": "system_telemetry",
+    "poll_telemetry": "system_telemetry",
+    "get_stats": "system_telemetry",
+    "system_info": "system_telemetry",
+    "cpu_usage": "system_telemetry",
+    "memory_usage": "system_telemetry",
+    "notify": "notifications",
+    "show_notification": "notifications",
+    "read_clipboard": "clipboard_access",
+    "write_clipboard": "clipboard_access",
+    # Voice
+    "listen": "microphone",
+    "record_mic": "microphone",
+    "speak": "speakers",
+    "synthesize_speech": "speakers",
+    "tts": "speakers",
+    # Vision
+    "capture_camera": "camera",
+    "capture_frame": "camera",
+    "airtouch": "airtouch_tracking_hardware",
+    # Telephony
+    "make_call": "bland_phone_calling",
+    "outbound_call": "bland_phone_calling",
+    "send_call": "bland_phone_calling",
+    # Google
+    "send_email": "gmail",
+    "read_inbox": "gmail",
+    "query_calendar": "google_calendar",
+    "create_calendar_event": "google_calendar",
+    # Dependencies / Sandbox
+    "install_dependency": "approved_dependency_installation",
+    "pip_install": "approved_dependency_installation",
+    "run_sandbox": "isolated_execution_environments",
+    # Repo
+    "query_inventory": "github_starred_repos",
+    "clone_repo": "github_starred_repos",
+    "register_tool": "tool_registration",
+}
+
+
 class AuthorizationCenter:
     """Central authority evaluating and maintaining persistent authorization scopes and connections."""
 
@@ -50,7 +122,7 @@ class AuthorizationCenter:
             "screen_capture": ("Screen Capture & OCR", "Capture screen surface for visual grounding and context understanding", PermissionProfile.AUTOMATIC),
             "ui_automation": ("Accessibility / UI Automation", "Inspect Windows UI elements and control supported applications", PermissionProfile.AUTOMATIC),
             "keyboard_mouse": ("Keyboard & Mouse Input", "Synthesize mouse clicks, cursor movement, and keypresses", PermissionProfile.RESTRICTED),
-            "file_folder_access": ("Filesystem Read & Write", "Create, organize, and manage files in authorized directories", PermissionProfile.AUTOMATIC),
+            "file_folder_access": ("Filesystem Read & Write", "Create, organize, and manage files in authorized directories", PermissionProfile.RESTRICTED),
             "app_launch": ("Application Management", "Launch, focus, and cleanly terminate desktop software", PermissionProfile.AUTOMATIC),
             "system_telemetry": ("Hardware & System Telemetry", "Monitor CPU, RAM, disk, battery, and network performance", PermissionProfile.AUTOMATIC),
             "notifications": ("Windows Desktop Notifications", "Send system tray and banner notifications", PermissionProfile.AUTOMATIC),
@@ -60,14 +132,14 @@ class AuthorizationCenter:
         },
         # B. Connected Services
         "connected_services": {
-            "google_workspace_oauth": ("Google Workspace OAuth", "Access Google Docs, Drive, and Workspace resources", PermissionProfile.RESTRICTED),
-            "gmail": ("Gmail Integration", "Inspect inbox and create draft emails (external send gated)", PermissionProfile.RESTRICTED),
+            "google_workspace_oauth": ("Google Workspace OAuth", "Access Google Docs, Drive, and Workspace resources", PermissionProfile.CONFIRMATION_REQUIRED),
+            "gmail": ("Gmail Integration", "Inspect inbox and create draft emails (external send gated)", PermissionProfile.CONFIRMATION_REQUIRED),
             "google_calendar": ("Google Calendar", "Read schedules, agendas, and draft calendar appointments", PermissionProfile.AUTOMATIC),
             "github": ("GitHub API & Repositories", "Query repository issues, branches, and documentation", PermissionProfile.AUTOMATIC),
             "telegram": ("Telegram Notification Bot", "Dispatch operational updates and alerts to authorized chat", PermissionProfile.RESTRICTED),
-            "bland_phone_calling": ("Bland AI Telephony", "Initiate outbound phone calls to pre-approved destination number", PermissionProfile.RESTRICTED),
+            "bland_phone_calling": ("Bland AI Telephony", "Initiate outbound phone calls (financial charge per minute)", PermissionProfile.CONFIRMATION_REQUIRED),
             "firebase_notifications": ("Firebase Mobile Push", "Send companion push notifications to paired Android device", PermissionProfile.AUTOMATIC),
-            "tailscale_remote_access": ("Tailscale Secure Mesh", "Provide end-to-end encrypted remote access across personal mesh", PermissionProfile.RESTRICTED),
+            "tailscale_remote_access": ("Tailscale Secure Mesh", "Provide end-to-end encrypted remote access across personal mesh", PermissionProfile.CONFIRMATION_REQUIRED),
             "weather_openmeteo": ("Live Weather Data", "Query Open-Meteo live forecasts and atmospheric data", PermissionProfile.AUTOMATIC)
         },
         # C. Hardware
@@ -82,10 +154,10 @@ class AuthorizationCenter:
         # D. Repository & Tool Access
         "repository_tool_access": {
             "github_starred_repos": ("65 Starred Repositories", "Inspect and match tools from the curated starred repository inventory", PermissionProfile.AUTOMATIC),
-            "approved_dependency_installation": ("Dependency Installation", "Install approved Python / system packages into virtual environment", PermissionProfile.RESTRICTED),
+            "approved_dependency_installation": ("Dependency Installation", "Install approved Python / system packages into virtual environment", PermissionProfile.CONFIRMATION_REQUIRED),
             "local_model_downloads": ("Local GGUF / ONNX Downloads", "Fetch verified models into D:\\matrix_data\\models directory", PermissionProfile.RESTRICTED),
             "tool_registration": ("Dynamic Tool Adapters", "Register sandboxed tool adapters for discovered capabilities", PermissionProfile.AUTOMATIC),
-            "isolated_execution_environments": ("Isolated Sandbox Execution", "Run experimental repository adapters in separate sub-processes", PermissionProfile.AUTOMATIC)
+            "isolated_execution_environments": ("Isolated Sandbox Execution", "Run experimental repository adapters in separate sub-processes", PermissionProfile.RESTRICTED)
         }
     }
 
@@ -169,16 +241,27 @@ class AuthorizationCenter:
 
             # Template logic
             if grant_template == "JARVIS_AUTONOMOUS":
-                # Safe categories default to AUTOMATIC
-                if scope.category in ("hardware", "windows_permissions") and scope.scope_id in (
-                    "microphone", "camera", "screen_capture", "ui_automation", "file_folder_access",
+                # 1. Strictly sensitive, financial, remote ingress, or irreversible scopes require explicit confirmation
+                if scope.scope_id in (
+                    "bland_phone_calling", "gmail", "tailscale_remote_access",
+                    "google_workspace_oauth", "approved_dependency_installation"
+                ):
+                    scope.profile = PermissionProfile.CONFIRMATION_REQUIRED
+                # 2. Safe local operations pre-approved for autonomy
+                elif scope.category in ("hardware", "windows_permissions") and scope.scope_id in (
+                    "microphone", "camera", "screen_capture", "ui_automation",
                     "app_launch", "system_telemetry", "notifications", "startup_background_service",
                     "laptop_microphone", "speakers", "webcam", "android_phone", "airtouch_tracking_hardware"
                 ):
                     scope.profile = PermissionProfile.AUTOMATIC
-                elif scope.scope_id in ("github_starred_repos", "tool_registration", "isolated_execution_environments", "google_calendar", "weather_openmeteo"):
+                elif scope.scope_id in ("github_starred_repos", "tool_registration", "google_calendar", "weather_openmeteo", "github"):
                     scope.profile = PermissionProfile.AUTOMATIC
-                elif scope.scope_id in ("bland_phone_calling", "gmail", "keyboard_mouse", "approved_dependency_installation", "local_model_downloads"):
+                # 3. Path-bounded or rate-limited scopes are RESTRICTED
+                elif scope.scope_id in (
+                    "file_folder_access", "keyboard_mouse", "clipboard_access",
+                    "bluetooth_devices", "bluetooth_hardware", "local_model_downloads",
+                    "isolated_execution_environments", "telegram", "firebase_notifications"
+                ):
                     scope.profile = PermissionProfile.RESTRICTED
                 else:
                     scope.profile = PermissionProfile.RESTRICTED
@@ -268,34 +351,53 @@ class AuthorizationCenter:
         strict_confirmation_triggers = [
             "delete_important_file", "format_drive", "drop_table", "rmdir_all",
             "send_external_email", "publish_external_message", "financial_transaction",
-            "purchase", "change_security_settings", "revoke_all_permissions"
+            "purchase", "change_security_settings", "revoke_all_permissions",
+            "send_call", "make_call", "outbound_call", "delete_file", "drop_database",
+            "uninstall_package", "open_tunnel"
         ]
         if any(trig in act_clean for trig in strict_confirmation_triggers) or details.get("risk_level", 1) >= 4:
             return False, PermissionProfile.CONFIRMATION_REQUIRED.value, f"Action '{action}' is strictly classified as sensitive/irreversible and requires explicit user confirmation."
 
-        # 2. Match scope in category
-        for full_id, scope in self.scopes.items():
-            if scope.scope_id in act_clean or act_clean in scope.scope_id:
-                if scope.profile == PermissionProfile.AUTOMATIC:
-                    return True, PermissionProfile.AUTOMATIC.value, f"Pre-authorized autonomously under '{scope.name}'."
-                elif scope.profile == PermissionProfile.RESTRICTED:
-                    # Check if within safety limits
-                    within_limits = True
-                    if "max_cost" in details and details["max_cost"] > 5.0:
-                        within_limits = False
-                    if "unapproved_target" in details and details["unapproved_target"]:
-                        within_limits = False
-                    if within_limits:
-                        return True, PermissionProfile.RESTRICTED.value, f"Allowed under '{scope.name}' policy boundaries."
-                    else:
-                        return False, PermissionProfile.CONFIRMATION_REQUIRED.value, f"Exceeds '{scope.name}' safety boundaries."
-                else:
-                    return False, PermissionProfile.CONFIRMATION_REQUIRED.value, f"Explicit confirmation required for '{scope.name}'."
+        # 2. Match scope via ACTION_SCOPE_MAP or direct scope ID
+        target_scope_id = ACTION_SCOPE_MAP.get(act_clean)
+        matched_scope = None
+        if target_scope_id:
+            for full_id, scope in self.scopes.items():
+                if scope.scope_id == target_scope_id:
+                    matched_scope = scope
+                    break
 
-        # Default fallback for general actions:
-        if self.first_run_completed:
-            return True, PermissionProfile.AUTOMATIC.value, "Allowed under completed initial setup baseline."
-        return False, PermissionProfile.CONFIRMATION_REQUIRED.value, "System initial setup not yet finalized."
+        if not matched_scope:
+            for full_id, scope in self.scopes.items():
+                if scope.scope_id in act_clean or act_clean in scope.scope_id:
+                    matched_scope = scope
+                    break
+
+        if matched_scope:
+            if matched_scope.profile == PermissionProfile.AUTOMATIC:
+                return True, PermissionProfile.AUTOMATIC.value, f"Pre-authorized autonomously under '{matched_scope.name}'."
+            elif matched_scope.profile == PermissionProfile.RESTRICTED:
+                # Check if within safety limits
+                within_limits = True
+                if "max_cost" in details and details["max_cost"] > 5.0:
+                    within_limits = False
+                if "unapproved_target" in details and details["unapproved_target"]:
+                    within_limits = False
+                if within_limits:
+                    return True, PermissionProfile.RESTRICTED.value, f"Allowed under '{matched_scope.name}' policy boundaries."
+                else:
+                    return False, PermissionProfile.CONFIRMATION_REQUIRED.value, f"Exceeds '{matched_scope.name}' safety boundaries."
+            else:
+                return False, PermissionProfile.CONFIRMATION_REQUIRED.value, f"Explicit confirmation required for '{matched_scope.name}' under security policy."
+
+        # 3. Default fallback for actions not directly mapped to known scopes:
+        # Never grant blanket AUTOMATIC access merely because setup finished!
+        risk = details.get("risk_level", 1)
+        if risk <= 1:
+            # Low-risk read-only / status operations can proceed under restricted profile
+            return True, PermissionProfile.RESTRICTED.value, f"Permitted under baseline safety boundaries (Risk Level {risk})."
+
+        return False, PermissionProfile.CONFIRMATION_REQUIRED.value, f"Action '{action}' is unclassified or elevated risk (Risk Level {risk}) and requires user confirmation."
 
 
 # Global singleton authorization center

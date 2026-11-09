@@ -108,6 +108,9 @@ class SystemAgent(BaseAgent):
             agent_name=self.name,
             action_taken="poll_telemetry",
             data={
+                "cpu_percent": cpu_p,
+                "ram_percent": vm.percent,
+                "ram_used_mb": round(vm.used / (1024*1024), 1),
                 "cpu": {
                     "percent": cpu_p,
                     "physical_cores": settings.cpu_cores,

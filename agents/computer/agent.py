@@ -202,7 +202,7 @@ class ComputerAgent(BaseAgent):
 
         # 6. Close Application
         if any(w in action_lower or w in raw_prompt for w in ["close", "kill", "terminate", "exit"]):
-            app_target = self._detect_target_app(raw_prompt)
+            app_target = parameters.get("app") or parameters.get("target") or parameters.get("application") or self._detect_target_app(raw_prompt)
             return await self._close_app(app_target, start_time)
 
         # 7. Controlled Command Execution
@@ -223,7 +223,7 @@ class ComputerAgent(BaseAgent):
 
         # 9. Launch Application
         if any(w in action_lower or w in raw_prompt for w in ["open", "launch", "start", "run"]):
-            app_target = self._detect_target_app(raw_prompt)
+            app_target = parameters.get("app") or parameters.get("target") or parameters.get("application") or self._detect_target_app(raw_prompt)
             return await self._launch_app(app_target, start_time)
 
         # Default fallback: status

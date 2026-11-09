@@ -62,7 +62,26 @@ class TaskRouter:
             logger.warning(f"No specialized agent found for '{agent_name}'. Falling back to system agent.")
             agent = self._agents["system"]
 
-        logger.info(f"Dispatching action '{action}' to agent '{agent.name}'")
+        # Enforce Authorization Center permission policy
+        from security.permissions.authorization_center import authorization_center, PermissionProfile
+        can_proceed, profile, reason = authorization_center.evaluate_authorization(
+            action=action,
+            category=f"agent.{agent.name}",
+            details=parameters
+        )
+        if not can_proceed:
+            logger.warning(f"Authorization gate blocked action '{action}' on agent '{agent.name}': {reason}")
+            return AgentResult(
+                agent_name=agent.name,
+                action_taken=action,
+                success=False,
+                execution_status="BLOCKED",
+                error=f"Security gate blocked action: {reason}",
+                verification={"verified": False, "blocked_by_security": True, "profile": profile},
+                data={"profile": profile, "requires_confirmation": True, "reason": reason}
+            )
+
+        logger.info(f"Dispatching action '{action}' to agent '{agent.name}' (profile: {profile})")
         return await agent.execute(action, parameters)
 
 
