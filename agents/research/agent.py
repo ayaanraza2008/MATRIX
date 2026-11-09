@@ -4,7 +4,7 @@ Searches multiple sources, extracts verified facts, compiles citations, and gene
 from typing import Dict, Any, List
 import time
 import httpx
-from agents.base_agent import BaseAgent, AgentResult
+from agents.base_agent import BaseAgent, AgentResult, AgentCapability
 
 
 class ResearchAgent(BaseAgent):
@@ -16,10 +16,31 @@ class ResearchAgent(BaseAgent):
             description="Performs online and local research, facts comparison, and cited report synthesis.",
             max_autonomy_level=1
         )
+        self._capabilities = [
+            AgentCapability(
+                name="web_research",
+                description="Searches multi-source references and synthesizes dossiers",
+                operations=["web_research", "research", "search"]
+            )
+        ]
 
     async def execute(self, action: str, parameters: Dict[str, Any]) -> AgentResult:
         start_time = time.perf_counter()
-        query = parameters.get("query", "general research")
+        act = action.lower().strip()
+
+        if act not in ["web_research", "research", "search", "query"]:
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken=action,
+                error=f"Unsupported action '{action}' for ResearchAgent",
+                execution_status="FAILED",
+                verification_status="FAILED",
+                execution_time_ms=round(latency, 2)
+            )
+
+        query = parameters.get("query", parameters.get("topic", "general research"))
 
         results = await self._search_web(query)
         report = self._format_research_report(query, results)

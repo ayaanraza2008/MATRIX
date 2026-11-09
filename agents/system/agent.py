@@ -79,8 +79,20 @@ class SystemAgent(BaseAgent):
         if "diagnos" in action_lower or "check my computer" in raw_prompt or "error" in raw_prompt:
             return await self._diagnose_system_errors(start_time)
 
-        # Default: Full Hardware Telemetry
-        return await self._poll_telemetry(start_time)
+        # 6. Hardware Telemetry
+        if any(w in action_lower for w in ["telemetry", "status", "specs", "cpu", "hardware", "system", "poll"]):
+            return await self._poll_telemetry(start_time)
+
+        latency = (time.perf_counter() - start_time) * 1000
+        return AgentResult(
+            success=False,
+            agent_name=self.name,
+            action_taken=action,
+            error=f"Unsupported action '{action}' for SystemAgent",
+            execution_status="FAILED",
+            verification_status="FAILED",
+            execution_time_ms=round(latency, 2)
+        )
 
     async def _poll_telemetry(self, start_time: float) -> AgentResult:
         """Poll real-time CPU, RAM, disk, and network stats."""

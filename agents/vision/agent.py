@@ -5,7 +5,7 @@ extracts on-screen text via native Windows 11 OCR, and performs perceptual scene
 from typing import Dict, Any, Optional
 import time
 from pathlib import Path
-from agents.base_agent import BaseAgent, AgentResult
+from agents.base_agent import BaseAgent, AgentResult, AgentCapability
 from vision.camera.capture import camera_capture
 from vision.screenshot.capture import desktop_screen_capture
 from vision.detection.analyzer import vision_analyzer
@@ -26,6 +26,12 @@ class VisionAgent(BaseAgent):
             description="Analyzes camera feeds, captures desktop visual state, extracts on-screen text via OCR, and inspects visual elements.",
             max_autonomy_level=1
         )
+        self._capabilities = [
+            AgentCapability(name="camera_capture", description="Capture high-resolution frames from hardware camera", operations=["camera", "capture_camera"]),
+            AgentCapability(name="screen_ocr", description="Capture desktop workspace surfaces and extract text via native OCR", operations=["screen", "ocr", "screenshot", "inspect_screen"]),
+            AgentCapability(name="airtouch_control", description="Manage touchless gesture, eye-tracking, and 3D viewport control", operations=["airtouch", "gesture", "gaze"]),
+            AgentCapability(name="vision_status", description="Query optical sensors and MediaPipe landmarker pipelines", operations=["vision_status", "status"])
+        ]
 
     async def execute(self, action: str, parameters: Dict[str, Any]) -> AgentResult:
         start_time = time.perf_counter()
@@ -41,8 +47,35 @@ class VisionAgent(BaseAgent):
         if "camera" in action_lower or "webcam" in action_lower or "camera" in raw_prompt:
             return await self._capture_camera_frame(start_time)
 
-        # 2. Desktop Screen Capture & OCR Inspection
-        return await self._inspect_desktop_screen(start_time, prompt=parameters.get("query", ""))
+        # 2. Vision Status
+        if "status" in action_lower or "vision_status" in action_lower:
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=True,
+                agent_name=self.name,
+                action_taken="vision_status",
+                data={
+                    "airtouch_mode": airtouch_service.mode,
+                    "ocr_ready": True
+                },
+                verification={"verified": True},
+                execution_time_ms=round(latency, 2)
+            )
+
+        # 3. Desktop Screen Capture & OCR Inspection
+        if any(k in action_lower for k in ["screen", "ocr", "capture", "inspect"]):
+            return await self._inspect_desktop_screen(start_time, prompt=parameters.get("query", ""))
+
+        latency = (time.perf_counter() - start_time) * 1000
+        return AgentResult(
+            success=False,
+            agent_name=self.name,
+            action_taken=action,
+            error=f"Unsupported action '{action}' for VisionAgent",
+            execution_status="FAILED",
+            verification_status="FAILED",
+            execution_time_ms=round(latency, 2)
+        )
 
     async def _capture_camera_frame(self, start_time: float) -> AgentResult:
         """Capture a physical frame from the integrated webcam."""

@@ -3,7 +3,7 @@ Discovers, evaluates, selects, adapts, and executes capabilities from the verifi
 """
 from typing import Dict, Any, List
 import time
-from agents.base_agent import BaseAgent, AgentResult
+from agents.base_agent import BaseAgent, AgentResult, AgentCapability
 from core.repository_intelligence.engine import repo_intelligence
 from core.tool_adapters.manager import adapter_manager
 from core.capability_registry.registry import capability_registry
@@ -20,6 +20,12 @@ class RepoIntelAgent(BaseAgent):
             description="Analyzes the verified 65 GitHub repositories, selects tools autonomously, and manages adapters.",
             max_autonomy_level=2
         )
+        self._capabilities = [
+            AgentCapability(name="tool_selection", description="Autonomously map user intents to specialized tools", operations=["select_tool", "resolve_task"]),
+            AgentCapability(name="gap_detection", description="Detect missing system capabilities and recommend adapters", operations=["detect_gap"]),
+            AgentCapability(name="inventory_query", description="Search and inspect catalog of 65 verified repositories", operations=["query_inventory", "search", "inventory", "list"]),
+            AgentCapability(name="system_summary", description="Provide high-level telemetry and status of repository ecosystems", operations=["get_summary", "summary"])
+        ]
 
     async def execute(self, action: str, parameters: Dict[str, Any]) -> AgentResult:
         start_time = time.perf_counter()
@@ -151,8 +157,8 @@ class RepoIntelAgent(BaseAgent):
                 execution_time_ms=round(latency, 2)
             )
 
-        else:
-            # Default: query repository inventory
+        elif act in ["query_inventory", "search", "inventory", "list", "query"]:
+            # Query repository inventory
             query = parameters.get("query", "")
             category = parameters.get("category")
             matches = repo_intelligence.search_repositories(query, category=category)
@@ -167,6 +173,18 @@ class RepoIntelAgent(BaseAgent):
                     "repositories": [m.model_dump() for m in matches[:15]]
                 },
                 verification={"search_completed": True},
+                execution_time_ms=round(latency, 2)
+            )
+
+        else:
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=False,
+                agent_name=self.name,
+                action_taken=action,
+                error=f"Unsupported action '{action}' for RepoIntelAgent",
+                execution_status="FAILED",
+                verification_status="FAILED",
                 execution_time_ms=round(latency, 2)
             )
 

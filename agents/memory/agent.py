@@ -144,17 +144,29 @@ class MemoryAgent(BaseAgent):
                 execution_time_ms=round(latency, 2)
             )
 
+        if action_lower in ["memory_status", "status", "info"]:
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=True,
+                agent_name=self.name,
+                action_taken="memory_status",
+                data={
+                    "engine": "SQLite Async + Vector RAG",
+                    "location": "D:\\matrix_data\\matrix.db",
+                    "supported_categories": self.MEMORY_CATEGORIES
+                },
+                verification={"verified": True},
+                execution_time_ms=round(latency, 2)
+            )
+
         latency = (time.perf_counter() - start_time) * 1000
         return AgentResult(
-            success=True,
+            success=False,
             agent_name=self.name,
-            action_taken="memory_status",
-            data={
-                "engine": "SQLite Async + Vector RAG",
-                "location": "D:\\matrix_data\\matrix.db",
-                "supported_categories": self.MEMORY_CATEGORIES
-            },
-            verification={"verified": True},
+            action_taken=action,
+            error=f"Unsupported action '{action}' for MemoryAgent",
+            execution_status="FAILED",
+            verification_status="FAILED",
             execution_time_ms=round(latency, 2)
         )
 

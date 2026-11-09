@@ -116,18 +116,30 @@ class PersonalAgent(BaseAgent):
             )
 
         # Default Personal Assistant QA / Identity
+        if action_lower in ["personal_assist", "report_time_date", "identity", "whoami", "status", "time", "date"]:
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=True,
+                agent_name=self.name,
+                action_taken="personal_assist",
+                data={
+                    "assistant_name": "MATRIX",
+                    "identity": "JARVIS-inspired digital operating layer",
+                    "capabilities": [c.name for c in self._capabilities],
+                    "connected_accounts_count": len(account_registry.list_connected_accounts())
+                },
+                verification={"verified": True},
+                execution_time_ms=round(latency, 2)
+            )
+
         latency = (time.perf_counter() - start_time) * 1000
         return AgentResult(
-            success=True,
+            success=False,
             agent_name=self.name,
-            action_taken="personal_assist",
-            data={
-                "assistant_name": "MATRIX",
-                "identity": "JARVIS-inspired digital operating layer",
-                "capabilities": [c.name for c in self._capabilities],
-                "connected_accounts_count": len(account_registry.list_connected_accounts())
-            },
-            verification={"verified": True},
+            action_taken=action,
+            error=f"Unsupported action '{action}' for PersonalAgent",
+            execution_status="FAILED",
+            verification_status="FAILED",
             execution_time_ms=round(latency, 2)
         )
 

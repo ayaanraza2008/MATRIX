@@ -6,7 +6,7 @@ Enforces single-source audio playback coordination to eliminate duplicate sound 
 from typing import Dict, Any
 import time
 from pathlib import Path
-from agents.base_agent import BaseAgent, AgentResult
+from agents.base_agent import BaseAgent, AgentResult, AgentCapability
 from voice.text_to_speech.engine import tts_engine
 from voice.speech_to_text.engine import stt_engine
 from voice.wake_word.engine import wake_word_detector
@@ -22,6 +22,11 @@ class VoiceAgent(BaseAgent):
             description="Speaks natural responses, transcribes microphone input, and handles voice triggers.",
             max_autonomy_level=1
         )
+        self._capabilities = [
+            AgentCapability(name="speech_synthesis", description="Convert text into natural streaming audio responses", operations=["speak", "speech"]),
+            AgentCapability(name="wake_word_control", description="Manage openWakeWord background activation listener", operations=["listen", "toggle_listening", "wake"]),
+            AgentCapability(name="voice_status", description="Query speech engine status and language models", operations=["voice_status", "status"])
+        ]
 
     async def execute(self, action: str, parameters: Dict[str, Any]) -> AgentResult:
         start_time = time.perf_counter()
@@ -131,17 +136,29 @@ class VoiceAgent(BaseAgent):
             )
 
         # Default Voice Status
+        if action_lower in ["voice_status", "status", "query_status"]:
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=True,
+                agent_name=self.name,
+                action_taken="voice_status",
+                data={
+                    "listening": wake_word_detector.is_listening,
+                    "supported_languages": ["en", "hi", "hinglish"],
+                    "tts_ready": True
+                },
+                verification={"verified": True},
+                execution_time_ms=round(latency, 2)
+            )
+
         latency = (time.perf_counter() - start_time) * 1000
         return AgentResult(
-            success=True,
+            success=False,
             agent_name=self.name,
-            action_taken="voice_status",
-            data={
-                "listening": wake_word_detector.is_listening,
-                "supported_languages": ["en", "hi", "hinglish"],
-                "tts_ready": True
-            },
-            verification={"verified": True},
+            action_taken=action,
+            error=f"Unsupported action '{action}' for VoiceAgent",
+            execution_status="FAILED",
+            verification_status="FAILED",
             execution_time_ms=round(latency, 2)
         )
 

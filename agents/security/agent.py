@@ -3,7 +3,7 @@ Enforces deterministic permission boundaries (Levels 0-4), command sandboxing, a
 """
 from typing import Dict, Any, List
 import time
-from agents.base_agent import BaseAgent, AgentResult
+from agents.base_agent import BaseAgent, AgentResult, AgentCapability
 from database.session import AsyncSessionLocal
 from database.models import AuditLog
 from config.settings import settings
@@ -30,6 +30,10 @@ class SecurityAgent(BaseAgent):
             description="Evaluates risks, inspects command payloads, blocks destructive scripts, and logs audit events.",
             max_autonomy_level=3
         )
+        self._capabilities = [
+            AgentCapability(name="evaluate_payload", description="Scan scripts and commands against destructive patterns", operations=["evaluate_payload", "inspect_payload", "evaluate"]),
+            AgentCapability(name="audit_permissions", description="Inspect active security policies and audit trails", operations=["audit_permissions", "security_status", "status"])
+        ]
 
     async def execute(self, action: str, parameters: Dict[str, Any]) -> AgentResult:
         start_time = time.perf_counter()
@@ -59,23 +63,37 @@ class SecurityAgent(BaseAgent):
                     "jailbreak_detected": [reason] if not is_safe else [],
                     "policy_level": settings.security_level
                 },
-                verification={"verified": True},
+                error=reason if not is_safe else None,
+                execution_status="SUCCESS" if is_safe else "BLOCKED",
+                verification={"verified": is_safe},
                 execution_time_ms=round(latency, 2)
             )
 
         # 2. General Security Audit Summary
+        if "audit" in action_lower or "status" in action_lower or "security" in action_lower:
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=True,
+                agent_name=self.name,
+                action_taken="audit_permissions",
+                data={
+                    "autonomy_level": settings.security_level,
+                    "require_approval_high_risk": settings.require_approval_high_risk,
+                    "sandbox_active": True,
+                    "policy_enforced": "Deterministic (LLM cannot override)"
+                },
+                verification={"verified": True},
+                execution_time_ms=round(latency, 2)
+            )
+
         latency = (time.perf_counter() - start_time) * 1000
         return AgentResult(
-            success=True,
+            success=False,
             agent_name=self.name,
-            action_taken="security_status",
-            data={
-                "autonomy_level": settings.security_level,
-                "require_approval_high_risk": settings.require_approval_high_risk,
-                "sandbox_active": True,
-                "policy_enforced": "Deterministic (LLM cannot override)"
-            },
-            verification={"verified": True},
+            action_taken=action,
+            error=f"Unsupported action '{action}' for SecurityAgent",
+            execution_status="FAILED",
+            verification_status="FAILED",
             execution_time_ms=round(latency, 2)
         )
 

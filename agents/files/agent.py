@@ -214,10 +214,19 @@ class FileAgent(BaseAgent):
             # 0. Create Folder / Directory
             if (("folder" in action_lower or "directory" in action_lower or "mkdir" in action_lower) and any(w in action_lower for w in ["create", "make", "new", "mkdir"])) or ("folder" in raw_prompt and any(w in raw_prompt for w in ["create", "make", "new", "mkdir"])):
                 import re
-                dest_input = parameters.get("directory") or parameters.get("target_dir") or parameters.get("path") or raw_prompt
-                dest_dir = self.resolve_target_dir(str(dest_input))
-                match = re.search(r'(?:create|make|new|mkdir)\s+(?:a\s+)?(?:folder|directory)\s+(?:named\s+|called\s+)?([a-zA-Z0-9_.-]+)', raw_prompt, re.I)
-                folder_name = parameters.get("folder_name") or (match.group(1) if match else "NewFolder")
+                dest_input = parameters.get("directory") or parameters.get("target_dir") or parameters.get("folder_path") or parameters.get("path") or raw_prompt
+                folder_name = parameters.get("folder_name")
+                if not folder_name:
+                    if dest_input and any(sep in str(dest_input) for sep in ["/", "\\"]):
+                        p_in = Path(dest_input)
+                        dest_dir = self.resolve_target_dir(str(p_in.parent))
+                        folder_name = p_in.name
+                    else:
+                        dest_dir = self.resolve_target_dir(str(dest_input))
+                        match = re.search(r'(?:create|make|new|mkdir)\s+(?:a\s+)?(?:folder|directory)\s+(?:named\s+|called\s+)?([a-zA-Z0-9_.-]+)', raw_prompt, re.I)
+                        folder_name = match.group(1) if match else "NewFolder"
+                else:
+                    dest_dir = self.resolve_target_dir(str(dest_input))
                 return await self._create_folder(dest_dir, folder_name, start_time)
 
             # 0.5. List Files / Directory

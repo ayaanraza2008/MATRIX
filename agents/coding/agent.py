@@ -6,7 +6,7 @@ import subprocess
 import time
 import ast
 from pathlib import Path
-from agents.base_agent import BaseAgent, AgentResult
+from agents.base_agent import BaseAgent, AgentResult, AgentCapability
 
 
 class CodingAgent(BaseAgent):
@@ -18,13 +18,20 @@ class CodingAgent(BaseAgent):
             description="Analyzes code, validates syntax, runs test suites, and performs git operations.",
             max_autonomy_level=2
         )
+        self._capabilities = [
+            AgentCapability(name="code_architecture", description="Inspect codebase architecture and AST structures", operations=["architecture", "inspect_code"]),
+            AgentCapability(name="run_tests", description="Run pytest test suites across workspace", operations=["test", "run_tests"]),
+            AgentCapability(name="validate_syntax", description="Validate Python AST syntax for code snippets", operations=["syntax", "validate_syntax"]),
+            AgentCapability(name="workspace_inspection", description="Inspect workspace codebase health", operations=["workspace", "inspect_workspace"])
+        ]
 
     async def execute(self, action: str, parameters: Dict[str, Any]) -> AgentResult:
         start_time = time.perf_counter()
         raw_prompt = parameters.get("instruction", parameters.get("raw_prompt", "")).lower()
+        action_lower = action.lower()
 
         # 1. Architectural Code Analysis (via Gravitas Adapter)
-        if "architecture" in action.lower() or "inspect_code" in action.lower() or "analyze" in raw_prompt:
+        if "architecture" in action_lower or "inspect_code" in action_lower or "analyze" in raw_prompt:
             file_path = parameters.get("file_path", "core/brain.py")
             return await self.execute_tool_adapter(
                 adapter_id="adapter_gravitas",
@@ -33,16 +40,28 @@ class CodingAgent(BaseAgent):
             )
 
         # 2. Run Tests
-        if "test" in action.lower() or "test" in raw_prompt:
+        if "test" in action_lower or "test" in raw_prompt:
             return await self._run_pytest(start_time)
 
         # 3. Syntax Validation
-        if "syntax" in action.lower() or "validate" in raw_prompt:
+        if "syntax" in action_lower or "validate" in raw_prompt:
             code_snippet = parameters.get("code", "")
             return self._validate_syntax(code_snippet, start_time)
 
         # 4. Workspace Inspection
-        return await self._inspect_workspace(start_time)
+        if "workspace" in action_lower or "inspect" in action_lower:
+            return await self._inspect_workspace(start_time)
+
+        latency = (time.perf_counter() - start_time) * 1000
+        return AgentResult(
+            success=False,
+            agent_name=self.name,
+            action_taken=action,
+            error=f"Unsupported action '{action}' for CodingAgent",
+            execution_status="FAILED",
+            verification_status="FAILED",
+            execution_time_ms=round(latency, 2)
+        )
 
     async def _run_pytest(self, start_time: float) -> AgentResult:
         """Run project test suite via pytest."""

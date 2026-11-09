@@ -77,28 +77,40 @@ class AndroidAgent(BaseAgent):
                 execution_time_ms=round(latency, 2)
             )
 
-        # 4. List Devices / Default Status
-        devices_list: List[Dict[str, Any]] = []
-        try:
-            async with AsyncSessionLocal() as session:
-                stmt = select(DeviceModel)
-                devices = (await session.execute(stmt)).scalars().all()
-                devices_list = [{"id": d.device_id, "name": d.name, "paired": d.is_paired} for d in devices]
-        except Exception:
-            pass
+        # 4. List Devices / Status
+        if action_lower in ["list_devices", "android_status", "status", "devices"]:
+            devices_list: List[Dict[str, Any]] = []
+            try:
+                async with AsyncSessionLocal() as session:
+                    stmt = select(DeviceModel)
+                    devices = (await session.execute(stmt)).scalars().all()
+                    devices_list = [{"id": d.device_id, "name": d.name, "paired": d.is_paired} for d in devices]
+            except Exception:
+                pass
+
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=True,
+                agent_name=self.name,
+                action_taken="android_status",
+                data={
+                    "paired_devices_count": len(devices_list),
+                    "devices": devices_list,
+                    "protocol": "WebSocket / REST TLS",
+                    "status": "Ready for mobile companion pairing"
+                },
+                verification={"verified": True},
+                execution_time_ms=round(latency, 2)
+            )
 
         latency = (time.perf_counter() - start_time) * 1000
         return AgentResult(
-            success=True,
+            success=False,
             agent_name=self.name,
-            action_taken="android_status",
-            data={
-                "paired_devices_count": len(devices_list),
-                "devices": devices_list,
-                "protocol": "WebSocket / REST TLS",
-                "status": "Ready for mobile companion pairing"
-            },
-            verification={"verified": True},
+            action_taken=action,
+            error=f"Unsupported action '{action}' for AndroidAgent",
+            execution_status="FAILED",
+            verification_status="FAILED",
             execution_time_ms=round(latency, 2)
         )
 

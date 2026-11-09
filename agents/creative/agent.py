@@ -85,17 +85,29 @@ class CreativeAgent(BaseAgent):
                 execution_time_ms=round(latency, 2)
             )
 
+        if act_lower in ["render_media_plan", "media_plan", "creative_status", "status"]:
+            latency = (time.perf_counter() - start_time) * 1000
+            return AgentResult(
+                success=True,
+                agent_name=self.name,
+                action_taken="render_media_plan",
+                data={
+                    "prompt": prompt,
+                    "engine": "Creative Studio & Media Adapter",
+                    "status": "Pipeline ready for creative synthesis"
+                },
+                verification={"verified": True},
+                execution_time_ms=round(latency, 2)
+            )
+
         latency = (time.perf_counter() - start_time) * 1000
         return AgentResult(
-            success=True,
+            success=False,
             agent_name=self.name,
-            action_taken="render_media_plan",
-            data={
-                "prompt": prompt,
-                "engine": "Creative Studio & Media Adapter",
-                "status": "Pipeline ready for creative synthesis"
-            },
-            verification={"verified": True},
+            action_taken=action,
+            error=f"Unsupported action '{action}' for CreativeAgent",
+            execution_status="FAILED",
+            verification_status="FAILED",
             execution_time_ms=round(latency, 2)
         )
 
