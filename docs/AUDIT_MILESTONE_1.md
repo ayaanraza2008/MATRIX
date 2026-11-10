@@ -1,4 +1,4 @@
-# MATRIX — Repository Audit & Milestone 1 Report
+# MATRIX — Repository Audit & Milestones 1–2 Report
 
 **Repository:** `ayaanraza2008/MATRIX` (public)
 **Branch audited:** `final-production-master` @ `433f5cc91f6eed87b46e85a9839d7942f163e90f`
@@ -182,8 +182,8 @@ Deleted: `add_list_processes.py`, `add_missing_methods.py`, `test_agent.py` (inv
 | `tests/test_foundation.py` (7) | PASSED |
 | `tests/test_brain_and_agents.py` (9) | PASSED |
 | `tests/test_extended_workflows.py` (6) | PASSED (screenshot test skips on headless) |
-| `tests/test_security_hardening.py` (15) | PASSED |
-| Total | **37 passed, 0 failed** locally on Windows 11 / Python 3.12.14 |
+| `tests/test_security_hardening.py` (20) | PASSED |
+| Total | **42 passed, 0 failed** locally (Windows 11 / Python 3.12.14) and on the GitHub `windows-latest` CI job |
 | CI lint job | PASSED |
 | Voice pipeline (hardware) | NOT TESTED |
 | Vision pipeline (camera) | NOT TESTED |
@@ -215,3 +215,39 @@ ruff check .
 ```
 
 No `D:` drive, no pre-existing database and no hardware beyond a normal Windows desktop are required.
+
+---
+
+## 12. Milestone 2 — network gate and honest model fallback
+
+### 12.1 Every `/api/` route is now gated
+Milestone 1 authenticated only `files` and `developer`; `sessions`, `memory`, `voice`, `vision`,
+`automation`, `integrations`, `telephony`, `security`, `repositories`, `briefing` and `airtouch`
+were still open to any host that could reach the port. A single ASGI middleware now enforces:
+
+* loopback / `MATRIX_TRUSTED_HOSTS` → allowed;
+* otherwise `Authorization: Bearer <MATRIX_API_TOKEN>` **or** a paired device token → allowed;
+* explicit allowlist for `/api/v1/health`, `/api/v1/devices/pair` and the provider-signed
+  Twilio/Bland webhooks.
+
+Regression tests assert that four formerly-open routers return `401` to a public source address
+while `/api/v1/health` stays reachable.
+
+### 12.2 The fake "AI" fallback is gone
+`ModelManager._generate_rule_based_response()` used to answer with fabricated success text
+("All MATRIX subsystems operational…", "Task dispatched through the intent engine and verification
+pipeline") when no model was loaded. It has been replaced by `_template_fallback_response()`, which:
+
+* prefixes every reply with `[OFFLINE TEMPLATE - no language model available]`;
+* states explicitly that no action was executed;
+* reports only measured values (psutil) for hardware/status questions;
+* sets `ModelResponse.degraded = True` so callers and the UI can distinguish template output
+  from real generation.
+
+`test_model_manager_and_memory_benchmark` now asserts the degraded contract and fails if the
+fabricated phrases ever return.
+
+### 12.3 Still not done
+Twilio webhooks verify HMAC signatures; the **Bland AI webhook has no signature check** and only
+mutates call history — it is on the milestone 3 list together with rate limiting and
+capability-registry write-on-change.

@@ -12,7 +12,11 @@ import uuid
 from config.settings import settings
 from config.logging_config import get_logger
 from database.init_db import init_database
-from security.authentication.api_access import is_trusted_client, matches_api_token
+from security.authentication.api_access import (
+    extract_bearer,
+    is_trusted_client,
+    matches_api_token,
+)
 from api.routes import (
     health, system, sessions, capabilities, devices, memory, voice, vision, repositories,
     automation, files, audit, developer, integrations, airtouch, telephony, briefing, security
@@ -101,6 +105,65 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Endpoints that must stay reachable without MATRIX credentials.
+# Twilio/Bland webhooks authenticate their caller with provider signatures instead.
+PUBLIC_API_PATHS = frozenset({
+    "/api/v1/health",
+    "/api/v1/devices/pair",
+    "/api/v1/telephony/twilio/incoming",
+    "/api/v1/telephony/twilio/speech",
+    "/api/v1/telephony/twilio/status",
+    "/api/v1/telephony/bland/webhook",
+})
+PUBLIC_PATH_PREFIXES = ("/docs", "/redoc", "/openapi.json", "/assets")
+
+
+async def _valid_device_token(token: str) -> bool:
+    """Check a paired-device token without raising HTTP errors."""
+    from core.device_auth import validate_token_raw
+    from database.session import AsyncSessionLocal
+
+    async with AsyncSessionLocal() as session:
+        return (await validate_token_raw(token, session)) is not None
+
+
+async def _is_authorized_remote(request: Request) -> bool:
+    token = extract_bearer(request.headers.get("authorization"))
+    if not token:
+        token = request.query_params.get("token")
+    if not token:
+        return False
+    if matches_api_token(token):
+        return True
+    return await _valid_device_token(token)
+
+
+# Network gate: every /api/ route requires an authenticated client unless it is
+# explicitly public or the request originates from this machine.
+@app.middleware("http")
+async def enforce_client_authentication(request: Request, call_next):
+    path = request.url.path
+    if not path.startswith("/api/") or path in PUBLIC_API_PATHS:
+        return await call_next(request)
+
+    client_host = request.client.host if request.client else None
+    if is_trusted_client(client_host) or await _is_authorized_remote(request):
+        return await call_next(request)
+
+    logger.warning("Blocked unauthenticated API request from %s to %s", client_host, path)
+    return JSONResponse(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        content={
+            "error": "Unauthorized",
+            "detail": (
+                "Non-local clients must supply 'Authorization: Bearer <MATRIX_API_TOKEN>' "
+                "or a paired device token."
+            ),
+        },
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 # Global timing and request logging middleware
