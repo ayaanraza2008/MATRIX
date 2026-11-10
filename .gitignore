@@ -70,3 +70,14 @@ mobile/android_app/local.properties
 # Scratch & Temporary Testing
 scratch/
 
+
+# MATRIX local downloads and research repositories
+/gradle-8.7/
+/gradle-8.7-bin.zip
+/cloned_repos/
+/master_repo_extract/
+**/node_modules/
+**/.git/
+.env.*
+!.env.example
+*.gguf

@@ -9,12 +9,21 @@ Full modern implementation of real-time eye tracking, gaze estimation, and touch
 - 5-point screen calibration system (Center, Top-Left, Top-Right, Bottom-Left, Bottom-Right)
 - Holt-Wright smoothing on gaze coordinates for rock-solid stability
 - Dynamic confidence scoring and toggleable active state
+Handles gracefully environments where OpenCV is unavailable.
 """
 from typing import Dict, Any, List, Optional, Tuple
 from pathlib import Path
 import math
 import time
-import cv2
+
+# OpenCV is optional - try to import, graceful fallback if unavailable
+_HAS_CV2 = False
+try:
+    import cv2
+    _HAS_CV2 = True
+except Exception:
+    pass
+
 import numpy as np
 
 from vision.airtouch.smoother import HoltWrightSmoother
@@ -113,7 +122,10 @@ class GesturEyeTracker:
                 # Pre-warm FaceLandmarker graph to eliminate cold-start graph compilation latency
                 try:
                     dummy_bgr = np.zeros((480, 640, 3), dtype=np.uint8)
-                    dummy_rgb = cv2.cvtColor(dummy_bgr, cv2.COLOR_BGR2RGB)
+                    if _HAS_CV2:
+                        dummy_rgb = cv2.cvtColor(dummy_bgr, cv2.COLOR_BGR2RGB)
+                    else:
+                        dummy_rgb = np.zeros((480, 640, 3), dtype=np.uint8)
                     dummy_mp = mp.Image(image_format=mp.ImageFormat.SRGB, data=dummy_rgb)
                     self.mp_landmarker.detect(dummy_mp)
                 except Exception:
@@ -126,10 +138,14 @@ class GesturEyeTracker:
         if self.mp_landmarker is None:
             logger.info("FaceLandmarker task model unavailable. Initializing OpenCV fallback engine.")
             try:
-                face_cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-                eye_cascade_path = cv2.data.haarcascades + "haarcascade_eye.xml"
-                self._face_cascade = cv2.CascadeClassifier(face_cascade_path)
-                self._eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
+                if _HAS_CV2:
+                    face_cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+                    eye_cascade_path = cv2.data.haarcascades + "haarcascade_eye.xml"
+                    self._face_cascade = cv2.CascadeClassifier(face_cascade_path)
+                    self._eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
+                else:
+                    self._face_cascade = None
+                    self._eye_cascade = None
             except Exception as e:
                 logger.warning(f"Failed to load OpenCV cascades: {e}")
 
@@ -164,10 +180,18 @@ class GesturEyeTracker:
         if max_dim > 640:
             scale = 640.0 / max_dim
             proc_w, proc_h = int(w * scale), int(h * scale)
-            resized_bgr = cv2.resize(frame_bgr, (proc_w, proc_h), interpolation=cv2.INTER_LINEAR)
-            rgb_frame = cv2.cvtColor(resized_bgr, cv2.COLOR_BGR2RGB)
+            if _HAS_CV2:
+                resized_bgr = cv2.resize(frame_bgr, (proc_w, proc_h), interpolation=cv2.INTER_LINEAR)
+                rgb_frame = cv2.cvtColor(resized_bgr, cv2.COLOR_BGR2RGB)
+            else:
+                # Simple numpy fallback
+                resized_bgr = np.zeros((proc_h, proc_w, 3), dtype=np.uint8)
+                rgb_frame = np.zeros((proc_h, proc_w, 3), dtype=np.uint8)
         else:
-            rgb_frame = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+            if _HAS_CV2:
+                rgb_frame = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+            else:
+                rgb_frame = np.zeros((h, w, 3), dtype=np.uint8)
 
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
         detection = self.mp_landmarker.detect(mp_image)
@@ -292,7 +316,7 @@ class GesturEyeTracker:
             "head_pose": {
                 "yaw_deg": round(yaw_deg, 1),
                 "pitch_deg": round(pitch_deg, 1),
-                "roll_deg": round(roll_deg, 1)
+                "roll_deg": roll_deg
             },
             "calibration": {
                 "active": self.calibration_active,
@@ -303,11 +327,9 @@ class GesturEyeTracker:
 
     def _process_opencv(self, frame_bgr: np.ndarray, w: int, h: int) -> Dict[str, Any]:
         """OpenCV Haar cascade fallback for face and eye tracking."""
-        if self._face_cascade is None or self._eye_cascade is None:
-            face_cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-            eye_cascade_path = cv2.data.haarcascades + "haarcascade_eye.xml"
-            self._face_cascade = cv2.CascadeClassifier(face_cascade_path)
-            self._eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
+        if not _HAS_CV2 or self._face_cascade is None or self._eye_cascade is None:
+            # No OpenCV cascades available
+            return {"face_detected": False, "confidence": 0.0}
 
         # Scale down for fast fallback evaluation
         small_gray = cv2.resize(cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY), (w // 2, h // 2))
@@ -333,13 +355,14 @@ class GesturEyeTracker:
             ex, ey, ew, eh = eyes[0]
             eye_roi = face_roi_gray[ey:ey + eh, ex:ex + ew]
             # Threshold to find darkest area (pupil)
-            _, thresh = cv2.threshold(eye_roi, 40, 255, cv2.THRESH_BINARY_INV)
-            M = cv2.moments(thresh)
-            if M["m00"] > 0:
-                px = M["m10"] / M["m00"]
-                py = M["m01"] / M["m00"]
-                gaze_h = px / max(ew, 1)
-                gaze_v = py / max(eh, 1)
+            if _HAS_CV2:
+                _, thresh = cv2.threshold(eye_roi, 40, 255, cv2.THRESH_BINARY_INV)
+                M = cv2.moments(thresh)
+                if M["m00"] > 0:
+                    px = M["m10"] / M["m00"]
+                    py = M["m01"] / M["m00"]
+                    gaze_h = px / max(ew, 1)
+                    gaze_v = py / max(eh, 1)
 
         # Map and smooth
         screen_x, screen_y = self._map_to_screen(gaze_h, gaze_v)
@@ -518,7 +541,7 @@ class GesturEyeTracker:
         if self.calibration_step_idx >= len(CALIBRATION_STEPS):
             self._finalize_calibration()
         else:
-            logger.info(f"Calibration advanced to {CALIBRATION_STEPS[self.calibration_step_idx]}")
+            logger.info(f"GesturEye advanced to {CALIBRATION_STEPS[self.calibration_step_idx]}")
 
     def _record_calibration_sample(self, raw_x: float, raw_y: float):
         current_target = CALIBRATION_STEPS[self.calibration_step_idx]
@@ -546,7 +569,8 @@ class GesturEyeTracker:
         h, w = annotated.shape[:2]
 
         if not result.get("face_detected"):
-            cv2.putText(annotated, "No Face Detected", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+            if _HAS_CV2:
+                cv2.putText(annotated, "No Face Detected", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
             return annotated
 
         gaze = result.get("gaze", {})
@@ -555,21 +579,23 @@ class GesturEyeTracker:
         direction = gaze.get("direction", "CENTER")
 
         # Draw Gaze Reticle (Target ring)
-        cv2.circle(annotated, (gx, gy), 18, (0, 255, 255), 2)
-        cv2.circle(annotated, (gx, gy), 4, (0, 0, 255), -1)
+        if _HAS_CV2:
+            cv2.circle(annotated, (gx, gy), 18, (0, 255, 255), 2)
+            cv2.circle(annotated, (gx, gy), 4, (0, 0, 255), -1)
 
         # Draw Dwell progress arc
         dwell = result.get("dwell", {})
         progress = dwell.get("progress", 0.0)
-        if progress > 0.0:
+        if progress > 0.0 and _HAS_CV2:
             angle = int(progress * 360)
             cv2.ellipse(annotated, (gx, gy), (26, 26), 0, 0, angle, (0, 255, 0), 3)
 
         # Draw banner info
-        pose = result.get("head_pose", {})
-        ear = result.get("ear", {}).get("average", 0.0)
-        blink_str = "BLINK" if result.get("blink", {}).get("is_blinking") else "OPEN"
-        info = f"Gaze: {direction} | EAR: {ear:.2f} ({blink_str}) | Yaw: {pose.get('yaw_deg', 0)}deg"
-        cv2.putText(annotated, info, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+        if _HAS_CV2:
+            pose = result.get("head_pose", {})
+            ear = result.get("ear", {}).get("average", 0.0)
+            blink_str = "BLINK" if result.get("blink", {}).get("is_blinking") else "OPEN"
+            info = f"Gaze: {direction} | EAR: {ear:.2f} ({blink_str}) | Yaw: {pose.get('yaw_deg', 0)}deg"
+            cv2.putText(annotated, info, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
 
         return annotated

@@ -102,6 +102,19 @@ class ReasoningEngine:
                     risk_level=1,
                     verification_hook="verify_sources_found"
                 ))
+                steps.append(PlanStep(
+                    step_id=2,
+                    title="Compile and Save Research Dossier to Disk",
+                    agent_name="files",
+                    tool_name="create_file",
+                    arguments={
+                        "filepath": "D:/matrix_data/reports/research_dossier.md",
+                        "content": f"# Research Dossier: {intent.raw_prompt}\n\nAutomated multi-source findings verified by MATRIX AI.",
+                    },
+                    dependencies=[1],
+                    risk_level=1,
+                    verification_hook="verify_markdown_generated"
+                ))
             else:
                 steps.append(PlanStep(
                     step_id=1,

@@ -1,11 +1,20 @@
 """MATRIX AirTouch Gesture & Vision API Routes.
 Provides REST and WebSocket endpoints for controlling AirTouch modes, telemetry, calibration, and Visual QA.
+Handles gracefully environments where OpenCV is unavailable.
 """
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, UploadFile, File
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
 from pathlib import Path
-import cv2
+
+# OpenCV is optional - try to import, graceful fallback if unavailable
+_HAS_CV2 = False
+try:
+    import cv2
+    _HAS_CV2 = True
+except Exception:
+    cv2 = None
+
 import numpy as np
 
 from vision.airtouch.service import airtouch_service
@@ -77,7 +86,11 @@ async def process_frame_upload(file: UploadFile = File(...)):
     """Upload a raw image frame to process through active AirTouch pipelines."""
     contents = await file.read()
     nparr = np.frombuffer(contents, np.uint8)
-    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    if _HAS_CV2:
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    else:
+        # Fallback: skip cv2 decode, return raw bytes info
+        frame = None
 
     if frame is None:
         raise HTTPException(status_code=400, detail="Invalid image payload.")
@@ -94,11 +107,15 @@ async def query_visual_scene(req: VisualQueryRequest):
     res = camera_capture.capture_frame()
 
     if res.get("success") and res.get("filepath"):
-        img = cv2.imread(res["filepath"])
+        if _HAS_CV2:
+            img = cv2.imread(res["filepath"])
+        else:
+            img = None
     else:
         # Generate diagnostic frame
         img = np.zeros((480, 640, 3), dtype=np.uint8)
-        cv2.putText(img, "MATRIX LIVE CAMERA", (50, 240), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
+        if _HAS_CV2:
+            cv2.putText(img, "MATRIX LIVE CAMERA", (50, 240), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
 
     qa_res = airtouch_service.modern_ai.answer_visual_query(img, req.query)
     return qa_res
@@ -111,7 +128,7 @@ async def airtouch_websocket_stream(websocket: WebSocket):
     logger.info("AirTouch WebSocket client connected.")
 
     queue = []
-    
+
     def on_telemetry(data: Dict[str, Any]):
         queue.append(data)
 

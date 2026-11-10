@@ -86,7 +86,7 @@ class IntentEngine:
 
         # 10. Research & Browser Automation
         (r"\b(deep\s+research|research\s+dossier|research\s+report|in-depth\s+research|research\s+paper|research\s+on\s+.+|research\s+(?:this\s+)?topic|prepare\s+a\s+report)\b", IntentType.RESEARCH, "research", 1),
-        (r"\b(search the web|research|find articles|look up online|compare sources|what is the latest|news on|browser\s+capability|using\s+(?:the\s+)?browser|browse\s+https?://|web\s+information|web\s+search|find\s+relevant\s+information|open\s+(?:my\s+)?browser\s+and\s+find)\b", IntentType.RESEARCH, "browser", 1),
+        (r"\b(search the web|research|find articles|look up online|compare sources|what is the latest|news on|browser\s+capability|using\s+(?:the\s+)?browser|browse\s+https?://|web\s+information|web\s+search|find\s+relevant\s+information|open\s+(?:my\s+)?browser\s+and\s+find)\b", IntentType.RESEARCH, "research", 1),
 
         # 11. Android Companion
         (r"\b(android|pair\s+phone|pairing\s+token|pair\s+device|mobile\s+companion|push\s+notification)\b", IntentType.ANDROID, "android", 1),

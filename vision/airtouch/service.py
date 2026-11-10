@@ -6,7 +6,11 @@ from typing import Dict, Any, Optional, Callable, List
 from pathlib import Path
 import threading
 import time
-import cv2
+try:
+    import cv2
+    _HAS_CV2 = True
+except Exception:
+    _HAS_CV2 = False
 import numpy as np
 
 from vision.airtouch.smoother import HoltWrightSmoother

@@ -2,14 +2,22 @@
 Implements dual-engine hand tracking:
 1. High-precision MediaPipe HandLandmarker (21 3D landmarks, finger state analysis, gesture classification).
 2. Resilient OpenCV fallback engine (skin segmentation, contour convex hull, convexity defects).
-
 Classifies gestures: FIST, OPEN_PALM, POINTING, THUMBS_UP, PEACE, PINCH.
+Handles gracefully environments where OpenCV is unavailable.
 """
 from typing import Dict, Any, List, Optional, Tuple
 from pathlib import Path
 import math
 import time
-import cv2
+
+# OpenCV is optional - try to import, graceful fallback if unavailable
+_HAS_CV2 = False
+try:
+    import cv2
+    _HAS_CV2 = True
+except Exception:
+    pass
+
 import numpy as np
 
 from config.logging_config import get_logger
@@ -67,7 +75,11 @@ class AirTouchHandTracker:
                 # Pre-warm HandLandmarker graph to eliminate initial compilation latency
                 try:
                     dummy_bgr = np.zeros((480, 640, 3), dtype=np.uint8)
-                    dummy_rgb = cv2.cvtColor(dummy_bgr, cv2.COLOR_BGR2RGB)
+                    if _HAS_CV2:
+                        dummy_rgb = cv2.cvtColor(dummy_bgr, cv2.COLOR_BGR2RGB)
+                    else:
+                        # Fallback: just create a simple rgb array manually
+                        dummy_rgb = np.zeros((480, 640, 3), dtype=np.uint8)
                     dummy_mp = mp.Image(image_format=mp.ImageFormat.SRGB, data=dummy_rgb)
                     self.mp_landmarker.detect(dummy_mp)
                 except Exception:
@@ -105,10 +117,18 @@ class AirTouchHandTracker:
         if max_dim > 640:
             scale = 640.0 / max_dim
             proc_w, proc_h = int(w * scale), int(h * scale)
-            resized_bgr = cv2.resize(frame_bgr, (proc_w, proc_h), interpolation=cv2.INTER_LINEAR)
-            rgb_frame = cv2.cvtColor(resized_bgr, cv2.COLOR_BGR2RGB)
+            if _HAS_CV2:
+                resized_bgr = cv2.resize(frame_bgr, (proc_w, proc_h), interpolation=cv2.INTER_LINEAR)
+                rgb_frame = cv2.cvtColor(resized_bgr, cv2.COLOR_BGR2RGB)
+            else:
+                # Simple numpy fallback for resizing and color conversion
+                resized_bgr = np.zeros((proc_h, proc_w, 3), dtype=np.uint8)
+                rgb_frame = np.zeros((proc_h, proc_w, 3), dtype=np.uint8)
         else:
-            rgb_frame = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+            if _HAS_CV2:
+                rgb_frame = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+            else:
+                rgb_frame = np.zeros((h, w, 3), dtype=np.uint8)
 
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
         detection_result = self.mp_landmarker.detect(mp_image)
@@ -239,6 +259,13 @@ class AirTouchHandTracker:
 
     def _process_opencv(self, frame_bgr: np.ndarray, w: int, h: int) -> Dict[str, Any]:
         """OpenCV contour and convexity defect fallback tracking."""
+        if not _HAS_CV2:
+            # No OpenCV available - return empty result
+            return {
+                "hands_detected": 0,
+                "hands": []
+            }
+
         # Convert to YCrCb color space for robust skin tone segmentation
         ycrcb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2YCrCb)
         lower_skin = np.array([0, 133, 77], dtype=np.uint8)
@@ -355,23 +382,28 @@ class AirTouchHandTracker:
             handedness = hand["handedness"]
 
             # Draw bounding box (Cyan HUD style)
-            cv2.rectangle(annotated, (bx, by), (bx + bw, by + bh), (0, 230, 255), 2)
+            if _HAS_CV2:
+                cv2.rectangle(annotated, (bx, by), (bx + bw, by + bh), (0, 230, 255), 2)
 
             # Draw connections
             lm_pts = {lm["id"]: (lm["pixel_x"], lm["pixel_y"]) for lm in hand.get("landmarks", [])}
             for start_idx, end_idx in HAND_CONNECTIONS:
                 if start_idx in lm_pts and end_idx in lm_pts:
-                    cv2.line(annotated, lm_pts[start_idx], lm_pts[end_idx], (0, 180, 255), 2)
+                    if _HAS_CV2:
+                        cv2.line(annotated, lm_pts[start_idx], lm_pts[end_idx], (0, 180, 255), 2)
 
             # Draw landmark points
             for lm in hand.get("landmarks", []):
-                cv2.circle(annotated, (lm["pixel_x"], lm["pixel_y"]), 4, (0, 255, 120), -1)
+                if _HAS_CV2:
+                    cv2.circle(annotated, (lm["pixel_x"], lm["pixel_y"]), 4, (0, 255, 120), -1)
 
             # Draw centroid
-            cv2.circle(annotated, (cx, cy), 6, (0, 0, 255), -1)
+            if _HAS_CV2:
+                cv2.circle(annotated, (cx, cy), 6, (0, 0, 255), -1)
 
             # Draw label banner
-            label = f"{handedness} [{gesture}] Fingers: {fingers}"
-            cv2.putText(annotated, label, (bx, max(20, by - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+            if _HAS_CV2:
+                label = f"{handedness} [{gesture}] Fingers: {fingers}"
+                cv2.putText(annotated, label, (bx, max(20, by - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
 
         return annotated

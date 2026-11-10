@@ -1,8 +1,19 @@
 package com.matrix.ai
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.media.AudioFormat
+import android.media.AudioRecord
+import android.media.MediaRecorder
 import android.os.Bundle
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -19,6 +30,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
@@ -28,13 +41,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.camera.view.PreviewView
+import androidx.core.content.ContextCompat
 import com.matrix.ai.network.ConnectionState
 import com.matrix.ai.network.MatrixApiClient
 import com.matrix.ai.network.SystemStatus
 import com.matrix.ai.ui.theme.*
 import com.google.gson.JsonObject
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 data class ChatMessage(
     val role: String,
@@ -45,6 +69,7 @@ data class ChatMessage(
 
 enum class ScreenTab(val title: String, val icon: ImageVector) {
     DASHBOARD("Dashboard", Icons.Default.Dashboard),
+    CAMERA("Camera", Icons.Default.Camera),
     PAIRING("Pairing", Icons.Default.QrCodeScanner),
     VOICE("Voice", Icons.Default.Mic),
     CHAT("Chat", Icons.Default.Chat),
@@ -276,6 +301,7 @@ fun MatrixMobileApp(apiClient: MatrixApiClient) {
         ) {
             when (currentTab) {
                 ScreenTab.DASHBOARD -> DashboardScreen(apiClient, systemStatus, connectionState) { currentTab = it }
+                ScreenTab.CAMERA -> CameraScreen(apiClient, connectionState)
                 ScreenTab.PAIRING -> PairingScreen(apiClient)
                 ScreenTab.VOICE -> VoiceScreen(apiClient, connectionState)
                 ScreenTab.CHAT -> ChatScreen(apiClient, messages, connectionState)
@@ -396,7 +422,64 @@ fun DashboardScreen(
 }
 
 // ==========================================
-// SCREEN 2: PAIRING
+// SCREEN 2: CAMERA
+// ==========================================
+@Composable
+fun CameraScreen(apiClient: MatrixApiClient, connectionState: ConnectionState) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var hasCameraPermission by remember {
+        mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        hasCameraPermission = it
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("CAMERA PREVIEW", color = MatrixCyan, fontSize = 13.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+        Text(
+            if (connectionState == ConnectionState.CONNECTED) "Live device camera. Frames remain on this device unless you explicitly send one."
+            else "Pair the device to use MATRIX camera workflows. Local preview is still available.",
+            color = Color.LightGray,
+            fontSize = 11.sp
+        )
+
+        if (hasCameraPermission) {
+            AndroidView(
+                factory = { viewContext ->
+                    PreviewView(viewContext).also { previewView ->
+                        val providerFuture = ProcessCameraProvider.getInstance(viewContext)
+                        providerFuture.addListener({
+                            val provider = providerFuture.get()
+                            val preview = Preview.Builder().build().also {
+                                it.setSurfaceProvider(previewView.surfaceProvider)
+                            }
+                            try {
+                                provider.unbindAll()
+                                provider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview)
+                            } catch (_: Exception) {
+                                // The preview remains unavailable until the camera can be released by the system.
+                            }
+                        }, ContextCompat.getMainExecutor(viewContext))
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(360.dp).clip(RoundedCornerShape(12.dp))
+            )
+        } else {
+            Card(colors = CardDefaults.cardColors(containerColor = MatrixCard)) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Camera permission is required for the local preview.", color = Color.White, fontSize = 11.sp)
+                    Button(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
+                        Text("Allow camera")
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ==========================================
+// SCREEN 3: PAIRING
 // ==========================================
 @Composable
 fun PairingScreen(apiClient: MatrixApiClient) {
@@ -459,14 +542,119 @@ fun PairingScreen(apiClient: MatrixApiClient) {
 }
 
 // ==========================================
-// SCREEN 3: VOICE ASSISTANT
+private class WavAudioRecorder(private val context: Context) {
+    private var recorder: AudioRecord? = null
+    private var recordingJob: Job? = null
+    private var output: ByteArrayOutputStream? = null
+
+    fun start(scope: kotlinx.coroutines.CoroutineScope) {
+        if (recorder != null) return
+        val sampleRate = 16_000
+        val minBuffer = AudioRecord.getMinBufferSize(
+            sampleRate,
+            AudioFormat.CHANNEL_IN_MONO,
+            AudioFormat.ENCODING_PCM_16BIT
+        ).coerceAtLeast(sampleRate / 10)
+        val audioRecord = AudioRecord(
+            MediaRecorder.AudioSource.MIC,
+            sampleRate,
+            AudioFormat.CHANNEL_IN_MONO,
+            AudioFormat.ENCODING_PCM_16BIT,
+            minBuffer * 2
+        )
+        if (audioRecord.state != AudioRecord.STATE_INITIALIZED) {
+            audioRecord.release()
+            throw IllegalStateException("Microphone recorder could not be initialized.")
+        }
+
+        output = ByteArrayOutputStream()
+        recorder = audioRecord
+        audioRecord.startRecording()
+        recordingJob = scope.launch(Dispatchers.IO) {
+            val buffer = ByteArray(minBuffer)
+            while (recorder === audioRecord) {
+                val read = audioRecord.read(buffer, 0, buffer.size)
+                if (read > 0) output?.write(buffer, 0, read)
+            }
+        }
+    }
+
+    suspend fun stopAndSave(): File? = withContext(Dispatchers.IO) {
+        val activeRecorder = recorder ?: return@withContext null
+        recorder = null
+        runCatching { activeRecorder.stop() }
+        recordingJob?.join()
+        activeRecorder.release()
+        recordingJob = null
+
+        val pcm = output?.toByteArray() ?: ByteArray(0)
+        output = null
+        if (pcm.isEmpty()) return@withContext null
+
+        File(context.cacheDir, "matrix_voice_${System.currentTimeMillis()}.wav").also { file ->
+            FileOutputStream(file).use { stream ->
+                writeWavHeader(stream, pcm.size, 16_000, 1, 16)
+                stream.write(pcm)
+            }
+        }
+    }
+
+    fun discard() {
+        recorder?.let { activeRecorder ->
+            recorder = null
+            runCatching { activeRecorder.stop() }
+            activeRecorder.release()
+        }
+        recordingJob?.cancel()
+        recordingJob = null
+        output = null
+    }
+
+    private fun writeWavHeader(stream: FileOutputStream, pcmSize: Int, sampleRate: Int, channels: Int, bitsPerSample: Int) {
+        val header = ByteBuffer.allocate(44).order(ByteOrder.LITTLE_ENDIAN)
+        header.put("RIFF".toByteArray())
+        header.putInt(36 + pcmSize)
+        header.put("WAVEfmt ".toByteArray())
+        header.putInt(16)
+        header.putShort(1)
+        header.putShort(channels.toShort())
+        header.putInt(sampleRate)
+        header.putInt(sampleRate * channels * bitsPerSample / 8)
+        header.putShort((channels * bitsPerSample / 8).toShort())
+        header.putShort(bitsPerSample.toShort())
+        header.put("data".toByteArray())
+        header.putInt(pcmSize)
+        stream.write(header.array())
+    }
+}
+
+// SCREEN 4: VOICE ASSISTANT
 // ==========================================
 @Composable
 fun VoiceScreen(apiClient: MatrixApiClient, connectionState: ConnectionState) {
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val recorder = remember(context) { WavAudioRecorder(context.applicationContext) }
     var isListening by remember { mutableStateOf(false) }
     var voiceStatus by remember { mutableStateOf("Tap to start hands-free voice stream") }
     var lastVoiceReply by remember { mutableStateOf("") }
+    val recordPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            try {
+                recorder.start(coroutineScope)
+                isListening = true
+                voiceStatus = "Listening... Tap the microphone again when finished."
+            } catch (e: IllegalStateException) {
+                voiceStatus = e.message ?: "Microphone is unavailable."
+            }
+        } else {
+            voiceStatus = "Microphone permission was not granted."
+        }
+    }
+
+    DisposableEffect(recorder) {
+        onDispose { recorder.discard() }
+    }
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseScale by infiniteTransition.animateFloat(
@@ -496,13 +684,32 @@ fun VoiceScreen(apiClient: MatrixApiClient, connectionState: ConnectionState) {
                         isListening = false
                         voiceStatus = "Audio uploaded. Awaiting Faster-Whisper CPU inference..."
                         coroutineScope.launch {
-                            val res = apiClient.sendCommand("Hello Matrix, check status", synthesizeVoice = true)
-                            lastVoiceReply = res.reply
-                            voiceStatus = "Complete."
+                            val audioFile = recorder.stopAndSave()
+                            if (audioFile == null) {
+                                voiceStatus = "No audio was captured. Please try again."
+                            } else {
+                                val recordingResult = apiClient.sendVoiceAudio(audioFile)
+                                audioFile.delete()
+                                if (recordingResult.success) {
+                                    lastVoiceReply = recordingResult.reply
+                                    voiceStatus = "Complete."
+                                } else {
+                                    voiceStatus = recordingResult.error ?: recordingResult.reply
+                                }
+                            }
                         }
                     } else {
-                        isListening = true
-                        voiceStatus = "Listening... Speak directive clearly"
+                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                            try {
+                                recorder.start(coroutineScope)
+                                isListening = true
+                                voiceStatus = "Listening... Tap the microphone again when finished."
+                            } catch (e: IllegalStateException) {
+                                voiceStatus = e.message ?: "Microphone is unavailable."
+                            }
+                        } else {
+                            recordPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        }
                     }
                 },
                 modifier = Modifier.size(70.dp).background(if (isListening) MatrixGreen else MatrixCard, CircleShape)

@@ -14,10 +14,13 @@ router = APIRouter(prefix="/memory", tags=["Personal Knowledge & Memory"])
 
 class MemoryCreatePayload(BaseModel):
     key: str
-    content: str
+    content: Optional[str] = None  # Legacy field; if omitted, 'value' is used for compatibility
+    value: Any = None  # Accept 'value' field from clients (legacy compatibility - may be dict or str)
     category: str = "personal"
     tags: List[str] = Field(default_factory=list)
     relevance_score: float = 1.0
+from pydantic import BaseModel, Field
+from typing import Any, List, Dict, Optional
 
 
 class MemorySearchResponse(BaseModel):
@@ -78,9 +81,12 @@ async def export_all_memories():
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def store_memory(payload: MemoryCreatePayload):
     """Save an approved user memory or preference with privacy scrubbing."""
+    # Use 'content' if provided, otherwise fall back to 'value' for legacy compatibility
+    # Convert value to string if needed (legacy compatibility - may be dict or str)
+    content = payload.content if payload.content is not None else (str(payload.value) if payload.value is not None else "")
     saved = await memory_manager.add_memory(
         key=payload.key,
-        content=payload.content,
+        content=content,
         category=payload.category,
         tags=payload.tags,
         relevance_score=payload.relevance_score

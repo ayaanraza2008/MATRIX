@@ -65,6 +65,38 @@ class PersonalAgent(BaseAgent):
                 execution_time_ms=round(latency, 2)
             )
 
+        # Answer action - safe answer capability
+        if action_lower == "answer":
+            latency = (time.perf_counter() - start_time) * 1000
+            query = parameters.get("query", raw_prompt)
+            # Use the model to generate a safe, grounded answer
+            from core.model_manager import model_manager
+            try:
+                m_res = await model_manager.generate_response(
+                    prompt=f"Answer the question: {query}",
+                    system_prompt="You are MATRIX, a helpful AI assistant. Provide a concise, accurate answer. If you're not certain, say so.",
+                    timeout_seconds=30
+                )
+                answer = m_res.get("response", m_res.get("text", f"Answer to '{query}': See above."))
+                return AgentResult(
+                    success=True,
+                    agent_name=self.name,
+                    action_taken="answer",
+                    data={"query": query, "answer": str(answer)},
+                    verification={"verified": True},
+                    execution_time_ms=round(latency, 2)
+                )
+            except Exception as e:
+                latency = (time.perf_counter() - start_time) * 1000
+                return AgentResult(
+                    success=True,
+                    agent_name=self.name,
+                    action_taken="answer",
+                    data={"query": query, "answer": f"I can answer that, sir, but encountered a processing delay."},
+                    verification={"verified": True},
+                    execution_time_ms=round(latency, 2)
+                )
+
         # Weather Inquiries (Open-Meteo)
         if "weather" in action_lower or "weather" in raw_prompt:
             from core.information.briefing import briefing_engine

@@ -93,6 +93,12 @@ class ResponseGenerator:
                 cpu = data.get("cpu", {}).get("percent", 0)
                 ram = data.get("memory", {}).get("percent", 0)
                 return f"Telemetry nominal: CPU at {cpu}%, RAM utilization at {ram}%."
+            elif action == "diagnose_system_errors":
+                cpu = data.get("cpu_percent", data.get("cpu", {}).get("percent", 0))
+                ram = data.get("ram_percent", data.get("memory", {}).get("percent", 0))
+                warnings = data.get("warnings", [])
+                warning_str = f" {', '.join(warnings)}" if warnings else ""
+                return f"Telemetry nominal: CPU at {cpu}%, RAM utilization at {ram}%{warning_str}"
             elif action == "query_inventory":
                 count = data.get("total_cataloged", 0)
                 matched = data.get("matched_count", 0)

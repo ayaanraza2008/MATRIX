@@ -11,9 +11,18 @@ from core.reasoning_engine import reasoning_engine
 from core.task_router import task_router
 from core.orchestrator import orchestrator
 from core.brain import brain
+from core.pairing_manager import pairing_manager
 from repository_engine.github_scanner import github_scanner
 from repository_engine.repository_analyzer import repository_analyzer
 from api.server import app
+
+# Register test pairing token for this test suite only.
+# This token is NOT present in production - it is isolated to the test fixture.
+_pairing_token = pairing_manager.create_token(ttl_seconds=300)
+# Replace the registry with just the test token so lifecycle tests work cleanly
+from core.pairing_manager import PairingTokenRecord
+pairing_manager._registry.clear()
+pairing_manager._registry["mtx_pair_valid_test_token"] = PairingTokenRecord(token="mtx_pair_valid_test_token", ttl_seconds=300)
 
 
 @pytest.mark.asyncio
