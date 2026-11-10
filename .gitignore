@@ -91,3 +91,7 @@ data/
 pytest-cache-files-*/
 .venv/
 
+
+# Benchmark scratch
+.bench/
+
