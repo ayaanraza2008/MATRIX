@@ -65,6 +65,8 @@ jobs:
           pip install -r requirements.txt
       - name: Verify application imports
         run: python -c "import api.server; print('api.server import OK')"
+      - name: Adapter truthfulness audit (no fabricated success payloads)
+        run: python scripts/audit_adapter_truthfulness.py
       - name: Run test suite
         run: python -m pytest tests/ -v --junitxml=test-results.xml
       - name: Upload test results

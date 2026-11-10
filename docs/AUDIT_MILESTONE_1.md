@@ -356,3 +356,54 @@ must be fetched on a network with normal egress and measured with the same scrip
 **Model-selection consequence:** the measured 0.5B fits comfortably in 590 MB, which is the safe
 default on 8 GB. The README's 1.5B candidate must not be presented as the default until it has been
 measured on the target machine.
+
+---
+
+## 16. Milestone 6 — fabricated adapter results removed
+
+The worst integrity problem in the repository was **27 adapter operations that returned
+`success=True` with hard-coded payloads**. They never touched a device, a network, or the
+filesystem. Examples found by an AST audit:
+
+| File | Fabricated claim |
+|---|---|
+| `voice_audio_adapters.py` | `"transcript": "Test audio transcript", "confidence": 0.98`; `duration_sec = len(text) * 0.06` |
+| `security_mcp_adapters.py` | MCP firewall always `{"authorized": True, "threat_flags": []}` |
+| `memory_llm_adapters.py` | invented benchmark `{"latency_p50": 180.5, "throughput_tok_s": 42.0}` |
+| `workflow_productivity_adapters.py` | `{"pass_rate": "100%"}`, `{"seo_score": 94}`, `{"indexed_assets": 42}` |
+| `browser_web_adapters.py` | `{"completed": True, "steps_executed": 3}`, `{"tiles_rendered": 16}` |
+| `science_research_adapters.py` | fixed London geocode / `{"elevation_m": 35.0}` |
+| `mobile_mcp_adapter.py` | fake package list, fake view hierarchy, `mock_companion_ready: True` |
+
+### What changed
+
+1. **`core.tool_adapters.base_adapter.unimplemented_result()`** — one honest failure path
+   (`success=False`, `error="NOT IMPLEMENTED: …"`, `verification.implemented=false`).
+2. **27 constant-success sites replaced** with that failure, preserving the declared
+   `supported_operations` but no longer reporting work that never happened.
+3. **Real implementations where a backend already exists:**
+   - `ChatterboxAcousticsAdapter.synthesize_speech` now calls the real `tts_engine.speak()`,
+     verifies the file exists and measures duration with `soundfile` instead of guessing.
+   - `BrowserUseAdapter.search_web` parses DuckDuckGo results and returns an explicit failure
+     when nothing parses (previously it invented *"Structured information regarding … retrieved
+     successfully"*).
+   - `MobileMcpAdapter` is a real ADB bridge: `adb devices`, `pm list packages`,
+     `uiautomator dump` + XML parse; reports missing adb/device explicitly and no longer emits
+     `mock_companion_ready`.
+4. **Regression gate:** `core/tool_adapters/truthfulness.py` scans adapter ASTs for
+   `success=True` with fully literal payloads. It runs in CI
+   (`Adapter truthfulness audit`) and as a pytest test, so a new fabricated response fails the build.
+
+### Test results
+
+| Suite | Result |
+|---|---|
+| Foundation (7) · Brain & agents (9) · Extended (6) · Security (20) · Lifecycle (6) | PASSED |
+| Adapter truthfulness (6) | PASSED |
+| **Total** | **54 passed, 0 failed** |
+
+### Honest caveat
+
+The AST gate catches *entirely literal* payloads. Responses that mix literals with variables
+(e.g. `{"status": 200, "count": len(x)}` computed from nothing) are not caught automatically.
+The remaining adapters still need a manual pass; that is scheduled as milestone 7.

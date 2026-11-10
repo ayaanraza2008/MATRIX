@@ -8,7 +8,7 @@ Dedicated adapters for 4 repositories:
 import time
 import urllib.parse
 from typing import Dict, Any, List
-from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult
+from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult, unimplemented_result
 
 
 class EgoLiteWebAdapter(BaseAdapter):
@@ -94,13 +94,8 @@ class EgoLiteWebAdapter(BaseAdapter):
 
             else:  # headless_automation
                 latency = (time.perf_counter() - start_time) * 1000
-                return AdapterExecutionResult(
-                    success=True,
-                    adapter_id=self.adapter_id,
-                    operation=operation,
-                    data={"completed": True, "steps_executed": 3},
-                    verification={"automated": True},
-                    execution_time_ms=round(latency, 2)
+                return unimplemented_result(
+                    self.adapter_id, operation, "'headless_automation' has no real backend wired in this build", latency
                 )
         except Exception as ex:
             return AdapterExecutionResult(
@@ -182,13 +177,8 @@ class FreeClaudeCodeAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"bridge_active": True, "doc_summary": "Extracted API specifications and usage examples", "status": 200},
-            verification={"query_resolved": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )
 
 
@@ -220,11 +210,6 @@ class GodsEyeViewAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"tiles_rendered": 16, "projection": "WebMercator", "camera_altitude_m": 500, "status": 200},
-            verification={"geospatial_view_loaded": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )

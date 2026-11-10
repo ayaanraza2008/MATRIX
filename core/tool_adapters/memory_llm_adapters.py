@@ -6,7 +6,7 @@ Dedicated adapters for 3 repositories:
 """
 import time
 from typing import Dict, Any, List
-from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult
+from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult, unimplemented_result
 
 
 class AgentMemoryStorageAdapter(BaseAdapter):
@@ -143,33 +143,18 @@ class DshGodLlmAdapter(BaseAdapter):
 
         if op == "llm_routing":
             latency = (time.perf_counter() - start_time) * 1000
-            return AdapterExecutionResult(
-                success=True,
-                adapter_id=self.adapter_id,
-                operation=operation,
-                data={"provider": "deepseek-free-cloud", "model": "deepseek-v3", "context_window": 64000},
-                verification={"routed": True},
-                execution_time_ms=round(latency, 2)
+            return unimplemented_result(
+                self.adapter_id, operation, "'llm_routing' has no real backend wired in this build", latency
             )
         elif op == "model_benchmarking":
             latency = (time.perf_counter() - start_time) * 1000
-            return AdapterExecutionResult(
-                success=True,
-                adapter_id=self.adapter_id,
-                operation=operation,
-                data={"latency_p50": 180.5, "throughput_tok_s": 42.0, "status": "OPTIMAL"},
-                verification={"benchmarked": True},
-                execution_time_ms=round(latency, 2)
+            return unimplemented_result(
+                self.adapter_id, operation, "'model_benchmarking' has no real backend wired in this build", latency
             )
         else:
             latency = (time.perf_counter() - start_time) * 1000
-            return AdapterExecutionResult(
-                success=True,
-                adapter_id=self.adapter_id,
-                operation=operation,
-                data={"active_provider": "local_qwen_fallback", "tokens_remaining": 500000},
-                verification={"budgeted": True},
-                execution_time_ms=round(latency, 2)
+            return unimplemented_result(
+                self.adapter_id, operation, "'model_benchmarking' has no real backend wired in this build", latency
             )
 
 
@@ -201,11 +186,6 @@ class StrataProviderAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"strata_tier": "Tier-1-Fast-Local", "cache_hit_rate": 0.42, "model": "qwen2.5-0.5b"},
-            verification={"tier_arbitrated": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )

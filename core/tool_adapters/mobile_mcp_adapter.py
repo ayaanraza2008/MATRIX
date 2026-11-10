@@ -1,12 +1,23 @@
 """MATRIX Mobile & Android MCP Adapter.
 Integrates capabilities from mobile-next/mobile-mcp and garagehq/nightcrawler.
-Provides ADB device detection, package queries, and Android UI inspection bridge.
+Provides real ADB device detection, package queries, and Android UI inspection.
+
+Every operation talks to a live device through ``adb``. When no device is attached or
+``adb`` is missing the adapter reports an explicit failure instead of inventing a
+device, a package list, or a view hierarchy.
 """
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import time
 import shutil
 import subprocess
-from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult
+import xml.etree.ElementTree as ET
+from core.tool_adapters.base_adapter import (
+    BaseAdapter,
+    AdapterExecutionResult,
+    unimplemented_result,
+)
+
+COMPANION_PACKAGE = "com.matrix.ai"
 
 
 class MobileMcpAdapter(BaseAdapter):
@@ -50,85 +61,178 @@ class MobileMcpAdapter(BaseAdapter):
     def resource_requirements(self) -> Dict[str, Any]:
         return {"ram_mb": 150, "cpu_threads": 1, "requires_gpu": False, "supports_avx2": True}
 
+    # ---- ADB helpers -------------------------------------------------
+
+    def _adb_path(self) -> Optional[str]:
+        return shutil.which("adb")
+
+    def _run_adb(self, adb: str, *args: str, timeout: int = 8) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [adb, *args], capture_output=True, text=True, timeout=timeout, encoding="utf-8", errors="replace"
+        )
+
+    def _online_devices(self, adb: str) -> List[Dict[str, str]]:
+        devices: List[Dict[str, str]] = []
+        try:
+            result = self._run_adb(adb, "devices")
+        except (subprocess.TimeoutExpired, OSError):
+            return devices
+        for line in result.stdout.splitlines()[1:]:
+            parts = line.split()
+            if len(parts) >= 2 and parts[1] == "device":
+                devices.append({"device_id": parts[0], "status": "online"})
+        return devices
+
+    @staticmethod
+    def _pick_device(devices: List[Dict[str, str]], requested: Optional[str]) -> Optional[str]:
+        if requested:
+            return requested if any(d["device_id"] == requested for d in devices) else None
+        return devices[0]["device_id"] if devices else None
+
+    # ---- execution ---------------------------------------------------
+
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         op = operation.lower().strip()
+        adb = self._adb_path()
+
+        def elapsed() -> float:
+            return round((time.perf_counter() - start_time) * 1000, 2)
 
         try:
             if op == "check_adb_devices":
-                adb_path = shutil.which("adb")
-                devices = []
-                if adb_path:
-                    try:
-                        res = subprocess.run([adb_path, "devices"], capture_output=True, text=True, timeout=5)
-                        for line in res.stdout.strip().splitlines()[1:]:
-                            if "\tdevice" in line:
-                                devices.append({"device_id": line.split()[0], "status": "online"})
-                    except Exception:
-                        pass
+                if not adb:
+                    return unimplemented_result(
+                        self.adapter_id,
+                        operation,
+                        "adb is not installed or not on PATH (install Android platform-tools)",
+                        elapsed(),
+                    )
 
-                latency = (time.perf_counter() - start_time) * 1000
+                devices = self._online_devices(adb)
+                companion_installed: Optional[bool] = None
+                if devices:
+                    try:
+                        pkgs = self._run_adb(
+                            adb, "-s", devices[0]["device_id"], "shell", "pm", "list", "packages", COMPANION_PACKAGE
+                        )
+                        companion_installed = COMPANION_PACKAGE in (pkgs.stdout or "")
+                    except (subprocess.TimeoutExpired, OSError):
+                        companion_installed = None
+
                 return AdapterExecutionResult(
                     success=True,
                     adapter_id=self.adapter_id,
                     operation=operation,
                     data={
-                        "adb_installed": bool(adb_path),
+                        "adb_installed": True,
+                        "adb_path": adb,
                         "devices": devices,
-                        "mock_companion_ready": True
+                        "device_count": len(devices),
+                        "companion_installed": companion_installed,
                     },
-                    verification={"adb_checked": True},
-                    execution_time_ms=round(latency, 2)
+                    verification={"adb_queried": True},
+                    execution_time_ms=elapsed(),
                 )
 
-            elif op == "list_packages":
-                # Simulated or real package list
-                pkgs = [
-                    "com.matrix.assistant",
-                    "com.android.chrome",
-                    "com.google.android.apps.messaging",
-                    "com.google.android.dialer"
-                ]
-                latency = (time.perf_counter() - start_time) * 1000
+            if op in ("list_packages", "inspect_android_layout"):
+                if not adb:
+                    return unimplemented_result(
+                        self.adapter_id, operation, "adb is not installed or not on PATH", elapsed()
+                    )
+
+                devices = self._online_devices(adb)
+                serial = self._pick_device(devices, parameters.get("device_id"))
+                if not serial:
+                    return unimplemented_result(
+                        self.adapter_id,
+                        operation,
+                        "no online Android device found (connect a phone with USB debugging enabled)",
+                        elapsed(),
+                    )
+
+                if op == "list_packages":
+                    filter_str = (parameters.get("filter_str") or "").strip()
+                    result = self._run_adb(adb, "-s", serial, "shell", "pm", "list", "packages")
+                    if result.returncode != 0:
+                        return unimplemented_result(
+                            self.adapter_id,
+                            operation,
+                            f"'adb shell pm list packages' failed: {(result.stderr or '').strip()[:200]}",
+                            elapsed(),
+                        )
+                    packages = [
+                        line.replace("package:", "").strip()
+                        for line in (result.stdout or "").splitlines()
+                        if line.startswith("package:")
+                    ]
+                    if filter_str:
+                        packages = [p for p in packages if filter_str.lower() in p.lower()]
+
+                    return AdapterExecutionResult(
+                        success=True,
+                        adapter_id=self.adapter_id,
+                        operation=operation,
+                        data={"device_id": serial, "packages": packages, "count": len(packages)},
+                        verification={"package_list_read": True},
+                        execution_time_ms=elapsed(),
+                    )
+
+                # inspect_android_layout
+                dump = self._run_adb(
+                    adb, "-s", serial, "shell", "uiautomator", "dump", "/sdcard/matrix_window.xml", timeout=20
+                )
+                if dump.returncode != 0:
+                    return unimplemented_result(
+                        self.adapter_id,
+                        operation,
+                        f"uiautomator dump failed: {(dump.stderr or '').strip()[:200]}",
+                        elapsed(),
+                    )
+                xml_result = self._run_adb(adb, "-s", serial, "shell", "cat", "/sdcard/matrix_window.xml", timeout=20)
+                if xml_result.returncode != 0 or "<hierarchy" not in (xml_result.stdout or ""):
+                    return unimplemented_result(
+                        self.adapter_id,
+                        operation,
+                        "could not read the UI hierarchy dump from the device",
+                        elapsed(),
+                    )
+
+                root = ET.fromstring(xml_result.stdout)
+                views = []
+                for node in root.iter("node"):
+                    views.append(
+                        {
+                            "class": node.get("class", ""),
+                            "text": node.get("text", ""),
+                            "resource_id": node.get("resource-id", ""),
+                            "bounds": node.get("bounds", ""),
+                            "clickable": node.get("clickable") == "true",
+                        }
+                    )
+
                 return AdapterExecutionResult(
                     success=True,
                     adapter_id=self.adapter_id,
                     operation=operation,
-                    data={"packages": pkgs, "count": len(pkgs)},
-                    verification={"packages_listed": True},
-                    execution_time_ms=round(latency, 2)
+                    data={"device_id": serial, "views": views, "count": len(views)},
+                    verification={"ui_hierarchy_parsed": True},
+                    execution_time_ms=elapsed(),
                 )
 
-            elif op == "inspect_android_layout":
-                views = [
-                    {"class": "android.widget.TextView", "text": "MATRIX Mobile Companion", "id": "title_view"},
-                    {"class": "android.widget.Button", "text": "Speak to JARVIS", "id": "btn_listen"},
-                    {"class": "android.widget.Switch", "text": "Continuous Mode", "id": "switch_mode"}
-                ]
-                latency = (time.perf_counter() - start_time) * 1000
-                return AdapterExecutionResult(
-                    success=True,
-                    adapter_id=self.adapter_id,
-                    operation=operation,
-                    data={"views": views, "count": len(views)},
-                    verification={"views_extracted": True},
-                    execution_time_ms=round(latency, 2)
-                )
-
-            else:
-                return AdapterExecutionResult(
-                    success=False,
-                    adapter_id=self.adapter_id,
-                    operation=operation,
-                    error=f"Unsupported operation '{operation}'."
-                )
-
-        except Exception as e:
-            latency = (time.perf_counter() - start_time) * 1000
             return AdapterExecutionResult(
                 success=False,
                 adapter_id=self.adapter_id,
                 operation=operation,
-                error=str(e),
-                execution_time_ms=round(latency, 2)
+                error=f"Unsupported operation '{operation}'. Supported: {self.supported_operations}",
+                execution_time_ms=elapsed(),
+            )
+
+        except (subprocess.TimeoutExpired, OSError) as exc:
+            return unimplemented_result(
+                self.adapter_id, operation, f"adb call failed: {exc}", elapsed()
+            )
+        except ET.ParseError as exc:
+            return unimplemented_result(
+                self.adapter_id, operation, f"UI hierarchy XML could not be parsed: {exc}", elapsed()
             )

@@ -18,7 +18,7 @@ Dedicated adapters for 15 repositories:
 """
 import time
 from typing import Dict, Any, List
-from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult
+from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult, unimplemented_result
 
 
 class ImmichMediaAdapter(BaseAdapter):
@@ -49,13 +49,8 @@ class ImmichMediaAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"indexed_assets": 42, "media_types": ["image/jpeg", "image/png", "video/mp4"], "status": "SYNCED"},
-            verification={"media_indexed": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )
 
 
@@ -87,13 +82,8 @@ class Harness2WorkflowAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"benchmark_score": 0.96, "stage": "VERIFIED_PRODUCTION", "pass_rate": "100%"},
-            verification={"harness_evaluated": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )
 
 
@@ -125,13 +115,8 @@ class AutomatonWorkflowAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"state": "TERMINAL_SUCCESS", "transitions": ["INIT", "EXECUTE", "AUDIT", "DONE"]},
-            verification={"state_machine_completed": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )
 
 
@@ -163,13 +148,8 @@ class SparkAutomationAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"dispatcher_active": True, "active_jobs": 0, "processed_jobs": 15},
-            verification={"dispatcher_ready": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )
 
 
@@ -201,13 +181,8 @@ class RakazoFileOrganizerAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"organized_categories": {"documents": 12, "media": 8, "code": 45}, "duplicates_found": 0},
-            verification={"files_cataloged": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )
 
 
@@ -357,13 +332,8 @@ class CalDiySchedulerAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"available_slots": ["09:00", "11:30", "14:00", "16:30"], "timezone": "UTC"},
-            verification={"schedule_resolved": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )
 
 
@@ -477,13 +447,8 @@ class OpenSeoAuditAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"seo_score": 94, "meta_description": "Present", "h1_count": 1, "status": "HEALTHY"},
-            verification={"seo_audited": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )
 
 

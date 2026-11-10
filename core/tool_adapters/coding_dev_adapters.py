@@ -15,7 +15,7 @@ import os
 import sys
 import time
 from typing import Dict, Any, List
-from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult
+from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult, unimplemented_result
 
 
 class HermesAgentAdapter(BaseAdapter):
@@ -186,13 +186,8 @@ class ReaReverseEngineeringAdapter(BaseAdapter):
                 # Syntax / AST checks
                 parsed = ast.parse(code if code else "pass")
                 latency = (time.perf_counter() - start_time) * 1000
-                return AdapterExecutionResult(
-                    success=True,
-                    adapter_id=self.adapter_id,
-                    operation=operation,
-                    data={"valid": True, "syntax_valid": True},
-                    verification={"verified": True},
-                    execution_time_ms=round(latency, 2)
+                return unimplemented_result(
+                    self.adapter_id, operation, "operation has no real backend wired in this build", latency
                 )
         except Exception as ex:
             return AdapterExecutionResult(
@@ -231,13 +226,8 @@ class CapCaptureAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"capture_backend": "DXGI/MediaFoundation", "modes": ["window", "fullscreen", "region"], "valid": True},
-            verification={"cap_engine_ready": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )
 
 

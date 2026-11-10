@@ -7,8 +7,9 @@ Dedicated adapters for 5 repositories:
 5. cjpais/Handy
 """
 import time
+from pathlib import Path
 from typing import Dict, Any, List
-from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult
+from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult, unimplemented_result
 
 
 class ChatterboxAcousticsAdapter(BaseAdapter):
@@ -53,44 +54,67 @@ class ChatterboxAcousticsAdapter(BaseAdapter):
         if op == "synthesize_speech":
             text = parameters.get("text", "System ready.")
             emotion = parameters.get("emotion", "calm_authoritative")
+            try:
+                from voice.text_to_speech.engine import tts_engine
+
+                audio_path = await tts_engine.speak(text=text, play_audio=False)
+            except Exception as exc:
+                latency = (time.perf_counter() - start_time) * 1000
+                return unimplemented_result(
+                    self.adapter_id,
+                    operation,
+                    f"local TTS backend raised: {exc}",
+                    latency,
+                )
+
+            if not audio_path or not Path(audio_path).exists():
+                latency = (time.perf_counter() - start_time) * 1000
+                return unimplemented_result(
+                    self.adapter_id,
+                    operation,
+                    "no audio file was produced (offline TTS backend unavailable)",
+                    latency,
+                )
+
+            duration = None
+            try:
+                import soundfile as sf
+
+                duration = round(float(sf.info(str(audio_path)).duration), 2)
+            except Exception:
+                duration = None
+
             latency = (time.perf_counter() - start_time) * 1000
             return AdapterExecutionResult(
                 success=True,
                 adapter_id=self.adapter_id,
                 operation=operation,
-                data={"audio_format": "wav", "sample_rate": 22050, "duration_sec": round(len(text) * 0.06, 2), "emotion": emotion},
-                verification={"synthesized": True},
-                execution_time_ms=round(latency, 2)
+                data={
+                    "audio_path": str(audio_path),
+                    "size_bytes": Path(audio_path).stat().st_size,
+                    "duration_sec": duration,
+                    "emotion": emotion,
+                },
+                verification={
+                    "audio_file_exists": True,
+                    "duration_measured": duration is not None,
+                },
+                execution_time_ms=round(latency, 2),
             )
         elif op == "transcribe_audio":
             latency = (time.perf_counter() - start_time) * 1000
-            return AdapterExecutionResult(
-                success=True,
-                adapter_id=self.adapter_id,
-                operation=operation,
-                data={"transcript": "Test audio transcript", "confidence": 0.98},
-                verification={"transcribed": True},
-                execution_time_ms=round(latency, 2)
+            return unimplemented_result(
+                self.adapter_id, operation, "'transcribe_audio' has no real backend wired in this build", latency
             )
         elif op == "voice_cloning":
             latency = (time.perf_counter() - start_time) * 1000
-            return AdapterExecutionResult(
-                success=True,
-                adapter_id=self.adapter_id,
-                operation=operation,
-                data={"embedding_dim": 256, "profile_id": "jarvis_custom", "status": "READY"},
-                verification={"cloned": True},
-                execution_time_ms=round(latency, 2)
+            return unimplemented_result(
+                self.adapter_id, operation, "'voice_cloning' has no real backend wired in this build", latency
             )
         else:  # audio_filter
             latency = (time.perf_counter() - start_time) * 1000
-            return AdapterExecutionResult(
-                success=True,
-                adapter_id=self.adapter_id,
-                operation=operation,
-                data={"applied": True, "filter": "highpass_notch_50hz", "snr_db": 28.4},
-                verification={"filtered": True},
-                execution_time_ms=round(latency, 2)
+            return unimplemented_result(
+                self.adapter_id, operation, "'audio_filter' has no real backend wired in this build", latency
             )
 
 
@@ -122,13 +146,8 @@ class AtticusAudioAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"buffer_latency_ms": 12.5, "stream_active": True, "sample_rate": 16000, "valid": True},
-            verification={"stream_pipeline_ok": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )
 
 
@@ -160,13 +179,8 @@ class OpenWhisprAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"text": "Recognized speech query", "model": "whisper-base-int8", "latency_ms": 45.0, "valid": True},
-            verification={"transcribed": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )
 
 
@@ -198,13 +212,8 @@ class OmniVoiceSynthesisAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"waveform_frames": 44100, "lang": "en-US", "codec": "pcm_s16le", "valid": True},
-            verification={"synthesized": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )
 
 
@@ -236,11 +245,6 @@ class HandyVoiceAssistantAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"hotword_listening": True, "hotword": "matrix", "energy_threshold": 300, "valid": True},
-            verification={"handy_active": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )
