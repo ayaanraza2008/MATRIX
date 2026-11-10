@@ -1,8 +1,19 @@
 """MATRIX System Metrics & Telemetry API Route.
+
+All values are measured from the host at request time (psutil / platform / registry).
+No hardware identity is hard-coded: unrecognised values surface as ``"unreported"``.
 """
 from fastapi import APIRouter, status
 import platform
 import psutil
+
+from config.hardware import (
+    cpu_name,
+    gpu_name,
+    logical_threads,
+    physical_cores,
+    storage_snapshot,
+)
 from config.settings import settings
 
 router = APIRouter(prefix="/system", tags=["System Telemetry"])
@@ -18,27 +29,27 @@ async def get_system_info():
             "release": platform.release(),
             "version": platform.version(),
             "architecture": platform.machine(),
-            "processor": platform.processor()
+            "processor": platform.processor(),
         },
         "python": {
             "version": platform.python_version(),
-            "implementation": platform.python_implementation()
+            "implementation": platform.python_implementation(),
         },
         "hardware": {
-            "cpu_name": "AMD Ryzen 7 5700U with Radeon Graphics",
-            "physical_cores": settings.cpu_cores,
-            "logical_processors": settings.cpu_threads,
+            "cpu_name": cpu_name(),
+            "physical_cores": physical_cores(),
+            "logical_processors": logical_threads(),
             "avx2_supported": settings.avx2_enabled,
-            "gpu_name": "AMD Radeon(TM) Graphics (Integrated APU)",
+            "gpu_name": gpu_name(),
             "total_ram_bytes": vm.total,
-            "total_ram_gb": round(vm.total / (1024 ** 3), 2)
+            "total_ram_gb": round(vm.total / (1024**3), 2),
         },
         "storage_layout": {
             "data_root": str(settings.data_dir),
             "models_root": str(settings.models_dir),
             "cache_root": str(settings.cache_dir),
-            "logs_root": str(settings.logs_dir)
-        }
+            "logs_root": str(settings.logs_dir),
+        },
     }
 
 
@@ -52,43 +63,30 @@ async def get_live_metrics():
     return {
         "cpu": {
             "percent": cpu_percent,
-            "frequency_mhz": round(cpu_freq.current, 1) if cpu_freq else 0
+            "frequency_mhz": round(cpu_freq.current, 1) if cpu_freq else 0,
         },
         "memory": {
             "percent": vm.percent,
             "used_mb": round(vm.used / (1024 * 1024), 1),
             "available_mb": round(vm.available / (1024 * 1024), 1),
-            "total_mb": round(vm.total / (1024 * 1024), 1)
+            "total_mb": round(vm.total / (1024 * 1024), 1),
         },
-        "status": "nominal" if vm.percent < 85 else "warning"
+        "status": "nominal" if vm.percent < 85 else "warning",
     }
 
 
 @router.get("/telemetry", status_code=status.HTTP_200_OK)
 async def get_system_telemetry():
-    """Retrieve comprehensive verified real-time hardware, storage, and OS telemetry."""
+    """Retrieve comprehensive real-time hardware, storage, and OS telemetry."""
     import time
+
     vm = psutil.virtual_memory()
     swap = psutil.swap_memory()
     cpu_percent = psutil.cpu_percent(interval=None)
     per_cpu = psutil.cpu_percent(interval=None, percpu=True)
     cpu_freq = psutil.cpu_freq()
 
-    # Disk telemetry for host partitions
-    disks = {}
-    for drive in ["C:", "D:"]:
-        try:
-            usage = psutil.disk_usage(f"{drive}\\")
-            disks[drive] = {
-                "total_gb": round(usage.total / (1024 ** 3), 2),
-                "free_gb": round(usage.free / (1024 ** 3), 2),
-                "used_gb": round(usage.used / (1024 ** 3), 2),
-                "used_percent": usage.percent
-            }
-        except Exception:
-            disks[drive] = {"available": False}
-
-    # Battery telemetry if running on laptop
+    # Battery telemetry if running on a laptop
     battery_info = None
     try:
         battery = psutil.sensors_battery()
@@ -96,7 +94,11 @@ async def get_system_telemetry():
             battery_info = {
                 "percent": battery.percent,
                 "power_plugged": battery.power_plugged,
-                "secsleft": battery.secsleft if battery.secsleft != psutil.POWER_TIME_UNLIMITED else None
+                "secsleft": (
+                    battery.secsleft
+                    if battery.secsleft != psutil.POWER_TIME_UNLIMITED
+                    else None
+                ),
             }
     except Exception:
         pass
@@ -119,9 +121,10 @@ async def get_system_telemetry():
             "percent": cpu_percent,
             "per_cpu_percent": per_cpu,
             "frequency_mhz": round(cpu_freq.current, 1) if cpu_freq else 0,
-            "physical_cores": psutil.cpu_count(logical=False) or settings.cpu_cores,
-            "logical_threads": psutil.cpu_count(logical=True) or settings.cpu_threads,
-            "architecture": platform.machine()
+            "physical_cores": physical_cores(),
+            "logical_threads": logical_threads(),
+            "architecture": platform.machine(),
+            "name": cpu_name(),
         },
         "memory": {
             "percent": vm.percent,
@@ -129,14 +132,14 @@ async def get_system_telemetry():
             "available_mb": round(vm.available / (1024 * 1024), 1),
             "total_mb": round(vm.total / (1024 * 1024), 1),
             "swap_used_mb": round(swap.used / (1024 * 1024), 1),
-            "low_ram_mode": settings.low_ram_mode
+            "low_ram_mode": settings.low_ram_mode,
         },
-        "storage": disks,
+        "storage": storage_snapshot(),
         "battery": battery_info,
         "process_count": len(psutil.pids()),
         "host": {
             "os": platform.system(),
             "release": platform.release(),
-            "hostname": platform.node()
-        }
+            "hostname": platform.node(),
+        },
     }

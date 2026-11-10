@@ -28,7 +28,7 @@ from config.logging_config import get_logger
 
 logger = get_logger("core.account_registry")
 
-ACCOUNT_DIR = Path(r"D:\matrix_data\accounts")
+ACCOUNT_DIR = settings.data_dir / "accounts"
 ACCOUNT_STORE = ACCOUNT_DIR / "accounts.json"
 VAULT_STORE = ACCOUNT_DIR / "vault.dat"
 

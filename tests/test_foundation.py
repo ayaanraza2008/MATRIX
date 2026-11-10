@@ -2,6 +2,7 @@
 Validates configuration, database integrity, REST API endpoints, and system telemetry.
 """
 import pytest
+import psutil
 from httpx import AsyncClient, ASGITransport
 from pathlib import Path
 from sqlalchemy import select
@@ -15,13 +16,14 @@ from api.server import app
 
 @pytest.mark.asyncio
 async def test_settings_and_paths():
-    """Verify configuration settings, hardware profile, and storage paths."""
+    """Verify configuration resolves a usable, portable storage layout."""
     assert settings.app_name == "MATRIX"
-    assert settings.cpu_cores == 8
-    assert settings.cpu_threads == 16
-    assert settings.avx2_enabled is True
-    assert settings.low_ram_mode is True
-    assert str(settings.data_dir).startswith("D:") or Path(settings.data_dir).exists()
+    assert settings.cpu_cores >= 1
+    assert settings.cpu_threads >= settings.cpu_cores
+    assert settings.data_dir.exists() and settings.data_dir.is_dir()
+    # Storage contract: database always follows the resolved data root.
+    assert settings.database_url.startswith("sqlite+aiosqlite:///")
+    assert (settings.data_dir / "matrix.db").as_posix() in settings.database_url
 
 
 @pytest.mark.asyncio
@@ -53,14 +55,15 @@ async def test_health_endpoint():
         assert data["database"]["connected"] is True
         assert data["database"]["type"] == "SQLite (Async aiosqlite)"
 
-        # Verify real hardware telemetry
+        # Verify real hardware telemetry matches what the host reports
         assert "system" in data
-        assert data["system"]["cpu_cores_physical"] == 8
-        assert data["system"]["cpu_threads_logical"] == 16
+        assert data["system"]["cpu_cores_physical"] == psutil.cpu_count(logical=False)
+        assert data["system"]["cpu_threads_logical"] == psutil.cpu_count(logical=True)
         assert data["system"]["ram_total_mb"] > 0
         assert data["system"]["ram_used_mb"] > 0
         assert "storage" in data
-        assert "C:" in data["storage"]
+        assert len(data["storage"]) >= 1
+        assert any(info.get("total_gb", 0) > 0 for info in data["storage"].values())
 
 
 @pytest.mark.asyncio
@@ -71,9 +74,11 @@ async def test_system_info_and_metrics():
         info_resp = await client.get("/api/v1/system/info")
         assert info_resp.status_code == 200
         info_data = info_resp.json()
-        assert info_data["hardware"]["physical_cores"] == 8
-        assert info_data["hardware"]["logical_processors"] == 16
-        assert "AMD" in info_data["hardware"]["cpu_name"]
+        assert info_data["hardware"]["physical_cores"] == psutil.cpu_count(logical=False)
+        assert info_data["hardware"]["logical_processors"] == psutil.cpu_count(logical=True)
+        cpu_name = info_data["hardware"]["cpu_name"]
+        assert isinstance(cpu_name, str) and cpu_name.strip()
+        assert cpu_name != "unreported", "CPU model should be detectable on this host"
 
         metrics_resp = await client.get("/api/v1/system/metrics")
         assert metrics_resp.status_code == 200

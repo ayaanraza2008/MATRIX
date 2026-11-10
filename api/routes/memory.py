@@ -19,8 +19,6 @@ class MemoryCreatePayload(BaseModel):
     category: str = "personal"
     tags: List[str] = Field(default_factory=list)
     relevance_score: float = 1.0
-from pydantic import BaseModel, Field
-from typing import Any, List, Dict, Optional
 
 
 class MemorySearchResponse(BaseModel):

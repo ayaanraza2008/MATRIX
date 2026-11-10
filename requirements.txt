@@ -1,45 +1,64 @@
-# ==========================================
-# MATRIX: Python Dependencies (Phase 1+)
-# Python 3.12+ (Windows 11 x64, Ryzen 7 AVX2)
-# ==========================================
+# ==========================================================
+# MATRIX: Python Runtime Dependencies
+# Target: Windows 11 x64 (verified on AMD Ryzen 7 5700U, 8 GB RAM, CPU-only)
+# Python: 3.12
+#
+# This list is the *verified* import surface of the FastAPI application:
+# `pip install -r requirements.txt && python -c "import api.server"` must succeed.
+# Windows-only packages are marked with environment markers so the file stays
+# installable on CI/Linux for linting and static analysis.
+# ==========================================================
 
-# Core Backend Framework
+# --- Core backend framework -----------------------------------------------
 fastapi>=0.115.0
 uvicorn[standard]>=0.32.0
+starlette>=0.38.0
 pydantic>=2.9.0
 pydantic-settings>=2.5.0
 python-dotenv>=1.0.1
-starlette>=0.38.0
+python-multipart>=0.0.9
 websockets>=13.0
 
-# Database & Async ORM
+# --- Database (async SQLite) ---------------------------------------------
 SQLAlchemy>=2.0.35
 aiosqlite>=0.20.0
-greenlet>=3.1.0
+greenlet>=3.1.0          # required by SQLAlchemy's asyncio extension
 
-# System & Hardware Telemetry
+# --- System telemetry & HTTP clients -------------------------------------
 psutil>=6.0.0
 rich>=13.8.0
-
-# HTTP & Async Client
 httpx>=0.27.0
 aiohttp>=3.10.0
 
-# Security & Utilities
-python-jose[cryptography]>=3.3.0
-passlib[bcrypt]>=1.7.4
+# --- Vision / imaging -----------------------------------------------------
+numpy>=1.26.0
+scipy>=1.13.0
+Pillow>=10.4.0
+opencv-python>=4.10.0
 
-# Testing
-pytest>=8.3.0
-pytest-asyncio>=0.24.0
-
-# Desktop & PC Automation (Ready for Phase 5)
-pywin32>=306
-pywinauto>=0.6.8
-pyautogui>=0.9.54
-
-# Speech & Audio (Ready for Phase 4)
+# --- Voice pipeline -------------------------------------------------------
 sounddevice>=0.5.0
 soundfile>=0.12.1
-faster-whisper>=1.0.0
-kokoro-onnx>=0.6.0
+edge-tts>=6.1.12
+openwakeword>=0.6.0
+onnxruntime>=1.19.0
+
+# --- Document parsing -----------------------------------------------------
+python-docx>=1.1.2
+openpyxl>=3.1.5
+PyPDF2>=3.0.1
+beautifulsoup4>=4.12.3
+
+# --- Windows desktop automation (skipped on non-Windows CI) ---------------
+pywin32>=306; sys_platform == "win32"
+pywinauto>=0.6.8; sys_platform == "win32"
+winsdk>=1.0.0b10; sys_platform == "win32"
+pycaw>=20240210; sys_platform == "win32"
+pyttsx3>=2.90; sys_platform == "win32"
+keyboard>=0.13.5; sys_platform == "win32"
+pyautogui>=0.9.54; sys_platform == "win32"
+pygetwindow>=0.0.9; sys_platform == "win32"
+
+# --- Testing --------------------------------------------------------------
+pytest>=8.3.0
+pytest-asyncio>=0.24.0

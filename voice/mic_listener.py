@@ -25,7 +25,7 @@ from config.settings import settings
 from config.logging_config import get_logger
 
 logger = get_logger("voice.mic_listener")
-CONFIG_PATH = Path(r"D:\matrix_data\config\audio_device.json")
+CONFIG_PATH = settings.data_dir / "config" / "audio_device.json"
 
 
 class NativeMicListener:

@@ -5,12 +5,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import asyncio
 import time
 import uuid
 
 from config.settings import settings
 from config.logging_config import get_logger
 from database.init_db import init_database
+from security.authentication.api_access import is_trusted_client, matches_api_token
 from api.routes import (
     health, system, sessions, capabilities, devices, memory, voice, vision, repositories,
     automation, files, audit, developer, integrations, airtouch, telephony, briefing, security
@@ -33,9 +35,9 @@ async def lifespan(app: FastAPI):
     else:
         logger.error("Database initialization encountered an error!")
 
-    # Wire hands-free voice manager & orchestrator telemetry to WebSocket broker
+    # Optional interactive subsystems: voice broker, microphone listener, model warm-up.
+    # These depend on audio hardware and are expected to fail on headless hosts.
     try:
-        import asyncio
         from voice.conversation.manager import hands_free_manager
         from core.orchestrator import orchestrator
 
@@ -46,25 +48,26 @@ async def lifespan(app: FastAPI):
         orchestrator.subscribe_progress(_broadcast_to_ws)
         logger.info("Hands-Free voice and orchestrator telemetry wired to WebSocket broker.")
 
-        # Start persistent native background microphone service
         from voice.mic_listener import mic_listener
         mic_listener.start(asyncio.get_running_loop())
         logger.info("Persistent background native microphone listener service started.")
 
-        # Warm up local LLM model asynchronously on startup to eliminate cold-start latency
         from core.model_manager import model_manager
         asyncio.create_task(asyncio.to_thread(model_manager.load_local_model))
         logger.info("Local LLM model background warm-up task dispatched.")
     except Exception as e:
-        logger.warning(f"Could not hook hands-free event broker, mic listener, or model preloader: {e}")
+        logger.warning(f"Optional voice/model subsystems unavailable on this host: {e}")
 
-    
-        # Start persistent background task scheduler and Autonomy Core
+    # Persistent background scheduler and Autonomy Core (must start on every host).
+    try:
         from automation.scheduler.engine import background_scheduler
         await background_scheduler.start()
         from core.autonomy.autonomous_core import autonomy_core
         await autonomy_core.initialize()
         logger.info("Autonomous persistent background task scheduler and Autonomy Core online.")
+    except Exception as e:
+        logger.error(f"Failed to start background scheduler/Autonomy Core: {e}")
+
     logger.info(f"MATRIX Server online at http://{settings.host}:{settings.port}")
     yield
     try:
@@ -188,16 +191,30 @@ else:
 
 @app.websocket("/ws/events")
 async def websocket_events(websocket: WebSocket):
-    """Bidirectional real-time event socket for UI command center and mobile companions."""
+    """Bidirectional real-time event socket for UI command center and mobile companions.
+
+    Local clients are trusted; remote clients must present a valid MATRIX API token or a
+    paired device token. Without a token the socket is closed instead of being granted
+    full broker access (previously any client could connect anonymously).
+    """
+    client_host = websocket.client.host if websocket.client else None
     token = websocket.query_params.get("token")
-    if token:
-        from core.device_auth import validate_token_raw
-        from database.session import AsyncSessionLocal
-        async with AsyncSessionLocal() as session:
-            device = await validate_token_raw(token, session)
-            if not device:
-                await websocket.close(code=4001, reason="Unauthorized or revoked device token")
-                return
+    authorized = is_trusted_client(client_host)
+
+    if not authorized and token:
+        if matches_api_token(token):
+            authorized = True
+        else:
+            from core.device_auth import validate_token_raw
+            from database.session import AsyncSessionLocal
+
+            async with AsyncSessionLocal() as session:
+                authorized = (await validate_token_raw(token, session)) is not None
+
+    if not authorized:
+        logger.warning("Rejected unauthenticated WebSocket client from %s", client_host)
+        await websocket.close(code=4001, reason="Unauthorized: provide a valid token")
+        return
 
     await ws_manager.connect(websocket)
     from voice.conversation.manager import hands_free_manager, ConversationMode

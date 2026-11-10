@@ -86,36 +86,36 @@ class ComputerAgent(BaseAgent):
         }
 
     def _simulate_click(self, x: int, y: int, click_type: str = "left") -> AgentResult:
-        """Simulate a mouse click at given coordinates. Returns AgentResult."""
+        """Click at absolute screen coordinates via the Win32 input API.
+
+        ``SendMessage`` was previously used with a zero lParam, which delivered the
+        click to the window's origin instead of the requested point, and ``win32con``
+        was never imported (NameError on every call). This implementation moves the
+        cursor and injects real mouse events, with a pyautogui fallback.
+        """
         try:
-            import win32gui
-            
-            hwnd = win32gui.WindowFromPoint((x, y))
-            if hwnd:
-                if click_type == "left":
-                    win32gui.SendMessage(hwnd, win32con.WMLBUTTONDOWN, 0, 0)
-                    win32gui.SendMessage(hwnd, win32con.WMLBUTTONUP, 0, 0)
-                elif click_type == "right":
-                    win32gui.SendMessage(hwnd, win32con.WMRBUTTONDOWN, 0, 0)
-                    win32gui.SendMessage(hwnd, win32con.WMRBUTTONUP, 0, 0)
-                elif click_type == "double":
-                    win32gui.SendMessage(hwnd, win32con.WMLBUTTONDOWN, 0, 0)
-                    time.sleep(0.1)
-                    win32gui.SendMessage(hwnd, win32con.WMLBUTTONUP, 0, 0)
-                
-                return AgentResult(
-                    success=True,
-                    agent_name=self.name,
-                    action_taken=f"mouse_{click_type}_click",
-                    data={"coordinates": (x, y), "click_type": click_type}
-                )
+            import win32api
+            import win32con
+
+            win32api.SetCursorPos((int(x), int(y)))
+            if click_type == "right":
+                down, up = win32con.MOUSEEVENTF_RIGHTDOWN, win32con.MOUSEEVENTF_RIGHTUP
             else:
-                return AgentResult(
-                    success=False,
-                    agent_name=self.name,
-                    action_taken="mouse_click",
-                    error="No window at coordinates"
-                )
+                down, up = win32con.MOUSEEVENTF_LEFTDOWN, win32con.MOUSEEVENTF_LEFTUP
+
+            repeats = 2 if click_type == "double" else 1
+            for _ in range(repeats):
+                win32api.mouse_event(down, 0, 0, 0, 0)
+                win32api.mouse_event(up, 0, 0, 0, 0)
+                if repeats > 1:
+                    time.sleep(0.05)
+
+            return AgentResult(
+                success=True,
+                agent_name=self.name,
+                action_taken=f"mouse_{click_type}_click",
+                data={"coordinates": (x, y), "click_type": click_type, "backend": "win32"},
+            )
         except Exception as e:
             # Fallback: use pyautogui
             try:

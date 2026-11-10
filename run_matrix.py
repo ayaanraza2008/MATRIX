@@ -29,14 +29,15 @@ def preflight_check():
     if py_ver.major < 3 or (py_ver.major == 3 and py_ver.minor < 10):
         print("[!] Warning: MATRIX requires Python 3.10+.")
         
-    # 2. Check Data Root
-    data_dir = Path("D:/matrix_data")
+    # 2. Check Data Root (resolved by config.settings: env override -> D: if writable -> ./data)
+    from config.settings import settings as matrix_settings
+    data_dir = Path(matrix_settings.data_dir)
     if not data_dir.exists():
         try:
             data_dir.mkdir(parents=True, exist_ok=True)
             print(f"[+] Created storage root: {data_dir}")
         except Exception as e:
-            print(f"[!] Warning: Could not create {data_dir} ({e}). Falling back to local storage.")
+            print(f"[!] Warning: Could not create {data_dir} ({e}).")
     else:
         print(f"[+] Storage Root: {data_dir} (Verified)")
 
