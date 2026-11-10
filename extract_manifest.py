@@ -1,4 +1,4 @@
-import zipfile, re
+import zipfile
 
 apk_path = r"C:\Users\Ali Raza Zaidi\Desktop\matrix\mobile\android_app\app\build\outputs\apk\debug\app-debug.apk"
 with zipfile.ZipFile(apk_path, 'r') as zf:

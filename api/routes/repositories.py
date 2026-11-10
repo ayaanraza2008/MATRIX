@@ -2,13 +2,13 @@
 Exposes repository evaluations, autonomous tool selection, adapter management,
 execution endpoints, dependency installation, and capability manifests.
 """
-from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, HTTPException, Query, Body
+from typing import Dict, Any, Optional
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from core.repository_intelligence.engine import repo_intelligence
 from core.tool_adapters.manager import adapter_manager
-from core.capability_registry.registry import capability_registry, CapabilityMaturity
+from core.capability_registry.registry import capability_registry
 from core.autonomous_installer.installer import autonomous_installer
 from core.repository_intelligence.resource_guard import resource_guard
 from core.model_manager import model_manager

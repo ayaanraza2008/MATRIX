@@ -2,10 +2,10 @@
 Exposes autonomy levels, pending Level 4 approval gates, approval/rejection endpoints,
 and security scopes.
 """
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Dict, Any, List, Optional
-from security.permissions.manager import security_manager, AutonomyLevel
+from typing import Dict, Optional
+from security.permissions.manager import security_manager
 from config.logging_config import get_logger
 
 logger = get_logger("api.security")

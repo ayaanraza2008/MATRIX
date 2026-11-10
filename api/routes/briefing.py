@@ -5,9 +5,9 @@ Endpoints:
 - GET /api/v1/briefing/away-summary
 - POST /api/v1/briefing/speak
 """
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
-from typing import Optional, Dict, Any
+from typing import Optional
 from core.information.briefing import briefing_engine
 from voice.text_to_speech.engine import tts_engine
 from config.logging_config import get_logger

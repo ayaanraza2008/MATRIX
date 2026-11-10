@@ -7,8 +7,8 @@ Provides endpoints for:
 - Call history and policy management
 """
 from fastapi import APIRouter, HTTPException, Request, Form, Response, status
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, List
+from pydantic import BaseModel
+from typing import Optional, Dict, Any
 import time
 import os
 import hmac
@@ -17,7 +17,6 @@ from core.telephony.engine import telephony_engine, OutboundCallingPolicy, is_va
 from core.telephony.twilio_security import verify_twilio_request
 from core.telephony.bland_client import bland_client, DEFAULT_MATRIX_PHONE_TASK, DEFAULT_OPENING_SENTENCE
 from core.brain import brain
-from voice.text_to_speech.engine import tts_engine
 from config.logging_config import get_logger
 
 logger = get_logger("api.telephony")

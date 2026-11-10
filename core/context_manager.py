@@ -6,7 +6,6 @@ from typing import List, Dict, Any, Optional
 import re
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
-from config.settings import settings
 
 
 class ContextMessage(BaseModel):

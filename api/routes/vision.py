@@ -2,13 +2,12 @@
 Provides camera capture, desktop screenshot analysis, native OCR, perceptual vision inspection,
 and direct image frame serving.
 """
-from fastapi import APIRouter, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional
 from pathlib import Path
 import time
-import shutil
 
 from vision.camera.capture import camera_capture
 from vision.screenshot.capture import desktop_screen_capture

@@ -2,11 +2,8 @@
 Real Home Assistant REST API client for smart device telemetry and automation control.
 Interacts with local/remote Home Assistant instances via Long-Lived Access Tokens.
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 import os
-import json
-import time
-from pathlib import Path
 import httpx
 
 from config.settings import settings

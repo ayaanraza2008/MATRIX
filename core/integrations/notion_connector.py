@@ -2,11 +2,8 @@
 Real Notion API client (https://api.notion.com/v1) using internal integration secret tokens.
 Supports searching pages/databases, reading pages, creating notes, and task synchronization.
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 import os
-import json
-import time
-from pathlib import Path
 import httpx
 
 from config.settings import settings

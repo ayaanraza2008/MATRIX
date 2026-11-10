@@ -1,7 +1,7 @@
 """MATRIX Autonomous Workflows & Scheduling Agent.
 Executes multi-step DAG workflows, persists checkpoints in SQLite, and handles crash recovery.
 """
-from typing import Dict, Any, List
+from typing import Dict, Any
 import time
 import uuid
 from sqlalchemy import select

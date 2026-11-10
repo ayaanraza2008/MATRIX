@@ -3,7 +3,7 @@ Captures real webcam frames, performs real desktop screen capture across native 
 extracts on-screen text via native Windows 11 OCR, and performs perceptual scene analysis.
 Gracefully handles environments where OpenCV or related vision libraries are unavailable.
 """
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 import time
 from pathlib import Path
 from agents.base_agent import BaseAgent, AgentResult, AgentCapability

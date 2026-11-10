@@ -3,7 +3,7 @@ Handles model discovery, health checks, resource-aware routing, memory benchmark
 and failover between local GGUF models (llama-cpp-python), Ollama, Gemini Cloud,
 and the internal deterministic rule engine.
 """
-from typing import Dict, Any, List, Optional
+from typing import List, Optional
 import os
 import gc
 import asyncio
@@ -124,11 +124,11 @@ class ModelManager:
 
     def is_local_model_available(self) -> bool:
         """Check if a local GGUF model exists and llama_cpp is importable."""
-        try:
-            import llama_cpp
-            return self.find_local_gguf_model() is not None
-        except ImportError:
+        import importlib.util
+
+        if importlib.util.find_spec("llama_cpp") is None:
             return False
+        return self.find_local_gguf_model() is not None
 
     def load_local_model(self) -> bool:
         """Load the local GGUF model into memory using llama-cpp-python."""

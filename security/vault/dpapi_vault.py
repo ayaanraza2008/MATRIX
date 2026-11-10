@@ -2,8 +2,7 @@
 Provides user-bound Windows DPAPI encryption for sensitive API keys, OAuth tokens, and secrets.
 Guarantees zero plaintext secrets in Git, logs, or unencrypted storage on disk.
 """
-from typing import Dict, Any, List, Optional
-import os
+from typing import Dict, List, Optional
 import json
 from pathlib import Path
 from config.settings import settings

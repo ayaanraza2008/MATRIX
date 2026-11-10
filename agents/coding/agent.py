@@ -1,7 +1,7 @@
 """MATRIX Coding & Software Development Agent.
 Inspects workspace codebases, runs test suites, checks syntax, and assists with refactoring.
 """
-from typing import Dict, Any, List
+from typing import Dict, Any
 import subprocess
 import time
 import ast

@@ -1,7 +1,7 @@
 """MATRIX Integration Adapter: Browser-Use (browser-use/browser-use).
 Integrates autonomous web navigation, page extraction, and form interaction into MATRIX Browser Agent.
 """
-from typing import Dict, Any, List
+from typing import Dict, Any
 import httpx
 from config.logging_config import get_logger
 

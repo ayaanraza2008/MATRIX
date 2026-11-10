@@ -3,7 +3,6 @@ Coordinates device pairing, remote task delegation, notification dispatch, devic
 """
 from typing import Dict, Any, List
 import time
-import uuid
 from sqlalchemy import select, delete
 from agents.base_agent import BaseAgent, AgentResult, AgentCapability
 from database.session import AsyncSessionLocal

@@ -18,10 +18,9 @@ import json
 import base64
 import hashlib
 import time
-from pathlib import Path
 from datetime import datetime, timezone
 from core.account_operations.models import (
-    ConnectedAccount, ServiceType, AuthType, AccountStatus, AccountOperationRecord
+    ConnectedAccount, ServiceType, AuthType, AccountStatus
 )
 from config.settings import settings
 from config.logging_config import get_logger

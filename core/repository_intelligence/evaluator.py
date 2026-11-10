@@ -3,7 +3,7 @@ Performs thorough multi-dimensional evaluation of all 65 GitHub repositories:
 license legality, hardware fit (Ryzen 7 5700U / 8GB RAM / CPU-only), security risk,
 local vs cloud capability, and target agent assignment.
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from pydantic import BaseModel, Field
 from core.capability_registry.registry import CapabilityMaturity
 

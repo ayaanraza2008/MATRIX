@@ -9,11 +9,7 @@ from the 6 reference repositories:
 6. public-apis/public-apis
 """
 from typing import Dict, Any, List, Optional
-import json
-import re
-from pathlib import Path
 from pydantic import BaseModel, Field
-from datetime import datetime, timezone
 from config.logging_config import get_logger
 
 logger = get_logger("core.reference_knowledge")

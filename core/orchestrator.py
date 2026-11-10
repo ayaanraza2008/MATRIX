@@ -8,7 +8,7 @@ from typing import Dict, Any, List, Optional, Callable, Tuple
 import time
 import asyncio
 from datetime import datetime, timezone
-from core.intent_engine import intent_engine, ParsedIntent
+from core.intent_engine import intent_engine
 from core.reasoning_engine import reasoning_engine
 from core.planner import ExecutionPlan, PlanStep
 from core.task_state import TaskState
@@ -17,8 +17,7 @@ from core.response_generator import response_generator
 from agents.base_agent import AgentResult
 from database.session import AsyncSessionLocal
 from database.models import TaskRecord
-from sqlalchemy import select, update
-from config.settings import settings
+from sqlalchemy import select
 from config.logging_config import get_logger
 
 logger = get_logger("core.orchestrator")
@@ -79,7 +78,6 @@ class Orchestrator:
 
     def _verify_step_outcome(self, step: PlanStep, res: AgentResult) -> Tuple[bool, Optional[str]]:
         """Verify that step execution achieved its goal on disk, in memory, or in OS state with independent evidence."""
-        import os
         from pathlib import Path
         import psutil
 

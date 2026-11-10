@@ -9,7 +9,7 @@ Detects physical finger-snaps using high-speed acoustic transient analysis:
 100% offline, zero cloud calls, near-zero CPU consumption (~0.05% CPU).
 """
 import time
-from typing import Optional, Dict, Any, Tuple
+from typing import Dict, Any, Tuple
 import numpy as np
 from config.logging_config import get_logger
 

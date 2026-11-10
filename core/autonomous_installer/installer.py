@@ -2,7 +2,7 @@
 Performs safe, isolated dependency and repository installation with provenance checks,
 license verification, resource headroom checks, rollback capability, and manifest tracking.
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 import sys
 import subprocess
 import json

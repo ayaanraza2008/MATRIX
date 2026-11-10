@@ -24,7 +24,6 @@ from voice.speech_to_text.engine import stt_engine
 from voice.text_to_speech.engine import tts_engine
 from voice.playback_coordinator import playback_coordinator
 import uuid
-from core.brain import brain
 from config.settings import settings
 from config.logging_config import get_logger
 

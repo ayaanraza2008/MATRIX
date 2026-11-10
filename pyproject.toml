@@ -93,7 +93,6 @@ target-version = "py312"
 exclude = [".venv", ".uv-cache", "external", "data", "scripts", "mobile", "desktop/ui/node_modules"]
 
 [tool.ruff.lint]
-# Correctness rules only: syntax errors, undefined names, redefinitions.
-# Unused-import/style cleanup (~230 findings, mostly generated modules) is tracked
-# as technical debt and will be enabled incrementally.
-select = ["E9", "F63", "F7", "F82", "F811", "F821"]
+# Correctness rules + unused imports. F401 was enabled after the 229-item cleanup so the
+# repository cannot silently accumulate dead imports again.
+select = ["E9", "F63", "F7", "F82", "F811", "F821", "F401"]

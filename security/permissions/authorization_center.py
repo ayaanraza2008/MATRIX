@@ -7,10 +7,9 @@ Implements the One-Time Setup Wizard, Scoped Category Authorizations, and 3-Tier
 Guarantees the user does NOT have to repeatedly approve routine operations once authorized.
 """
 from enum import Enum
-from typing import Dict, Any, List, Optional, Tuple, Set
+from typing import Dict, Any, List, Optional, Tuple
 import json
 import time
-from pathlib import Path
 from pydantic import BaseModel, Field
 from config.settings import settings
 from config.logging_config import get_logger

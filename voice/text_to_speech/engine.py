@@ -3,7 +3,7 @@ Provides natural text-to-speech in English, Hindi, and Hinglish with fallback fr
 Features real-time interruption, audio buffer drain synchronization, configurable speech rate,
 and coordinated playback deduplication through PlaybackCoordinator.
 """
-from typing import Optional, Dict, Any
+from typing import Optional
 import asyncio
 from pathlib import Path
 import time
@@ -11,7 +11,7 @@ import re
 import uuid
 from config.settings import settings
 from config.logging_config import get_logger
-from voice.playback_coordinator import playback_coordinator, PlaybackState
+from voice.playback_coordinator import playback_coordinator
 
 logger = get_logger("voice.tts")
 

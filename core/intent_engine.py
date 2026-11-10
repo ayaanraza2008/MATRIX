@@ -3,7 +3,7 @@ Determines intent, target specialized agent, parameters, required autonomy level
 and extracts entities from natural language requests in English, Hindi, and Hinglish.
 """
 from enum import Enum
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 import re
 from pydantic import BaseModel
 from config.logging_config import get_logger

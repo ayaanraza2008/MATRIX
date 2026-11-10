@@ -12,8 +12,6 @@ This module creates adapters for third-party repositories that:
 - Keep original repositories as separate external modules
 """
 
-import sys
-import os
 from typing import Dict, Any, Optional, List
 from abc import ABC, abstractmethod
 

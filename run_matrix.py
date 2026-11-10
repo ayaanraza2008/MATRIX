@@ -2,11 +2,9 @@
 Performs pre-flight checks and launches the FastAPI backend and React HUD.
 """
 import sys
-import os
 import time
 import socket
 import webbrowser
-import asyncio
 from pathlib import Path
 
 # Add project root to path

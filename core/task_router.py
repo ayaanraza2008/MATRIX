@@ -63,7 +63,7 @@ class TaskRouter:
             agent = self._agents["system"]
 
         # Enforce Authorization Center permission policy
-        from security.permissions.authorization_center import authorization_center, PermissionProfile
+        from security.permissions.authorization_center import authorization_center
         can_proceed, profile, reason = authorization_center.evaluate_authorization(
             action=action,
             category=f"agent.{agent.name}",

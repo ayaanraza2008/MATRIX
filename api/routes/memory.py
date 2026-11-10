@@ -2,7 +2,7 @@
 Allows users to inspect, create, edit, search, and delete stored personal facts, project contexts,
 preferences, routines, and contacts with automatic secret scrubbing.
 """
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 from memory.manager import memory_manager

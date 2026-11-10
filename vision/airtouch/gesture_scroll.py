@@ -8,8 +8,7 @@ Translates vertical hand/finger gestures into smooth, velocity-controlled scroll
 - Closed fist locks/stops scrolling immediately
 - Emits OS scroll events via pyautogui and WebSocket payloads for web/HUD clients
 """
-from typing import Dict, Any, Optional, Tuple
-import math
+from typing import Dict, Any, Optional
 import time
 
 try:

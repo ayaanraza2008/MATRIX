@@ -3,15 +3,13 @@ Executes periodic maintenance, health monitoring, integration heartbeats,
 and scheduled user tasks with SQLite persistence, failure retries, and pause controls.
 """
 from typing import Dict, Any, List, Optional, Callable
-import time
 import asyncio
 from datetime import datetime, timezone
 import uuid
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from database.session import AsyncSessionLocal
 from database.models import BackgroundTask as BackgroundTaskModel
-from sqlalchemy import select, update
-from config.settings import settings
+from sqlalchemy import select
 from config.logging_config import get_logger
 
 logger = get_logger("automation.scheduler")

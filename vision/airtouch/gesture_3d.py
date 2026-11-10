@@ -10,7 +10,6 @@ Features:
 import time
 import math
 from typing import Dict, Any, Tuple, Optional
-import numpy as np
 from vision.airtouch.smoother import HoltWrightSmoother
 
 

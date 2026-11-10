@@ -9,8 +9,6 @@ import os
 import json
 import httpx
 from pydantic import BaseModel, Field
-from datetime import datetime, timezone
-from pathlib import Path
 from config.settings import settings
 from config.logging_config import get_logger
 

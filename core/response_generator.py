@@ -1,7 +1,7 @@
 """MATRIX Response Generator.
 Synthesizes agent execution results into concise, natural, professional replies in English, Hindi, or Hinglish.
 """
-from typing import Dict, Any, List
+from typing import List
 from agents.base_agent import AgentResult
 
 

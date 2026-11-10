@@ -6,7 +6,6 @@ from typing import Dict, Any, List
 import time
 from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult
 from voice.text_to_speech.engine import tts_engine
-from voice.speech_to_text.engine import stt_engine
 
 
 class VoiceStudioAdapter(BaseAdapter):

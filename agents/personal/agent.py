@@ -5,7 +5,7 @@ Handles personal account actions, user preferences, daily scheduling, and secure
 - Discover and manage authorized user accounts (Google, GitHub, Email, Cloud Storage)
 - Strictly enforces Level 3 explicit confirmation before any external transmission.
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 import time
 import re
 from agents.base_agent import BaseAgent, AgentResult, AgentCapability

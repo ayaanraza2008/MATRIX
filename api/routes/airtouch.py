@@ -5,7 +5,6 @@ Handles gracefully environments where OpenCV is unavailable.
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, UploadFile, File
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
-from pathlib import Path
 
 # OpenCV is optional - try to import, graceful fallback if unavailable
 _HAS_CV2 = False

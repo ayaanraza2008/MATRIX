@@ -11,12 +11,12 @@ Provides a real-time management dashboard covering all 65 GitHub repositories:
 import time
 import os
 from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, HTTPException, Query, Body
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from core.repository_intelligence.engine import repo_intelligence
 from core.tool_adapters.manager import adapter_manager
-from core.capability_registry.registry import capability_registry, CapabilityMaturity
+from core.capability_registry.registry import CapabilityMaturity
 from core.resource_manager import resource_manager
 from core.repository_intelligence.hardware_guard import hardware_guard
 from core.reference_knowledge.engine import reference_knowledge_engine
@@ -204,7 +204,6 @@ async def get_integrations_status_summary():
     from core.integrations.telegram_connector import telegram_connector
     from core.integrations.notion_connector import notion_connector
     from core.integrations.home_assistant_connector import home_assistant_connector
-    from core.telephony.engine import telephony_engine
     from core.telephony.bland_client import bland_client
     from core.notifications.push_service import push_service
 

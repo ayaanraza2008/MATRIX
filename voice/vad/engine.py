@@ -1,7 +1,7 @@
 """MATRIX Voice Activity Detection (VAD) & Continuous Speech Endpointing Engine.
 Uses Silero VAD ONNX with recurrent LSTM state tracking, pre-roll buffering, and configurable endpointing.
 """
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple
 from pathlib import Path
 from collections import deque
 import numpy as np

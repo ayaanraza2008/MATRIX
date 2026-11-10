@@ -1,12 +1,11 @@
 """MATRIX Repository Intelligence Agent.
 Discovers, evaluates, selects, adapts, and executes capabilities from the verified 65 GitHub Repositories.
 """
-from typing import Dict, Any, List
+from typing import Dict, Any
 import time
 from agents.base_agent import BaseAgent, AgentResult, AgentCapability
 from core.repository_intelligence.engine import repo_intelligence
 from core.tool_adapters.manager import adapter_manager
-from core.capability_registry.registry import capability_registry
 from core.reference_knowledge.engine import reference_knowledge_engine
 from core.repository_intelligence.hardware_guard import hardware_guard
 

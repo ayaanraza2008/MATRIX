@@ -5,12 +5,9 @@ Enforces single-source audio playback coordination to eliminate duplicate sound 
 """
 from typing import Dict, Any
 import time
-from pathlib import Path
 from agents.base_agent import BaseAgent, AgentResult, AgentCapability
 from voice.text_to_speech.engine import tts_engine
-from voice.speech_to_text.engine import stt_engine
 from voice.wake_word.engine import wake_word_detector
-from voice.playback_coordinator import playback_coordinator
 
 
 class VoiceAgent(BaseAgent):

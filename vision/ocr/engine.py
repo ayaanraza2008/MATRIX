@@ -1,9 +1,8 @@
 """MATRIX Native Windows 11 OCR Engine.
 Uses Windows Media OCR via WinSDK for offline, high-speed optical character recognition on screenshots and images.
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from pathlib import Path
-import asyncio
 import time
 from config.logging_config import get_logger
 

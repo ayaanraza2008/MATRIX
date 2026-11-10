@@ -8,7 +8,6 @@ User Input -> Context Retrieval -> Intent Classification -> Reasoning -> Task De
 """
 from typing import Dict, Any, Optional
 import time
-import re
 import uuid
 from core.deduplication import idempotency_manager
 from core.context_manager import context_manager
@@ -16,7 +15,7 @@ from core.orchestrator import orchestrator
 from core.model_manager import model_manager
 from core.task_state import TaskState
 from database.session import AsyncSessionLocal
-from database.models import Message as MessageModel, Session as SessionModel
+from database.models import Message as MessageModel
 from config.settings import settings
 from config.logging_config import get_logger
 

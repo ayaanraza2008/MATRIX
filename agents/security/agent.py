@@ -1,7 +1,7 @@
 """MATRIX Security & Policy Enforcement Agent.
 Enforces deterministic permission boundaries (Levels 0-4), command sandboxing, and MITRE mapping.
 """
-from typing import Dict, Any, List
+from typing import Dict, Any
 import time
 from agents.base_agent import BaseAgent, AgentResult, AgentCapability
 from database.session import AsyncSessionLocal

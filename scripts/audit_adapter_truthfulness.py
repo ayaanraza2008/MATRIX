@@ -5,7 +5,12 @@ Fails when an adapter returns success with a fabricated (fully literal) payload.
     python scripts/audit_adapter_truthfulness.py
 """
 from pathlib import Path
+import logging
 import sys
+
+# Importing the adapter package registers every adapter through the manager; keep the
+# audit output readable by silencing that chatter.
+logging.disable(logging.CRITICAL)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 

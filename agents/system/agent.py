@@ -7,7 +7,7 @@ Monitors and manages the Windows 11 host:
 - Audio volume and system status inspection
 - Automated system error diagnosis and resource pressure detection
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 import time
 import subprocess
 import os

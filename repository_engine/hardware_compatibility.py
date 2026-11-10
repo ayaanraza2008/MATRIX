@@ -1,9 +1,8 @@
 """MATRIX Repository Intelligence: Hardware Compatibility Evaluator.
 Assesses repository compute requirements against verified machine specs (8GB RAM, Ryzen 7 5700U, Radeon APU).
 """
-from typing import Dict, Any, List
+from typing import Dict, Any
 import psutil
-from config.settings import settings
 
 
 class HardwareCompatibilityChecker:

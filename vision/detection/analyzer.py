@@ -2,7 +2,7 @@
 Computes image metrics (sharpness, brightness, contrast, edge density) and integrates with AI models.
 Handles gracefully environments where OpenCV is unavailable.
 """
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from pathlib import Path
 import time
 import numpy as np
