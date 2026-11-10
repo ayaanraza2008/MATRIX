@@ -84,8 +84,16 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v3
+      - name: Ensure Android SDK platform 35
+        run: |
+          # The ubuntu image ships the Android SDK; only the compile platform is pinned.
+          export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          SDKM="$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -n1)"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "sdkmanager=$SDKM"
+          yes | "$SDKM" --licenses > /dev/null 2>&1 || true
+          "$SDKM" --install "platforms;android-35" "build-tools;35.0.0"
       - name: Build debug APK
         working-directory: mobile/android_app
         run: |
