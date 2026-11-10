@@ -89,9 +89,14 @@ npm run dev
 ```
 
 ### Build & Run the Android Companion App
+A debug APK is built on every push by GitHub Actions and published as the
+`matrix-android-debug-apk` artifact (≈16 MB) — no local Android SDK required to obtain one.
+
+To build locally instead:
 1. Open Android Studio.
 2. Select **Open an Existing Project** and navigate to `mobile/android_app/`.
 3. Let Gradle sync dependencies (Jetpack Compose BOM, OkHttp, Kotlin Coroutines).
 4. Connect an Android phone (with USB Debugging enabled) or start an Android Emulator.
 5. Click **Run 'app'** (`Shift + F10`).
-6. Set the PC IP in the companion app to connect to `http://<YOUR_PC_IP>:8000/`.
+6. Set the PC IP in the companion app to connect to `http://<YOUR_PC_IP>:8000/` and provide the
+   `MATRIX_API_TOKEN` configured on the PC (required for non-loopback clients).
