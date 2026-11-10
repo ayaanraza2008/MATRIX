@@ -8,12 +8,9 @@ API Base: https://api.bland.ai (REST v1 endpoints with v2 Organization Key)
 """
 import os
 import re
-import json
-import time
 from typing import Dict, Any, List, Optional
-from pathlib import Path
 import httpx
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from config.settings import settings
 from config.logging_config import get_logger

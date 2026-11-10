@@ -11,7 +11,6 @@ import base64
 import hashlib
 import secrets
 from datetime import datetime, timezone, timedelta
-from pathlib import Path
 import httpx
 
 from config.settings import settings

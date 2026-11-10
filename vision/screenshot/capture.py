@@ -1,8 +1,7 @@
 """MATRIX Desktop Screen Capture Engine.
 Provides multi-tier desktop capture on Windows 11 with comprehensive session diagnostics.
 """
-from typing import Dict, Any, Optional, Tuple
-from pathlib import Path
+from typing import Dict, Any
 import time
 import ctypes
 from PIL import Image

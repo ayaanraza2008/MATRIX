@@ -2,11 +2,8 @@
 Real Telegram Bot API client for sending alerts, notifications, and receiving mobile commands.
 Uses official Telegram Bot HTTP API (https://api.telegram.org/bot<TOKEN>/).
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 import os
-import json
-import time
-from pathlib import Path
 import httpx
 
 from config.settings import settings

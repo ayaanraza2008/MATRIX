@@ -5,7 +5,6 @@ Provides persistent episodic memory storage, semantic context retrieval, and ses
 from typing import Dict, Any, List
 import time
 from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult
-from core.context_manager import context_manager
 
 
 class ContextMemoryAdapter(BaseAdapter):

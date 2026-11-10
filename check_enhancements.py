@@ -1,4 +1,3 @@
-import ast
 
 # Read the computer agent
 with open('agents/computer/agent.py', 'r') as f:

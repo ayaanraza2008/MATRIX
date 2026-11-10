@@ -3,7 +3,7 @@ Manages persistent multi-step task records, checkpoints, and recovery states in 
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import uuid

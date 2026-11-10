@@ -2,13 +2,11 @@
 Generates comprehensive daily briefings, real-time live weather reports via Open-Meteo,
 calendar summaries, project status, and away-mode PC telemetry.
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 import time
 import datetime
 import httpx
 import psutil
-from pathlib import Path
-from config.settings import settings
 from config.logging_config import get_logger
 
 logger = get_logger("core.information.briefing")

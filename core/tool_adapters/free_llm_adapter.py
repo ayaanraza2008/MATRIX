@@ -5,7 +5,6 @@ Provides multi-provider fallback routing, free tier quota management, and latenc
 from typing import Dict, Any, List
 import time
 from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult
-from core.model_manager import model_manager
 
 
 class FreeLlmRouterAdapter(BaseAdapter):

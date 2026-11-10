@@ -2,11 +2,8 @@
 Monitors microphone stream for 'Matrix', 'Hey Matrix', and 'Hey Jarvis' triggers locally using openWakeWord ONNX.
 Features continuous low-resource background evaluation, zero cloud dependencies, and active echo suppression.
 """
-from typing import Callable, Optional, Dict, Any, List
-import os
+from typing import Callable, Optional, Dict, Any
 import time
-import asyncio
-from pathlib import Path
 import numpy as np
 from config.settings import settings
 from config.logging_config import get_logger

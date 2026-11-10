@@ -3,7 +3,6 @@ Broadcasts live telemetries, agent status, and holographic animation states to f
 """
 from typing import List, Dict, Any
 from fastapi import WebSocket
-import json
 import asyncio
 import psutil
 from config.logging_config import get_logger

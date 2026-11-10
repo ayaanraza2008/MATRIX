@@ -2,7 +2,6 @@
 Provides colored console output with Rich and persistent rotating file logging.
 """
 import logging
-import sys
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 from rich.logging import RichHandler

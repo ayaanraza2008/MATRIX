@@ -2,11 +2,8 @@
 Connects to GitHub REST API v3 using Personal Access Tokens (classic or fine-grained).
 Supports repository search, issues, pull requests, commit history, and release status.
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 import os
-import json
-import time
-from pathlib import Path
 import httpx
 
 from config.settings import settings

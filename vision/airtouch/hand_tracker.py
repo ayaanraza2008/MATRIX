@@ -5,7 +5,7 @@ Implements dual-engine hand tracking:
 Classifies gestures: FIST, OPEN_PALM, POINTING, THUMBS_UP, PEACE, PINCH.
 Handles gracefully environments where OpenCV is unavailable.
 """
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 from pathlib import Path
 import math
 import time

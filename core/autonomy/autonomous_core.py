@@ -6,7 +6,6 @@ executes the 12-step continuous JARVIS lifecycle:
 """
 from typing import Dict, Any, List, Optional
 import time
-import asyncio
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 
@@ -14,13 +13,11 @@ from config.logging_config import get_logger
 from core.autonomy.goal_manager import goal_manager
 from core.autonomy.tool_discovery import tool_discovery
 from core.autonomy.event_monitor import event_monitor
-from core.self_maintenance.diagnostics import diagnostics_engine
 from core.self_maintenance.recovery import recovery_engine
-from security.permissions.manager import security_manager, AutonomyLevel
+from security.permissions.manager import security_manager
 from security.permissions.authorization_center import authorization_center
 from memory.manager import memory_manager
 from core.telephony.engine import telephony_engine
-from core.information.briefing import briefing_engine
 from automation.scheduler.engine import background_scheduler
 from core.integrations.manager import integration_manager
 from core.intent_engine import intent_engine

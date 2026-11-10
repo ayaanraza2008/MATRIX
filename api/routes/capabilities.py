@@ -1,7 +1,7 @@
 """MATRIX Capabilities & Skills Registry Route.
 Surfaces verified capabilities, specialized agents, and repository integrations.
 """
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List

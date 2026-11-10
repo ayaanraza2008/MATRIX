@@ -10,9 +10,7 @@ Dedicated adapters for 8 repositories:
 8. msitarzewski/agency-agents
 """
 import ast
-import json
 import os
-import sys
 import time
 from typing import Dict, Any, List
 from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult, unimplemented_result

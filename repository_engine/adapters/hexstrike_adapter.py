@@ -3,7 +3,6 @@ Wraps HexStrike AI MCP agent security skills in an isolated, deterministic autho
 """
 from typing import Dict, Any, List
 from pydantic import BaseModel
-from config.settings import settings
 from config.logging_config import get_logger
 
 logger = get_logger("adapter.hexstrike")

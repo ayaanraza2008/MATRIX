@@ -11,7 +11,7 @@ Full modern implementation of real-time eye tracking, gaze estimation, and touch
 - Dynamic confidence scoring and toggleable active state
 Handles gracefully environments where OpenCV is unavailable.
 """
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple
 from pathlib import Path
 import math
 import time

@@ -2,10 +2,7 @@
 Extends AirTouch with state-of-the-art multi-modal visual perception.
 Handles gracefully environments where certain OpenCV features are unavailable.
 """
-from typing import Dict, Any, List, Optional, Tuple
-from pathlib import Path
-import time
-import math
+from typing import Dict, Any, Optional, Tuple
 import numpy as np
 
 # OpenCV is optional - try to import, graceful fallback if unavailable
@@ -18,9 +15,7 @@ except Exception:
 
 from vision.airtouch.hand_tracker import AirTouchHandTracker
 from vision.airtouch.eye_tracker import GesturEyeTracker
-from vision.detection.analyzer import vision_analyzer
 from vision.ocr.engine import ocr_engine
-from config.settings import settings
 from config.logging_config import get_logger
 
 logger = get_logger("vision.airtouch.modern_ai")

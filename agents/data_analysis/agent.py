@@ -2,7 +2,7 @@
 Performs tabular data extraction, statistical calculations, CSV processing,
 and secure mathematical calculations.
 """
-from typing import Dict, Any, List
+from typing import Dict, Any
 import time
 import csv
 import statistics

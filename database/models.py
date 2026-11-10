@@ -2,7 +2,6 @@
 SQLAlchemy Async ORM models for devices, sessions, messages, tasks, audit trails, and preferences.
 """
 from datetime import datetime, timezone
-from typing import Optional
 from sqlalchemy import (
     Column, Integer, String, Text, Boolean, DateTime, Float, ForeignKey, JSON
 )

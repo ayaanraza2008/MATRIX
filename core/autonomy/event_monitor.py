@@ -6,7 +6,6 @@ from typing import Dict, Any, List, Callable, Awaitable, Optional
 import time
 import asyncio
 from pydantic import BaseModel, Field
-from datetime import datetime, timezone
 from config.logging_config import get_logger
 
 logger = get_logger("core.autonomy.event_monitor")

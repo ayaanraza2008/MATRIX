@@ -3,7 +3,6 @@ Coordinates camera acquisition, active operating modes, Gesture3D, Gesture Scrol
 and telemetry broadcasting for the Matrix HUD and WebSocket clients.
 """
 from typing import Dict, Any, Optional, Callable, List
-from pathlib import Path
 import threading
 import time
 try:
@@ -13,13 +12,11 @@ except Exception:
     _HAS_CV2 = False
 import numpy as np
 
-from vision.airtouch.smoother import HoltWrightSmoother
 from vision.airtouch.gesture_3d import Gesture3DController
 from vision.airtouch.gesture_scroll import AirTouchGestureScroll
 from vision.airtouch.hand_tracker import AirTouchHandTracker
 from vision.airtouch.eye_tracker import GesturEyeTracker, CALIBRATION_STEPS
 from vision.airtouch.modern_ai_vision import ModernAIVisionSubsystem
-from config.settings import settings
 from config.logging_config import get_logger
 
 logger = get_logger("vision.airtouch.service")

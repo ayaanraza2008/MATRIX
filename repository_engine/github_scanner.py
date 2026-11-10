@@ -1,7 +1,7 @@
 """MATRIX Repository Intelligence: GitHub Scanner & Collector.
 Scans and parses the verified 65 GitHub Starred Repositories inventory.
 """
-from typing import Dict, Any, List, Optional
+from typing import List, Optional
 import json
 from pathlib import Path
 from pydantic import BaseModel

@@ -4,12 +4,11 @@ Validates configuration, database integrity, REST API endpoints, and system tele
 import pytest
 import psutil
 from httpx import AsyncClient, ASGITransport
-from pathlib import Path
 from sqlalchemy import select
 
 from config.settings import settings
-from database.session import engine, AsyncSessionLocal
-from database.models import UserPreference, Session as SessionModel, Message as MessageModel
+from database.session import AsyncSessionLocal
+from database.models import UserPreference
 from database.init_db import init_database
 from api.server import app
 

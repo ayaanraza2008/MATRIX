@@ -6,7 +6,7 @@ from typing import List, Dict, Any, Optional
 import uuid
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
-from core.task_state import TaskState, TaskStateMachine
+from core.task_state import TaskState
 
 
 class PlanStep(BaseModel):

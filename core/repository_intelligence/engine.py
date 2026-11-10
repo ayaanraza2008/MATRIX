@@ -10,7 +10,6 @@ from core.repository_intelligence.evaluator import evaluator, RepositoryEvaluati
 from core.capability_registry.registry import (
     capability_registry, ToolCapability, CapabilityMaturity, OperationSchema, ResourceRequirement
 )
-from core.autonomy_policy.policy import autonomy_policy, ActionCategory
 from config.logging_config import get_logger
 
 logger = get_logger("core.repo_intel.engine")

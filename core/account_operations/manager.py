@@ -6,15 +6,13 @@ Handles personal account actions for connected services:
 - Strict Level 3 confirmation enforcement before external messaging or deletion
 - Audit logging and explicit reporting of every performed change.
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 import time
 import json
 import uuid
-from pathlib import Path
 from datetime import datetime, timezone
 from core.account_operations.registry import account_registry
-from core.account_operations.models import ConnectedAccount, AccountOperationRecord
-from core.autonomy_policy.policy import AutonomyPolicyEngine, ActionCategory
+from core.account_operations.models import AccountOperationRecord
 from config.settings import settings
 from config.logging_config import get_logger
 

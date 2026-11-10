@@ -2,7 +2,7 @@
 Manages image/video prompt synthesis, story/script writing, music concept generation,
 voiceover scripts, thumbnail design briefs, and Mermaid/SVG diagram rendering.
 """
-from typing import Dict, Any, List
+from typing import Dict, Any
 import time
 from agents.base_agent import BaseAgent, AgentResult, AgentCapability
 

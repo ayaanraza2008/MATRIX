@@ -48,7 +48,7 @@ def _keyword(node: ast.Call, key: str) -> Optional[ast.AST]:
 
 
 def scan_file(path: Path) -> List[Finding]:
-    """Return every constant success payload declared in one adapter module."""
+    """Return every fabricated or unsubstantiated success claim in one adapter module."""
     findings: List[Finding] = []
     try:
         tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -63,21 +63,19 @@ def scan_file(path: Path) -> List[Finding]:
         if not (isinstance(success, ast.Constant) and success.value is True):
             continue
 
-        data = _keyword(node, "data")
-        if data is None or not _is_constant(data):
-            continue
-
         if (path.name, node.lineno) in REVIEWED_STATIC:
             continue
 
-        findings.append(
-            Finding(
-                path.name,
-                node.lineno,
-                "success=True with a fully literal data payload "
-                "(cannot be real device/network/filesystem data)",
+        data = _keyword(node, "data")
+        if data is not None and _is_constant(data):
+            findings.append(
+                Finding(
+                    path.name,
+                    node.lineno,
+                    "success=True with a fully literal data payload "
+                    "(cannot be real device/network/filesystem data)",
+                )
             )
-        )
     return findings
 
 

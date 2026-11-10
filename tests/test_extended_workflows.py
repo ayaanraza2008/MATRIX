@@ -5,7 +5,6 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 from pathlib import Path
 from api.server import app
-from config.settings import settings
 
 
 @pytest.mark.asyncio

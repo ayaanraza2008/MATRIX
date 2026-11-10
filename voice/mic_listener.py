@@ -10,17 +10,16 @@ Features:
 - Automatic reconnection on device unplug/error with exponential backoff
 - Zero-copy buffer feeds and ultra-low CPU footprint
 """
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, Tuple
 import threading
 import time
 import json
 import asyncio
-from pathlib import Path
 import numpy as np
 import sounddevice as sd
 from scipy.signal import resample_poly
 
-from voice.conversation.manager import hands_free_manager, HandsFreeState, ConversationMode
+from voice.conversation.manager import hands_free_manager
 from config.settings import settings
 from config.logging_config import get_logger
 

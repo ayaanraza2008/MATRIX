@@ -1,8 +1,5 @@
 """Test AirTouch hand and eye tracking with mock frames."""
 import sys
-import numpy as np
-from pathlib import Path
-from unittest.mock import MagicMock
 
 sys.path.insert(0, '.')
 

@@ -7,9 +7,8 @@ Executes real browser automation via Playwright:
 - Multi-tab management and secure file downloads
 - Resilient fallback via httpx when headless browser contexts are restricted.
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 import time
-import asyncio
 import re
 import urllib.parse
 from pathlib import Path

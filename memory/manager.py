@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Optional, Tuple
 import re
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import select, or_, and_, delete, update
+from sqlalchemy import select, or_, and_, delete
 from database.session import AsyncSessionLocal
 from database.models import MemoryEntry
 from config.logging_config import get_logger

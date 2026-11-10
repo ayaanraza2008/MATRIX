@@ -2,8 +2,8 @@
 Exposes searchable knowledge, developer free-tier catalogs, system prompt libraries,
 and public REST APIs to MATRIX specialized agents.
 """
-from typing import Dict, Any, List, Optional
-from core.reference_knowledge.knowledge_store import reference_knowledge, KnowledgeEntry
+from typing import Dict, Any, Optional
+from core.reference_knowledge.knowledge_store import reference_knowledge
 from config.logging_config import get_logger
 
 logger = get_logger("core.reference_knowledge.engine")

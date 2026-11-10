@@ -3,15 +3,11 @@ Performs application launching, closing, window management (minimize, maximize, 
 UI Automation via pywinauto/win32gui, mouse and keyboard automation, screenshot capture,
 and controlled non-destructive diagnostic commands on Windows 11 under Level 2/3 policy gating.
 """
-from typing import Dict, Any, Optional, List, Tuple
-import subprocess
+from typing import Dict, Any, Optional
 import time
-import os
 import psutil
 from pathlib import Path
 from agents.base_agent import BaseAgent, AgentResult, AgentCapability
-from config.settings import settings
-from vision.screenshot.capture import desktop_screen_capture
 from config.logging_config import get_logger
 
 logger = get_logger("agents.computer")

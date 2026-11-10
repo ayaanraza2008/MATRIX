@@ -10,7 +10,6 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import time
 from datetime import datetime, timezone
-from pathlib import Path
 import psutil
 
 from database.session import get_db
@@ -18,7 +17,7 @@ from database.models import Device as DeviceModel
 from config.settings import settings
 from config.logging_config import get_logger
 from core.pairing_manager import pairing_manager, get_lan_ip, get_tailscale_ip
-from core.device_auth import get_authenticated_device, generate_auth_token, hash_token, security_rate_limiter
+from core.device_auth import get_authenticated_device, generate_auth_token, security_rate_limiter
 from core.tailscale_manager import tailscale_manager
 from core.brain import brain
 from voice.text_to_speech.engine import tts_engine

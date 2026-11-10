@@ -4,7 +4,7 @@ evaluates risk levels (0-4), and assigns verification hooks.
 Supports multi-step decomposition for autonomous workflows, file organization,
 research dossier generation, and account operations.
 """
-from typing import List, Dict, Any
+from typing import List
 from core.intent_engine import ParsedIntent, IntentType
 from core.planner import ExecutionPlan, PlanStep
 from config.settings import settings

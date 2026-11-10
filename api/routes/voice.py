@@ -3,14 +3,13 @@ Provides endpoints for speech synthesis, microphone audio transcription,
 hands-free autonomous conversation, wake-word sensitivity tuning,
 audio file serving, device discovery, and immediate interruption controls.
 """
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, status
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Optional
 from pathlib import Path
 import time
 import asyncio
-import numpy as np
 
 from voice.text_to_speech.engine import tts_engine
 from voice.playback_coordinator import playback_coordinator
@@ -20,7 +19,7 @@ from voice.wake_word.engine import wake_word_detector
 from voice.snap_detector import snap_detector
 from voice.mic_listener import mic_listener
 from voice.vad.engine import vad_engine
-from voice.conversation.manager import hands_free_manager, ConversationMode, HandsFreeState
+from voice.conversation.manager import hands_free_manager, ConversationMode
 from core.brain import brain
 from config.settings import settings
 from config.logging_config import get_logger

@@ -1,5 +1,4 @@
 """Test VisionAnalyzer functions with real image files."""
-import sys
 import os
 from pathlib import Path
 from vision.detection.analyzer import compute_image_metrics, compare_images, vision_analyzer
