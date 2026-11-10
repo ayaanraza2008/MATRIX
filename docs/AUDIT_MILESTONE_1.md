@@ -289,3 +289,39 @@ unchanged.
 | Security hardening (20) | PASSED |
 | Lifecycle & integrity (6) | PASSED |
 | **Total** | **48 passed, 0 failed** |
+
+---
+
+## 14. Milestone 4 — the Android companion is now actually built
+
+No pipeline had ever compiled the Kotlin app; the delivery reports described an APK that existed
+only on the owner's old machine. A dedicated CI job now builds it on every push.
+
+**Endpoint:** `.github/workflows/ci.yml` → `Android APK (debug build)`
+
+| Step | Detail |
+|---|---|
+| JDK | Temurin 17 (AGP 8.5.2 requirement) |
+| SDK | runner-provided Android SDK; pins `platforms;android-35` + `build-tools;35.0.0` |
+| Build | `./gradlew --no-daemon --stacktrace assembleDebug` |
+| Artifact | `matrix-android-debug-apk` — **16.06 MB** debug APK, downloadable from the run |
+
+Verified evidence (run `42836714558`): all three jobs green —
+`Lint => success`, `Tests (windows-latest) => success`, `Android APK (debug build) => success`,
+with the APK attached as an artifact.
+
+Two build failures were found and fixed on the way:
+
+1. `android-actions/setup-android@v3` aborts on current runner images
+   (`Warning: Failed to find package 'tools'` → `sdkmanager` exit 1), because the legacy
+   `tools` package no longer exists. Replaced with an explicit `sdkmanager --install` of the
+   pinned platform against the preinstalled SDK.
+2. The app needs no `res/` directory (it uses framework drawables/styles) — that suspicion was
+   checked and dismissed rather than "fixed" by adding unused resources.
+
+**What this proves:** the Kotlin sources (`MainActivity.kt`, `MatrixApiClient.kt`,
+`MatrixKeyStoreStorage.kt`, Compose theme) compile against the declared dependencies and produce
+an installable package.
+
+**What it does not prove:** runtime behaviour on a handset (pairing, audio, camera, WebSocket
+reconnect). Installing the artifact on a real phone remains `BLOCKED` until a device is attached.
