@@ -116,3 +116,24 @@ class BaseAdapter(ABC):
         if isinstance(result, dict) and result.get("error"):
             return False
         return True
+
+def unimplemented_result(
+    adapter_id: str,
+    operation: str,
+    reason: str,
+    execution_time_ms: float = 0.0,
+) -> AdapterExecutionResult:
+    """Explicit, honest failure for an adapter operation with no real backend.
+
+    Adapters must never return ``success=True`` with fabricated data. When an operation
+    is declared in ``supported_operations`` but has no implementation, callers get a
+    verifiable failure instead of an invented payload.
+    """
+    return AdapterExecutionResult(
+        success=False,
+        adapter_id=adapter_id,
+        operation=operation,
+        error=f"NOT IMPLEMENTED: {reason}",
+        verification={"implemented": False},
+        execution_time_ms=execution_time_ms,
+    )

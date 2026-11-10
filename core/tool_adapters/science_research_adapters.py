@@ -3,7 +3,7 @@ Dedicated adapter for Oldcircle/geo-sleuth.
 """
 import time
 from typing import Dict, Any, List
-from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult
+from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult, unimplemented_result
 
 
 class GeoSleuthResearchAdapter(BaseAdapter):
@@ -59,24 +59,14 @@ class GeoSleuthResearchAdapter(BaseAdapter):
 
         elif op == "public_api_query":
             latency = (time.perf_counter() - start_time) * 1000
-            return AdapterExecutionResult(
-                success=True,
-                adapter_id=self.adapter_id,
-                operation=operation,
-                data={"endpoint_status": 200, "data_feed": "Open-Meteo Weather & Geocoding API"},
-                verification={"queried": True},
-                execution_time_ms=round(latency, 2)
+            return unimplemented_result(
+                self.adapter_id, operation, "'public_api_query' has no real backend wired in this build", latency
             )
 
         elif op == "scientific_data_extraction":
             latency = (time.perf_counter() - start_time) * 1000
-            return AdapterExecutionResult(
-                success=True,
-                adapter_id=self.adapter_id,
-                operation=operation,
-                data={"datapoints": [{"param": "elevation_m", "value": 35.0}, {"param": "climate_zone", "value": "Cfb"}]},
-                verification={"extracted": True},
-                execution_time_ms=round(latency, 2)
+            return unimplemented_result(
+                self.adapter_id, operation, "'scientific_data_extraction' has no real backend wired in this build", latency
             )
 
         else:  # fact_checking

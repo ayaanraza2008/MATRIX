@@ -8,7 +8,7 @@ Dedicated adapters for 4 repositories:
 import time
 import socket
 from typing import Dict, Any, List
-from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult
+from core.tool_adapters.base_adapter import BaseAdapter, AdapterExecutionResult, unimplemented_result
 
 
 class NightcrawlerSecurityAdapter(BaseAdapter):
@@ -92,13 +92,8 @@ class NightcrawlerSecurityAdapter(BaseAdapter):
             elif op == "mcp_defense":
                 msg = parameters.get("protocol_message", {})
                 latency = (time.perf_counter() - start_time) * 1000
-                return AdapterExecutionResult(
-                    success=True,
-                    adapter_id=self.adapter_id,
-                    operation=operation,
-                    data={"authorized": True, "threat_flags": [], "protocol_validated": True},
-                    verification={"mcp_firewalled": True},
-                    execution_time_ms=round(latency, 2)
+                return unimplemented_result(
+                    self.adapter_id, operation, "'mcp_defense' has no real backend wired in this build", latency
                 )
 
             else:  # payload_inspection
@@ -194,13 +189,8 @@ class AnthropicSecuritySkillsAdapter(BaseAdapter):
     async def execute(self, operation: str, parameters: Dict[str, Any]) -> AdapterExecutionResult:
         start_time = time.perf_counter()
         latency = (time.perf_counter() - start_time) * 1000
-        return AdapterExecutionResult(
-            success=True,
-            adapter_id=self.adapter_id,
-            operation=operation,
-            data={"allowed": True, "sandbox_isolated": True, "skills_invoked": ["tool_input_validation"], "valid": True},
-            verification={"skill_executed": True},
-            execution_time_ms=round(latency, 2)
+        return unimplemented_result(
+            self.adapter_id, operation, "operation has no real backend wired in this build", latency
         )
 
 

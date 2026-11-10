@@ -91,31 +91,51 @@ class BrowserUseAdapter(BaseAdapter):
                     )
 
             elif op == "search_web":
-                query = parameters.get("query", "MATRIX AI")
-                max_res = parameters.get("max_results", 3)
-                
-                # Fast DuckDuckGo HTML / instant search
-                search_url = f"https://html.duckduckgo.com/html/?q={httpx.URL(query)}"
+                query = str(parameters.get("query", "MATRIX AI"))
+                max_res = int(parameters.get("max_results", 3))
+                from urllib.parse import quote_plus
+
+                search_url = f"https://html.duckduckgo.com/html/?q={quote_plus(query)}"
                 async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
                     resp = await client.get(search_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64)"})
-                    soup = BeautifulSoup(resp.text, "html.parser")
-                    results = []
-                    for link in soup.find_all("a", class_="result__snippet")[:max_res]:
-                        results.append({"snippet": link.get_text(strip=True)})
 
-                    if not results:
-                        # Fallback simulated search result
-                        results = [{"title": f"Result for {query}", "snippet": f"Structured information regarding {query} retrieved successfully."}]
+                soup = BeautifulSoup(resp.text, "html.parser")
+                results = []
+                for block in soup.select(".result")[:max_res]:
+                    title_el = block.select_one(".result__a")
+                    snippet_el = block.select_one(".result__snippet")
+                    if not (title_el or snippet_el):
+                        continue
+                    results.append({
+                        "title": title_el.get_text(strip=True) if title_el else "",
+                        "snippet": snippet_el.get_text(strip=True) if snippet_el else "",
+                        "url": title_el.get("href", "") if title_el else "",
+                    })
 
-                    latency = (time.perf_counter() - start_time) * 1000
+                latency = (time.perf_counter() - start_time) * 1000
+                if not results:
+                    # Never synthesise a result: an empty parse is reported as a failure.
                     return AdapterExecutionResult(
-                        success=True,
+                        success=False,
                         adapter_id=self.adapter_id,
                         operation=operation,
-                        data={"query": query, "results": results},
-                        verification={"results_count": len(results)},
-                        execution_time_ms=round(latency, 2)
+                        error=(
+                            "No search results could be parsed from DuckDuckGo "
+                            f"(HTTP {resp.status_code}, {len(resp.text)} bytes). "
+                            "The page layout may have changed or the request was blocked."
+                        ),
+                        verification={"results_count": 0},
+                        execution_time_ms=round(latency, 2),
                     )
+
+                return AdapterExecutionResult(
+                    success=True,
+                    adapter_id=self.adapter_id,
+                    operation=operation,
+                    data={"query": query, "results": results},
+                    verification={"results_count": len(results)},
+                    execution_time_ms=round(latency, 2),
+                )
 
             else:
                 return AdapterExecutionResult(
