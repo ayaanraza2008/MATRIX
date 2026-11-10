@@ -29,7 +29,27 @@ async def test_remote_client_cannot_reach_privileged_routes_without_credentials(
     async with _remote_client() as client:
         res = await client.get("/api/v1/files")
         assert res.status_code == 401
-        assert "Authentication required" in res.json()["detail"]
+        assert "Non-local clients" in res.json()["detail"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "path",
+    ["/api/v1/memory", "/api/v1/sessions", "/api/v1/capabilities", "/api/v1/voice/status"],
+)
+async def test_remote_client_blocked_on_formerly_open_routers(path):
+    """The network gate covers every /api/ route, not just the hardened ones."""
+    async with _remote_client() as client:
+        res = await client.get(path)
+        assert res.status_code == 401, f"{path} was reachable without credentials"
+
+
+@pytest.mark.asyncio
+async def test_health_endpoint_stays_public_for_remote_clients():
+    async with _remote_client() as client:
+        res = await client.get("/api/v1/health")
+        assert res.status_code == 200
+        assert res.json()["app_name"] == "MATRIX"
 
 
 @pytest.mark.asyncio

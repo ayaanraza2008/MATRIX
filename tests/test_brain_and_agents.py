@@ -34,11 +34,17 @@ async def test_model_manager_and_memory_benchmark():
     assert bench.recommended_model.startswith("qwen2.5")
     assert bench.max_safe_params_billion <= 3.5
 
-    # Test generation
+    # Test generation. With no GGUF/Ollama/cloud provider configured the manager must
+    # return an explicitly degraded template reply, never a fabricated AI answer.
     res = await model_manager.generate_response("what is matrix?")
     assert res.content is not None
     assert len(res.content) > 10
     assert res.is_local is True
+    if res.provider == "rule_engine":
+        assert res.degraded is True
+        assert "no language model available" in res.content.lower()
+        assert "task dispatched" not in res.content.lower()
+        assert "subsystems operational" not in res.content.lower()
 
 
 @pytest.mark.asyncio

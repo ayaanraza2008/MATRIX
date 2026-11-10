@@ -8,7 +8,8 @@
 
 MATRIX is an autonomous personal AI ecosystem designed for Windows 11 PC and Android phones. It operates under a **local-first** paradigm optimized for the AMD Ryzen 7 5700U (8 cores, 16 threads, AVX2) and 8 GB system RAM, with modular fallback to cloud models.
 
-- **Primary Storage**: `D:\matrix_data` (Preserves OS drive C: space)
+- **Primary Storage**: `D:\matrix_data` when that drive is writable, otherwise `<repo>/data`
+  (override with `MATRIX_DATA_DIR`) so MATRIX runs on hosts and CI runners without a D: drive
 - **Database**: SQLite with `aiosqlite` async ORM
 - **Backend**: Python 3.12 + FastAPI + WebSockets + Pydantic v2
 - **Command HUD**: React 19 + TypeScript + Vite + Tailwind CSS + Three.js 3D Holographic Core
@@ -17,7 +18,7 @@ MATRIX is an autonomous personal AI ecosystem designed for Windows 11 PC and And
 
 ---
 
-## 2. Verified Implementation Status (16/16 Tests Passing)
+## 2. Verified Implementation Status (42 automated tests)
 
 - [x] **Project Scaffold & Env**: 49 package modules with typed initializers.
 - [x] **Settings & Storage**: Pydantic BaseSettings mapped to `D:\matrix_data`.
@@ -48,7 +49,21 @@ MATRIX is an autonomous personal AI ecosystem designed for Windows 11 PC and And
   16. `DataAnalysisAgent` (Descriptive statistics & tabular data processing)
 - [x] **Repository Intelligence Engine**: Audited catalog of all 65 GitHub starred repositories from `@ayaanraza2008`.
 - [x] **Native Android Companion**: Kotlin + Jetpack Compose app project with OkHttp & WebSocket client.
-- [x] **Automated Test Suite**: 16 Pytest tests passing with 100% success rate in 13.80s.
+- [x] **Automated Test Suite**: 42 Pytest tests (foundation, agents, workflows, security regressions).
+  CI runs the full suite on GitHub's `windows-latest` runner plus a ruff correctness gate — see
+  `.github/workflows/ci.yml`. Voice, camera and Android behaviour require real hardware and are not
+  covered by CI; see `docs/AUDIT_MILESTONE_1.md` for the honest status matrix.
+
+---
+
+## 2a. Security defaults (read before exposing MATRIX to a LAN)
+
+- Local (loopback) clients are trusted. Any other host must send
+  `Authorization: Bearer <MATRIX_API_TOKEN>` or a paired device token.
+- `POST /api/v1/developer/execute` (arbitrary Python) stays **disabled** unless
+  `MATRIX_DEVELOPER_MODE=true`.
+- Only `/api/v1/health`, device pairing and the signed Twilio/Bland webhooks are public.
+- Generate a token: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
 
 ---
 
