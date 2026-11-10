@@ -82,3 +82,12 @@ scratch/
 !.env.example
 *.gguf
 /gsd-core/
+
+# MATRIX local test/CI data and tool caches
+.testdata/
+.ci-data/
+data/
+.uv-cache/
+pytest-cache-files-*/
+.venv/
+

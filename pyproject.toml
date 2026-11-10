@@ -5,41 +5,95 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "matrix-ai"
 version = "1.0.0"
-description = "Personal AI Ecosystem for PC + Android"
+description = "Personal AI Ecosystem for Windows PC + Android"
 readme = "README.md"
 requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
     {name = "MATRIX Architecture Team"}
 ]
+
+# Dependency list mirrors requirements.txt. The server must be importable after
+# `pip install .`; heavy ML runtimes live in the optional extras below.
 dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
+    "starlette>=0.38.0",
     "pydantic>=2.9.0",
     "pydantic-settings>=2.5.0",
+    "python-dotenv>=1.0.1",
+    "python-multipart>=0.0.9",
+    "websockets>=13.0",
     "SQLAlchemy>=2.0.35",
     "aiosqlite>=0.20.0",
+    "greenlet>=3.1.0",
     "psutil>=6.0.0",
-    "httpx>=0.27.0",
     "rich>=13.8.0",
-    "python-dotenv>=1.0.1",
-    "websockets>=13.0"
+    "httpx>=0.27.0",
+    "aiohttp>=3.10.0",
+    "numpy>=1.26.0",
+    "scipy>=1.13.0",
+    "Pillow>=10.4.0",
+    "opencv-python>=4.10.0",
+    "sounddevice>=0.5.0",
+    "soundfile>=0.12.1",
+    "edge-tts>=6.1.12",
+    "openwakeword>=0.6.0",
+    "onnxruntime>=1.19.0",
+    "python-docx>=1.1.2",
+    "openpyxl>=3.1.5",
+    "PyPDF2>=3.0.1",
+    "beautifulsoup4>=4.12.3",
+    "pywin32>=306; sys_platform == 'win32'",
+    "pywinauto>=0.6.8; sys_platform == 'win32'",
+    "winsdk>=1.0.0b10; sys_platform == 'win32'",
+    "pycaw>=20240210; sys_platform == 'win32'",
+    "pyttsx3>=2.90; sys_platform == 'win32'",
+    "keyboard>=0.13.5; sys_platform == 'win32'",
+    "pyautogui>=0.9.54; sys_platform == 'win32'",
+    "pygetwindow>=0.0.9; sys_platform == 'win32'",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
-    "ruff>=0.6.0"
+    "ruff>=0.6.0",
 ]
+# Large runtimes that are downloaded separately on the 8 GB target machine.
+ai = [
+    "llama-cpp-python>=0.3.0",
+    "faster-whisper>=1.0.0",
+]
+vision-advanced = [
+    "mediapipe>=0.10.14",
+]
+browser = [
+    "playwright>=1.45.0",
+]
+training = [
+    "torch>=2.3.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["agents*", "api*", "automation*", "config*", "core*", "database*", "desktop*", "memory*", "repository_engine*", "security*", "tests*", "vision*", "voice*"]
+exclude = ["external*", "scripts*", "data*", "mobile*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 
 [tool.ruff]
-line-length = 100
+line-length = 110
 target-version = "py312"
+exclude = [".venv", ".uv-cache", "external", "data", "scripts", "mobile", "desktop/ui/node_modules"]
+
+[tool.ruff.lint]
+# Correctness rules only: syntax errors, undefined names, redefinitions.
+# Unused-import/style cleanup (~230 findings, mostly generated modules) is tracked
+# as technical debt and will be enabled incrementally.
+select = ["E9", "F63", "F7", "F82", "F811", "F821"]

@@ -364,15 +364,15 @@ async def bland_call_webhook(request: Request):
         data = {}
 
     call_id = data.get("call_id")
-    status = data.get("status", "completed").upper()
+    call_status = str(data.get("status", "completed")).upper()
     duration = data.get("call_length")
     transcript = data.get("concatenated_transcript") or data.get("summary")
     recording_url = data.get("recording_url")
 
-    logger.info(f"Bland AI Webhook: Call {call_id} -> {status} (duration: {duration}s)")
+    logger.info(f"Bland AI Webhook: Call {call_id} -> {call_status} (duration: {duration}s)")
 
     if call_id:
-        telephony_engine.update_call_status(call_id, status, duration)
+        telephony_engine.update_call_status(call_id, call_status, duration)
         for record in telephony_engine._call_history:
             if record.bland_call_id == call_id or record.call_id == f"bland_{call_id}":
                 record.transcript_summary = transcript

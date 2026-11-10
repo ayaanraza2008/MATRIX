@@ -18,7 +18,7 @@ from security.vault.dpapi_vault import dpapi_vault
 
 logger = get_logger("security.authorization_center")
 
-AUTH_CONFIG_FILE = Path(r"D:\matrix_data\security\authorization_profiles.json")
+AUTH_CONFIG_FILE = settings.data_dir / "security" / "authorization_profiles.json"
 
 
 class PermissionProfile(str, Enum):

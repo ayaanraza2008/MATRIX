@@ -103,10 +103,10 @@ class ModernAIVisionSubsystem:
 
             # Object detection using cascades if available
             try:
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) if _HAS_CV2 else gray
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) if _HAS_CV2 else None
                 detected_objects = []
                 for obj_name, cascade in self.object_cascades.items():
-                    if cascade is not None:
+                    if cascade is not None and gray is not None:
                         try:
                             gray_small = cv2.pyrDown(gray)
                             matches = cascade.detectMultiScale(gray_small, scaleFactor=1.2, minNeighbors=4, minSize=(20, 20))

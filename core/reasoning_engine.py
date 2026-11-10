@@ -84,7 +84,7 @@ class ReasoningEngine:
                     agent_name="files",
                     tool_name="create_file",
                     arguments={
-                        "filepath": "D:/matrix_data/reports/research_dossier.md",
+                        "filepath": str(settings.data_dir / "reports" / "research_dossier.md"),
                         "content": f"# Research Dossier: {intent.raw_prompt}\n\nAutomated multi-source findings verified by MATRIX AI.",
                         "query": intent.raw_prompt
                     },
@@ -108,7 +108,7 @@ class ReasoningEngine:
                     agent_name="files",
                     tool_name="create_file",
                     arguments={
-                        "filepath": "D:/matrix_data/reports/research_dossier.md",
+                        "filepath": str(settings.data_dir / "reports" / "research_dossier.md"),
                         "content": f"# Research Dossier: {intent.raw_prompt}\n\nAutomated multi-source findings verified by MATRIX AI.",
                     },
                     dependencies=[1],

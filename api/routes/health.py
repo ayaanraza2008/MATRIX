@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import psutil
 import time
 from database.session import get_db, check_db_health
+from config.hardware import logical_threads, physical_cores, storage_snapshot
 from config.settings import settings
 from config.logging_config import get_logger
 
@@ -26,18 +27,8 @@ async def get_health(response: Response, db: AsyncSession = Depends(get_db)):
     available_ram_mb = round(vm.available / (1024 * 1024), 2)
     used_ram_mb = round(vm.used / (1024 * 1024), 2)
 
-    # Storage telemetry
-    disks = {}
-    for drive in ["C:", "D:"]:
-        try:
-            usage = psutil.disk_usage(f"{drive}\\")
-            disks[drive] = {
-                "total_gb": round(usage.total / (1024 ** 3), 2),
-                "free_gb": round(usage.free / (1024 ** 3), 2),
-                "used_percent": usage.percent
-            }
-        except Exception:
-            disks[drive] = {"available": False}
+    # Storage telemetry (real mounted partitions on this host)
+    disks = storage_snapshot()
 
     # CPU telemetry
     cpu_percent = psutil.cpu_percent(interval=None)
@@ -65,8 +56,8 @@ async def get_health(response: Response, db: AsyncSession = Depends(get_db)):
         },
         "system": {
             "cpu_percent": cpu_percent,
-            "cpu_cores_physical": settings.cpu_cores,
-            "cpu_threads_logical": settings.cpu_threads,
+            "cpu_cores_physical": physical_cores(),
+            "cpu_threads_logical": logical_threads(),
             "ram_total_mb": total_ram_mb,
             "ram_available_mb": available_ram_mb,
             "ram_used_mb": used_ram_mb,

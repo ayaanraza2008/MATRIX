@@ -20,8 +20,8 @@ from config.logging_config import get_logger
 
 logger = get_logger("core.account_operations")
 
-DRAFTS_DIR = Path(r"D:\matrix_data\drafts")
-AUDIT_DIR = Path(r"D:\matrix_data\accounts\operations")
+DRAFTS_DIR = settings.data_dir / "drafts"
+AUDIT_DIR = settings.data_dir / "accounts" / "operations"
 
 
 class AccountOperationsManager:

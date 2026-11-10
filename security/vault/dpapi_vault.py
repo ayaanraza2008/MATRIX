@@ -11,7 +11,7 @@ from config.logging_config import get_logger
 
 logger = get_logger("security.vault")
 
-VAULT_DIR = Path(r"D:\matrix_data\security")
+VAULT_DIR = settings.data_dir / "security"
 VAULT_FILE = VAULT_DIR / "dpapi_vault.dat"
 
 

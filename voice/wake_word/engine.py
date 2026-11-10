@@ -13,7 +13,7 @@ from config.logging_config import get_logger
 
 logger = get_logger("voice.wakeword")
 
-WAKEWORD_DIR = Path(r"D:\matrix_data\models\wakeword")
+WAKEWORD_DIR = settings.data_dir / "models" / "wakeword"
 
 
 class WakeWordDetector:
