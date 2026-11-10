@@ -187,6 +187,7 @@ Deleted: `add_list_processes.py`, `add_missing_methods.py`, `test_agent.py` (inv
 | CI lint job | PASSED |
 | Voice pipeline (hardware) | NOT TESTED |
 | Vision pipeline (camera) | NOT TESTED |
+| Local LLM inference | PASSED on reference hardware (44.6 tok/s, +590 MB for 0.5B Q4); target-hardware numbers BLOCKED (no HuggingFace egress from this sandbox) |
 | Android companion (device) | BLOCKED — no handset attached |
 
 ---
@@ -196,7 +197,7 @@ Deleted: `add_list_processes.py`, `add_missing_methods.py`, `test_agent.py` (inv
 1. **Authenticate the remaining routers** with one shared dependency + an explicit public-route allowlist (Twilio/Bland webhooks, `/health`). Add request-rate limiting to `/developer/*`.
 2. **Remove fabricated model output** — replace the rule-engine "success" text with an explicit `provider="unavailable"` response, and fix the test that asserts on canned text.
 3. **Lifecycle cleanup** — move wake-word arming, capability-registry persistence and DB init into the FastAPI lifespan; make capability writes change-detected so the tree stays clean.
-4. **Real LLM path** — benchmark Qwen2.5 0.5B/1.5B GGUF on this exact 8 GB machine (tokens/s, RSS) before advertising a model profile; store results in `docs/benchmarks/`.
+4. **Real LLM path** — benchmark Qwen2.5 0.5B/1.5B GGUF on this exact 8 GB machine (tokens/s, RSS) before advertising a model profile; store results in `docs/benchmarks/`. *Progress: the 0.5B path is measured on reference hardware (44.6 tok/s, +590 MB); the 1.5B candidate and the 8 GB target remain unmeasured.*
 5. **Android path** — build the APK in CI (`gradle assembleDebug`), publish the artifact, verify pairing over LAN with `MATRIX_API_TOKEN`.
 6. **Repository slimming** — remove `external/AirTouch`, archive ad-hoc scripts, consolidate `docs/`.
 
@@ -325,3 +326,33 @@ an installable package.
 
 **What it does not prove:** runtime behaviour on a handset (pairing, audio, camera, WebSocket
 reconnect). Installing the artifact on a real phone remains `BLOCKED` until a device is attached.
+
+---
+
+## 15. Milestone 5 — local inference is measured, not assumed
+
+Every earlier report asserted "local LLM integration"; nothing had ever loaded a model and reported
+a number. `scripts/benchmark_local_llm.py` now does exactly that, and
+`.github/workflows/benchmark-llm.yml` runs it on demand.
+
+**First measured run** (`42839431687`, GitHub runner, *reference hardware — not the 8 GB laptop*):
+
+| Metric | Value |
+|---|---|
+| Model | Qwen2.5-0.5B-Instruct Q4_K_M (468.6 MB) |
+| Runtime | llama-cpp-python 0.3.36 CPU wheel, 2 threads |
+| Load time | 0.42 s |
+| Generation | 30 tokens in 0.67 s = **44.6 tokens/s** |
+| Resident memory | **+590 MB** (43.5 → 633.5 MB USS) |
+| Output | coherent English answer (stored in the artifact) |
+
+Full record with caveats: `docs/benchmarks/llm-cpu-github-runner-2026-11-10.md`.
+
+**Status change:** "Local LLM inference" moves from `NOT TESTED` to **`PASSED` on reference
+hardware**. Target-hardware numbers for the 8 GB Ryzen (and for the 1.5B candidate that the README
+still advertises) remain `BLOCKED`: this sandbox cannot reach `huggingface.co`, so the model file
+must be fetched on a network with normal egress and measured with the same script.
+
+**Model-selection consequence:** the measured 0.5B fits comfortably in 590 MB, which is the safe
+default on 8 GB. The README's 1.5B candidate must not be presented as the default until it has been
+measured on the target machine.

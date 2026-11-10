@@ -28,6 +28,9 @@ MATRIX is an autonomous personal AI ecosystem designed for Windows 11 PC and And
 - [x] **WebSocket Real-time Broker**: `/ws/events` bidirectional event channel and telemetry loop.
 - [x] **3D Holographic Command Interface**: React 19 + Three.js holographic core with 14 functional modules.
 - [x] **Model Manager & Benchmarking**: Memory-aware model router tailored to 8 GB RAM and AVX2 CPU.
+  Measured on reference hardware: Qwen2.5-0.5B-Instruct Q4_K_M runs at **44.6 tokens/s** with
+  **+590 MB** resident memory (2 threads). See `docs/benchmarks/llm-cpu-github-runner-2026-11-10.md`.
+  The 0.5B model is the safe default for 8 GB hosts; the 1.5B candidate is unmeasured on target hardware.
 - [x] **Intent Classification Engine**: Classifies commands, queries, research, coding, workflows, and dialog.
 - [x] **Reasoning Engine & Planner**: Formulates step-by-step ExecutionPlans with verification hooks.
 - [x] **16 Specialized Agents Grid**:
