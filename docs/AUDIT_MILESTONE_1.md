@@ -251,3 +251,41 @@ fabricated phrases ever return.
 Twilio webhooks verify HMAC signatures; the **Bland AI webhook has no signature check** and only
 mutates call history — it is on the milestone 3 list together with rate limiting and
 capability-registry write-on-change.
+
+---
+
+## 13. Milestone 3 — lifecycle hygiene and authenticated webhooks
+
+### 13.1 Importing MATRIX no longer starts a microphone
+`HandsFreeManager.__init__` called `wake_word_detector.start_listening()`, so *any* import that
+reached `voice.conversation.manager` (including `import api.server`) loaded the openWakeWord
+models and armed microphone monitoring. `test_lifecycle_and_integrity.py` now spawns a clean
+interpreter, imports the voice stack and asserts `wake_word_armed == 0` and `is_listening == 0`.
+Arming is explicit via `HandsFreeManager.arm_wake_word()`, called from the FastAPI lifespan and
+when the user returns from privacy-pause to an always-listening mode.
+
+### 13.2 The capability registry stopped dirtying the working tree
+`CapabilityRegistry.register()` bumped `last_updated` and rewrote
+`core/capability_registry/capabilities_data.json` on every import (the adapter manager registers
+its adapters at import time), so `git status` was never clean after a run. `register()` is now a
+no-op for unchanged capabilities, and `save_to_disk()` compares parsed JSON before writing.
+A regression test registers the same capability twice and asserts the timestamp and mtime are
+unchanged.
+
+### 13.3 Provider webhooks and execution throttling
+* `POST /api/v1/telephony/bland/webhook` now requires `MATRIX_BLAND_WEBHOOK_SECRET` — supplied as
+  `?secret=` or `X-Matrix-Webhook-Secret`. Unset secret → **503 (not configured)**; wrong secret →
+  **401**. Before this change any caller could post fake call-completion events.
+* `/api/v1/developer/execute` and `/run-tests` are throttled to **10 requests/minute per client**
+  (HTTP 429), on top of the developer-mode and authentication gates.
+
+### 13.4 Test results
+
+| Suite | Result |
+|---|---|
+| Foundation (7) | PASSED |
+| Brain & agents (9) | PASSED |
+| Extended workflows (6) | PASSED |
+| Security hardening (20) | PASSED |
+| Lifecycle & integrity (6) | PASSED |
+| **Total** | **48 passed, 0 failed** |

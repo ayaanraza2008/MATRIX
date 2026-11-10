@@ -84,21 +84,44 @@ class CapabilityRegistry:
             except Exception as e:
                 logger.error(f"Error reading capability cache: {e}")
 
-    def save_to_disk(self):
-        """Persist capabilities cache to JSON file."""
+    def save_to_disk(self) -> bool:
+        """Persist capabilities cache to JSON file.
+
+        Returns True only when the file was actually rewritten. Identical content is a
+        no-op so that importing the application never dirties a tracked file.
+        """
         try:
             self.registry_file.parent.mkdir(parents=True, exist_ok=True)
             serializable = {
                 k: v.model_dump(mode="json")
                 for k, v in self._capabilities.items()
             }
+            if self.registry_file.exists():
+                try:
+                    with open(self.registry_file, "r", encoding="utf-8") as f:
+                        if json.load(f) == serializable:
+                            return False
+                except (json.JSONDecodeError, OSError):
+                    pass
             with open(self.registry_file, "w", encoding="utf-8") as f:
                 json.dump(serializable, f, indent=2)
+            return True
         except Exception as e:
             logger.error(f"Error saving capability cache: {e}")
+            return False
 
     def register(self, cap: ToolCapability) -> bool:
-        """Register or update a tool capability."""
+        """Register or update a tool capability.
+
+        Re-registering an identical capability is a no-op: ``last_updated`` is only
+        bumped (and the file only rewritten) when something actually changed.
+        """
+        existing = self._capabilities.get(cap.capability_id)
+        if existing is not None and existing.model_dump(exclude={"last_updated"}) == cap.model_dump(
+            exclude={"last_updated"}
+        ):
+            return True
+
         cap.last_updated = datetime.now(timezone.utc)
         self._capabilities[cap.capability_id] = cap
         self.save_to_disk()

@@ -20,10 +20,11 @@ import time
 from pathlib import Path
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from config.settings import settings
+from core.device_auth import security_rate_limiter
 from security.authentication.api_access import (
     require_authenticated_client,
     require_developer_mode,
@@ -64,6 +65,18 @@ def _projects_root() -> Path:
     return root
 
 
+async def limit_developer_execution(request: Request) -> None:
+    """Throttle the code-execution endpoints to 10 requests/minute per client."""
+    client = request.client.host if request.client else "unknown"
+    if not security_rate_limiter.check_rate_limit(
+        f"developer_exec_{client}", max_requests=10, window_seconds=60
+    ):
+        raise HTTPException(
+            status_code=429,
+            detail="Developer execution rate limit exceeded (10 per minute).",
+        )
+
+
 def _validated_project_dir(project_name: str) -> Path:
     if not is_safe_name(project_name):
         raise HTTPException(status_code=400, detail="Invalid project name.")
@@ -83,7 +96,14 @@ async def validate_syntax(payload: CodeRunRequest):
         return {"valid": False, "error": f"SyntaxError at line {e.lineno}: {e.msg}"}
 
 
-@router.post("/execute", dependencies=[Depends(require_authenticated_client), Depends(require_developer_mode)])
+@router.post(
+    "/execute",
+    dependencies=[
+        Depends(require_authenticated_client),
+        Depends(require_developer_mode),
+        Depends(limit_developer_execution),
+    ],
+)
 async def execute_code(payload: CodeRunRequest):
     """Execute a Python code snippet in an isolated subprocess."""
     start_time = time.perf_counter()
@@ -112,7 +132,14 @@ async def execute_code(payload: CodeRunRequest):
         return {"success": False, "error": str(e)}
 
 
-@router.post("/run-tests", dependencies=[Depends(require_authenticated_client), Depends(require_developer_mode)])
+@router.post(
+    "/run-tests",
+    dependencies=[
+        Depends(require_authenticated_client),
+        Depends(require_developer_mode),
+        Depends(limit_developer_execution),
+    ],
+)
 async def run_tests(payload: TestRunRequest):
     """Run one of the repository's own pytest files."""
     tests_root = settings.base_dir / "tests"

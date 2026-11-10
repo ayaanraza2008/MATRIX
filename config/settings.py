@@ -185,6 +185,9 @@ class Settings(BaseSettings):
     bland_api_key: str = Field(default="", alias="BLAND_API_KEY")
     bland_api_base_url: str = Field(default="https://api.bland.ai", alias="BLAND_API_BASE_URL")
     bland_target_phone: str = Field(default="", alias="BLAND_TARGET_PHONE")
+    # Shared secret required on the Bland AI webhook (query param `secret` or the
+    # X-Matrix-Webhook-Secret header). Unset means the webhook is refused as unconfigured.
+    bland_webhook_secret: str = Field(default="", alias="MATRIX_BLAND_WEBHOOK_SECRET")
 
     # Security & Autonomy
     security_level: int = Field(default=3, alias="MATRIX_SECURITY_LEVEL")
