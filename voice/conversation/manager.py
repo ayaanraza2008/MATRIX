@@ -75,9 +75,25 @@ class HandsFreeManager:
         self._listening_start_time: float = 0.0
         self._listening_timeout_seconds: float = 7.5
 
-        # Arm wake word engine (single-dispatch via process_audio_chunk)
-        wake_word_detector.callback = None
-        wake_word_detector.start_listening()
+        # Wake-word arming is explicit (see arm_wake_word) so that importing this
+        # module never spins up microphone monitoring as a side effect.
+        self.wake_word_armed: bool = False
+
+    def arm_wake_word(self) -> bool:
+        """Explicitly arm the wake-word engine (single dispatch via process_audio_chunk).
+
+        Called from the FastAPI lifespan and when the user switches back to an
+        always-listening mode. Returns True when the engine is listening.
+        """
+        try:
+            wake_word_detector.callback = None
+            wake_word_detector.start_listening()
+            self.wake_word_armed = wake_word_detector.is_listening
+            return self.wake_word_armed
+        except Exception as e:
+            logger.error(f"Failed to arm wake-word engine: {e}")
+            self.wake_word_armed = False
+            return False
 
     def subscribe(self, callback: Callable[[Dict[str, Any]], Any]):
         """Subscribe a listener (e.g. WebSocket connection manager) to hands-free events."""
@@ -114,7 +130,7 @@ class HandsFreeManager:
             wake_word_detector.stop_listening()
             self.state = HandsFreeState.SLEEPING
         elif mode in [ConversationMode.CONTINUOUS, ConversationMode.WAKE_WORD_ONLY]:
-            wake_word_detector.start_listening()
+            self.arm_wake_word()
             if self.state in (HandsFreeState.SLEEPING, HandsFreeState.ERROR):
                 self.state = HandsFreeState.IDLE
         logger.info(f"Hands-Free mode changed to: {mode.value}")

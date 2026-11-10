@@ -52,6 +52,11 @@ async def lifespan(app: FastAPI):
         orchestrator.subscribe_progress(_broadcast_to_ws)
         logger.info("Hands-Free voice and orchestrator telemetry wired to WebSocket broker.")
 
+        if hands_free_manager.arm_wake_word():
+            logger.info("Wake-word engine armed for the hands-free pipeline.")
+        else:
+            logger.warning("Wake-word engine not armed (no models or no audio backend).")
+
         from voice.mic_listener import mic_listener
         mic_listener.start(asyncio.get_running_loop())
         logger.info("Persistent background native microphone listener service started.")

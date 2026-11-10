@@ -11,6 +11,8 @@ from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 import time
 import os
+import hmac
+from config.settings import settings
 from core.telephony.engine import telephony_engine, OutboundCallingPolicy, is_valid_phone
 from core.telephony.twilio_security import verify_twilio_request
 from core.telephony.bland_client import bland_client, DEFAULT_MATRIX_PHONE_TASK, DEFAULT_OPENING_SENTENCE
@@ -357,7 +359,29 @@ async def dispatch_bland_call(payload: BlandCallRequest):
 
 @router.post("/bland/webhook")
 async def bland_call_webhook(request: Request):
-    """Webhook callback endpoint for Bland AI call completed and status events."""
+    """Webhook callback endpoint for Bland AI call completed and status events.
+
+    Bland does not sign its callbacks, so a shared secret is required. When
+    MATRIX_BLAND_WEBHOOK_SECRET is unset the endpoint refuses all events (503)
+    instead of trusting unauthenticated callers.
+    """
+    expected_secret = settings.bland_webhook_secret
+    if not expected_secret:
+        logger.error("Bland webhook rejected: MATRIX_BLAND_WEBHOOK_SECRET is not configured.")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Bland webhook authentication is not configured (set MATRIX_BLAND_WEBHOOK_SECRET).",
+        )
+
+    supplied_secret = (
+        request.headers.get("X-Matrix-Webhook-Secret")
+        or request.query_params.get("secret")
+        or ""
+    )
+    if not hmac.compare_digest(supplied_secret, expected_secret):
+        logger.warning("Bland webhook rejected: invalid shared secret.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid webhook secret.")
+
     try:
         data = await request.json()
     except Exception:
