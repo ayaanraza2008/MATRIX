@@ -1,0 +1,71 @@
+name: LLM Benchmark (manual)
+
+# Measures the local GGUF inference path on a clean GitHub runner.
+# Numbers here describe the runner (4 vCPU / 16 GB), NOT the owner's 8 GB Ryzen laptop.
+# Run the same script locally to get target-hardware figures.
+
+on:
+  workflow_dispatch:
+    inputs:
+      model_url:
+        description: "Direct URL of a GGUF model"
+        required: false
+        default: "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf"
+      max_tokens:
+        description: "Completion tokens to generate"
+        required: false
+        default: "128"
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install llama.cpp CPU runtime
+        run: |
+          python -m pip install --upgrade pip
+          pip install --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu \
+                      llama-cpp-python psutil
+
+      - name: Download model
+        env:
+          MODEL_URL: ${{ inputs.model_url }}
+        run: |
+          mkdir -p .bench
+          curl -fL --retry 3 --retry-delay 5 -o .bench/model.gguf "$MODEL_URL"
+          ls -lh .bench/model.gguf
+
+      - name: Run benchmark
+        env:
+          MAX_TOKENS: ${{ inputs.max_tokens }}
+        run: |
+          python scripts/benchmark_local_llm.py \
+            --model .bench/model.gguf \
+            --max-tokens "$MAX_TOKENS" \
+            --out .bench/result.json
+
+      - name: Publish summary
+        if: always()
+        run: |
+          if [ -f .bench/result.json ]; then
+            {
+              echo "## Local LLM benchmark (GitHub runner)"
+              echo ""
+              echo '```json'
+              cat .bench/result.json
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: llm-benchmark-result
+          path: .bench/result.json
+          if-no-files-found: warn
